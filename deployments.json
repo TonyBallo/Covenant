@@ -1,0 +1,12 @@
+{
+  "sepolia": {
+    "IdentitySBT": {
+      "network": "sepolia",
+      "contract": "IdentitySBT",
+      "address": "0x2E47219B0910dc76233cdAb56aDDaa8d196c030A",
+      "deployer": "0xadff4af90c4f354ef21b6225faee61fbed1e642b",
+      "deployedAt": "Jan-25-2026 10:40:00 PM UTC",
+      "etherscan": "https://sepolia.etherscan.io/address/0x2E47219B0910dc76233cdAb56aDDaa8d196c030A"
+    }
+  }
+}
