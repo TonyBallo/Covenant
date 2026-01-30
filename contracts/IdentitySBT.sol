@@ -3,118 +3,162 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /**
- * @title IdentitySBT
- * @dev Soulbound token for verified identities with tiered trust levels
- * @author Built by [Your Name] - Web3 Certificate Authority
+ * @title IdentityPact
+ * @dev Soulbound seals for verified identities with tiered trust levels
+ * @author Project Covenant - Web3 Certificate Authority
  */
-contract IdentitySBT is ERC721, Ownable {
+contract IdentityPact is ERC721, Ownable, ReentrancyGuard {
     
-    // Tier levels for verification
+    // Tier levels for verification seals
     enum Tier {
-        NONE,      // 0 - Not verified
-        BRONZE,    // 1 - Email + Phone
-        SILVER,    // 2 - + Full Name + Location
-        GOLD,      // 3 - + Government ID
-        PLATINUM   // 4 - + Full KYC + Biometrics
+        NONE,   // 0 - Not verified
+        I,      // 1 - Email
+        II,     // 2 - Email + Phone OR Social Account OR Wallet History > 6 months 
+        III,    // 3 - Government ID
+        IV,     // 4 - Full KYC + Address Verification
+        V       // 5 - Biometrics + Background Check
     }
     
-    // Token data structure
-    struct TokenData {
+    // Seal data structure
+    struct SealData {
         Tier tier;
-        bytes32 dataHash;      // Hash of off-chain identity data
+        bytes covenantSignature;  // CHANGED: signature instead of hash
         uint256 mintedAt;
         bool revoked;
         string revocationReason;
     }
     
     // State variables
-    uint256 private _nextTokenId = 1;
-    mapping(uint256 => TokenData) public tokenData;
-    mapping(address => uint256) public addressToTokenId;
+    uint256 private _nextSealId = 1;
+    mapping(uint256 => SealData) public sealData;
+    mapping(address => uint256) public addressToSealId;
     
     // Events
-    event SBTMinted(address indexed to, uint256 indexed tokenId, Tier tier, bytes32 dataHash);
-    event SBTRevoked(uint256 indexed tokenId, address indexed owner, string reason);
-    event TierUpgraded(uint256 indexed tokenId, Tier oldTier, Tier newTier);
-    event SBTBurned(uint256 indexed tokenId, address indexed owner);
+    event SealMinted(address indexed to, uint256 indexed sealId, Tier tier);
+    event SealRevoked(uint256 indexed sealId, address indexed owner, string reason);
+    event SealUpgraded(uint256 indexed sealId, Tier oldTier, Tier newTier);
+    event SealBurned(uint256 indexed sealId, address indexed owner);
     
-    constructor() ERC721("Identity SBT", "IDSBT") Ownable(msg.sender) {}
+    constructor() ERC721("Covenant Pact", "PACT") Ownable(msg.sender) {}
     
     /**
-     * @dev Mint a new SBT to an address
+     * @dev Recover signer address from message and signature
      */
-    function mint(address to, Tier tier, bytes32 dataHash) external onlyOwner {
-        require(addressToTokenId[to] == 0, "Address already has SBT");
-        require(tier != Tier.NONE, "Invalid tier");
-        require(dataHash != bytes32(0), "Invalid data hash");
+    function recoverSigner(bytes32 message, bytes memory signature) 
+        internal 
+        pure 
+        returns (address) 
+    {
+        require(signature.length == 65, "Invalid signature length");
         
-        uint256 tokenId = _nextTokenId++;
-        _safeMint(to, tokenId);
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
         
-        tokenData[tokenId] = TokenData({
-            tier: tier,
-            dataHash: dataHash,
-            mintedAt: block.timestamp,
-            revoked: false,
-            revocationReason: ""
-        });
+        assembly {
+            r := mload(add(signature, 32))
+            s := mload(add(signature, 64))
+            v := byte(0, mload(add(signature, 96)))
+        }
         
-        addressToTokenId[to] = tokenId;
+        bytes32 ethSignedHash = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n32", message)
+        );
         
-        emit SBTMinted(to, tokenId, tier, dataHash);
+        return ecrecover(ethSignedHash, v, r, s);
     }
     
     /**
-     * @dev Revoke an SBT
+     * @dev Mint a new seal to an address
      */
-    function revoke(uint256 tokenId, string calldata reason) external onlyOwner {
-        require(_ownerOf(tokenId) != address(0), "Token does not exist");
-        require(!tokenData[tokenId].revoked, "Already revoked");
+    function mint(address to, Tier tier, bytes calldata covenantSignature) 
+    external 
+    onlyOwner 
+    nonReentrant 
+{
+    require(addressToSealId[to] == 0, "Address already has seal");
+    require(tier != Tier.NONE, "Invalid tier");
+    
+    // Verify Covenant signature (NO timestamp)
+    bytes32 message = keccak256(abi.encodePacked(to, uint8(tier)));
+    require(recoverSigner(message, covenantSignature) == owner(), "Invalid Covenant signature");
+    
+    uint256 sealId = _nextSealId++;
+    _safeMint(to, sealId);
+    
+    sealData[sealId] = SealData({
+        tier: tier,
+        covenantSignature: covenantSignature,
+        mintedAt: block.timestamp,  // Still track when minted
+        revoked: false,
+        revocationReason: ""
+    });
+    
+    addressToSealId[to] = sealId;
+    
+    emit SealMinted(to, sealId, tier);
+}
+    
+    /**
+     * @dev Revoke a seal
+     */
+    function revoke(uint256 sealId, string calldata reason) external onlyOwner {
+        require(_ownerOf(sealId) != address(0), "Seal does not exist");
+        require(!sealData[sealId].revoked, "Already revoked");
         
-        tokenData[tokenId].revoked = true;
-        tokenData[tokenId].revocationReason = reason;
+        sealData[sealId].revoked = true;
+        sealData[sealId].revocationReason = reason;
         
-        emit SBTRevoked(tokenId, _ownerOf(tokenId), reason);
+        emit SealRevoked(sealId, _ownerOf(sealId), reason);
     }
     
     /**
-     * @dev Upgrade tier of existing SBT
+     * @dev Upgrade tier of existing seal
      */
-    function upgradeTier(uint256 tokenId, Tier newTier, bytes32 newDataHash) external onlyOwner {
-        require(_ownerOf(tokenId) != address(0), "Token does not exist");
-        require(!tokenData[tokenId].revoked, "Token is revoked");
-        require(newTier > tokenData[tokenId].tier, "Can only upgrade tier");
-        
-        Tier oldTier = tokenData[tokenId].tier;
-        tokenData[tokenId].tier = newTier;
-        tokenData[tokenId].dataHash = newDataHash;
-        
-        emit TierUpgraded(tokenId, oldTier, newTier);
-    }
+    function upgradeTier(uint256 sealId, Tier newTier, bytes calldata newSignature) 
+    external 
+    onlyOwner 
+    nonReentrant 
+{
+    require(_ownerOf(sealId) != address(0), "Seal does not exist");
+    require(!sealData[sealId].revoked, "Seal is revoked");
+    require(newTier > sealData[sealId].tier, "Can only upgrade tier");
+    
+    // Verify new signature (NO timestamp)
+    address sealOwner = _ownerOf(sealId);
+    bytes32 message = keccak256(abi.encodePacked(sealOwner, uint8(newTier)));
+    require(recoverSigner(message, newSignature) == owner(), "Invalid Covenant signature");
+    
+    Tier oldTier = sealData[sealId].tier;
+    sealData[sealId].tier = newTier;
+    sealData[sealId].covenantSignature = newSignature;
+    
+    emit SealUpgraded(sealId, oldTier, newTier);
+}
     
     /**
-     * @dev Check if an address is verified and get their tier
-     * This is the function other protocols will call
+     * @dev Check if an address is verified and get their seal tier
      */
     function getVerificationStatus(address user) 
         external 
         view 
         returns (bool isVerified, Tier tier, bool isRevoked) 
     {
-        uint256 tokenId = addressToTokenId[user];
+        uint256 sealId = addressToSealId[user];
         
-        if (tokenId == 0 && _ownerOf(tokenId) != user) {
+        if (sealId == 0 && _ownerOf(sealId) != user) {
             return (false, Tier.NONE, false);
         }
         
-        TokenData memory data = tokenData[tokenId];
+        SealData memory data = sealData[sealId];
         return (true, data.tier, data.revoked);
     }
     
     /**
-     * @dev Override transfer functions to make tokens soulbound
+     * @dev Override transfer functions to make seals soulbound
      */
     function transferFrom(address, address, uint256) public pure override {
         revert("Soulbound: Transfer not allowed");
@@ -125,16 +169,16 @@ contract IdentitySBT is ERC721, Ownable {
     }
     
     /**
-     * @dev Allow users to burn their own SBT (opt-out)
+     * @dev Allow users to burn their own seal (opt-out)
      */
-    function burn(uint256 tokenId) external {
-        require(_ownerOf(tokenId) == msg.sender, "Not token owner");
+    function burn(uint256 sealId) external {
+        require(_ownerOf(sealId) == msg.sender, "Not seal owner");
         
         address owner = msg.sender;
-        delete tokenData[tokenId];
-        delete addressToTokenId[msg.sender];
-        _burn(tokenId);
+        delete sealData[sealId];
+        delete addressToSealId[msg.sender];
+        _burn(sealId);
         
-        emit SBTBurned(tokenId, owner);
+        emit SealBurned(sealId, owner);
     }
 }
