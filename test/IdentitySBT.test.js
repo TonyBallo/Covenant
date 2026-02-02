@@ -1,5 +1,6 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+require("solidity-coverage");
 
 describe("IdentityPact v2", function () {
   let pact;
@@ -82,55 +83,32 @@ async function createSignature(signer, userAddress, tier) {
   });
   
   describe("Soulbound Mechanics", function () {
-    beforeEach(async function () {
-      const signature = await createSignature(owner, user1.address, 2);
-      await pact.mint(user1.address, 2, signature);
-    });
-    
-    it("Should prevent transfers", async function () {
-      const sealId = await pact.addressToSealId(user1.address);
+      beforeEach(async function () {
+          const signature = await createSignature(owner, user1.address, 2);
+          await pact.mint(user1.address, 2, signature);
+      });
       
-      await expect(
-        pact.connect(user1).transferFrom(user1.address, user2.address, sealId)
-      ).to.be.revertedWith("Soulbound: Transfer not allowed");
-    });
-    
-    it("Should prevent safe transfers", async function () {
-      const sealId = await pact.addressToSealId(user1.address);
+      it("Should prevent transfers", async function () {
+          const sealId = await pact.addressToSealId(user1.address);
+          
+          await expect(
+              pact.connect(user1).transferFrom(user1.address, user2.address, sealId)
+          ).to.be.revertedWith("Soulbound: Transfer not allowed");
+      });
       
-      await expect(
-        pact.connect(user1)["safeTransferFrom(address,address,uint256)"](
-          user1.address, 
-          user2.address, 
-          sealId
-        )
-      ).to.be.revertedWith("Soulbound: Transfer not allowed");
-    });
-    
-    it("Should allow user to burn their own seal", async function () {
-      const sealId = await pact.addressToSealId(user1.address);
+      it("Should prevent safe transfers", async function () {
+          const sealId = await pact.addressToSealId(user1.address);
+          
+          await expect(
+              pact.connect(user1)["safeTransferFrom(address,address,uint256)"](
+                  user1.address, 
+                  user2.address, 
+                  sealId
+              )
+          ).to.be.revertedWith("Soulbound: Transfer not allowed");
+      });
       
-      await pact.connect(user1).burn(sealId);
-      
-      const [isVerified] = await pact.getVerificationStatus(user1.address);
-      expect(isVerified).to.equal(false);
-    });
-    
-    it("Should emit SealBurned event", async function () {
-      const sealId = await pact.addressToSealId(user1.address);
-      
-      await expect(pact.connect(user1).burn(sealId))
-        .to.emit(pact, "SealBurned")
-        .withArgs(sealId, user1.address);
-    });
-    
-    it("Should prevent burning someone else's seal", async function () {
-      const sealId = await pact.addressToSealId(user1.address);
-      
-      await expect(
-        pact.connect(user2).burn(sealId)
-      ).to.be.revertedWith("Not seal owner");
-    });
+      // REMOVED: burn testing now in Time-Locked Burn System section
   });
   
   describe("Revocation", function () {
@@ -265,4 +243,241 @@ async function createSignature(signer, userAddress, tier) {
       await expect(pact.mint(user1.address, 2, signature)).to.not.be.reverted;
     });
   });
+
+  describe("Time-Locked Burn System", function () {
+    
+    beforeEach(async function () {
+        const signature = await createSignature(owner, user1.address, 2);
+        await pact.mint(user1.address, 2, signature);
+    });
+
+    it("Should allow user to request burn", async function () {
+        const sealId = await pact.addressToSealId(user1.address);
+        
+        await pact.connect(user1).requestBurn(sealId);
+        
+        const burnReq = await pact.burnRequests(sealId);
+        expect(burnReq.pending).to.be.true;
+    });
+
+    it("Should emit BurnRequested event with correct parameters", async function () {
+        const sealId = await pact.addressToSealId(user1.address);
+        
+        const tx = await pact.connect(user1).requestBurn(sealId);
+        const receipt = await tx.wait();
+        
+        // Find the BurnRequested event
+        const event = receipt.logs.find(
+            log => log.fragment && log.fragment.name === 'BurnRequested'
+        );
+        
+        expect(event).to.exist;
+        expect(event.args[0]).to.equal(sealId); // sealId
+        expect(event.args[1]).to.equal(user1.address); // owner
+        expect(event.args[2]).to.be.gt(0); // executableAt exists
+    });
+
+    it("Should prevent duplicate burn requests", async function () {
+        const sealId = await pact.addressToSealId(user1.address);
+        
+        await pact.connect(user1).requestBurn(sealId);
+        
+        await expect(
+            pact.connect(user1).requestBurn(sealId)
+        ).to.be.revertedWith("Burn already requested");
+    });
+
+    it("Should prevent burn request on revoked seal", async function () {
+        const sealId = await pact.addressToSealId(user1.address);
+        
+        await pact.revoke(sealId, "Fraud");
+        
+        await expect(
+            pact.connect(user1).requestBurn(sealId)
+        ).to.be.revertedWith("Cannot burn revoked seal");
+    });
+
+    it("Should allow canceling burn request", async function () {
+        const sealId = await pact.addressToSealId(user1.address);
+        
+        await pact.connect(user1).requestBurn(sealId);
+        await pact.connect(user1).cancelBurnRequest(sealId);
+        
+        const burnReq = await pact.burnRequests(sealId);
+        expect(burnReq.pending).to.be.false;
+    });
+
+    it("Should emit BurnCancelled event", async function () {
+        const sealId = await pact.addressToSealId(user1.address);
+        
+        await pact.connect(user1).requestBurn(sealId);
+        
+        await expect(pact.connect(user1).cancelBurnRequest(sealId))
+            .to.emit(pact, "BurnCancelled")
+            .withArgs(sealId, user1.address);
+    });
+
+    it("Should prevent canceling non-existent burn request", async function () {
+        const sealId = await pact.addressToSealId(user1.address);
+        
+        await expect(
+            pact.connect(user1).cancelBurnRequest(sealId)
+        ).to.be.revertedWith("No pending burn request");
+    });
+
+    it("Should prevent executing burn before delay", async function () {
+        const sealId = await pact.addressToSealId(user1.address);
+        
+        await pact.connect(user1).requestBurn(sealId);
+        
+        await expect(
+            pact.connect(user1).executeBurn(sealId)
+        ).to.be.revertedWith("Burn delay not elapsed");
+    });
+
+    it("Should execute burn after delay", async function () {
+        const sealId = await pact.addressToSealId(user1.address);
+        
+        await pact.connect(user1).requestBurn(sealId);
+        
+        // Fast forward 90 days
+        await ethers.provider.send("evm_increaseTime", [90 * 24 * 60 * 60]);
+        await ethers.provider.send("evm_mine");
+        
+        await pact.connect(user1).executeBurn(sealId);
+        
+        const [isVerified] = await pact.getVerificationStatus(user1.address);
+        expect(isVerified).to.be.false;
+    });
+
+    it("Should emit SealBurned event on execution", async function () {
+        const sealId = await pact.addressToSealId(user1.address);
+        
+        await pact.connect(user1).requestBurn(sealId);
+        
+        await ethers.provider.send("evm_increaseTime", [90 * 24 * 60 * 60]);
+        await ethers.provider.send("evm_mine");
+        
+        await expect(pact.connect(user1).executeBurn(sealId))
+            .to.emit(pact, "SealBurned")
+            .withArgs(sealId, user1.address);
+    });
+
+    it("Should prevent executing without request", async function () {
+        const sealId = await pact.addressToSealId(user1.address);
+        
+        await expect(
+            pact.connect(user1).executeBurn(sealId)
+        ).to.be.revertedWith("No pending burn request");
+    });
+
+    it("Should show burn pending in verification status", async function () {
+        const sealId = await pact.addressToSealId(user1.address);
+        
+        await pact.connect(user1).requestBurn(sealId);
+        
+        const [verified, tier, revoked, burnPending, executableAt] = 
+            await pact.getVerificationStatus(user1.address);
+        
+        expect(verified).to.be.true;
+        expect(burnPending).to.be.true;
+        expect(executableAt).to.be.gt(0);
+    });
+
+    it("Should only allow seal owner to request burn", async function () {
+        const sealId = await pact.addressToSealId(user1.address);
+        
+        await expect(
+            pact.connect(user2).requestBurn(sealId)
+        ).to.be.revertedWith("Not seal owner");
+    });
+
+    it("Should only allow seal owner to cancel burn", async function () {
+        const sealId = await pact.addressToSealId(user1.address);
+        
+        await pact.connect(user1).requestBurn(sealId);
+        
+        await expect(
+            pact.connect(user2).cancelBurnRequest(sealId)
+        ).to.be.revertedWith("Not seal owner");
+    });
+
+    it("Should only allow seal owner to execute burn", async function () {
+        const sealId = await pact.addressToSealId(user1.address);
+        
+        await pact.connect(user1).requestBurn(sealId);
+        
+        await ethers.provider.send("evm_increaseTime", [90 * 24 * 60 * 60]);
+        await ethers.provider.send("evm_mine");
+        
+        await expect(
+            pact.connect(user2).executeBurn(sealId)
+        ).to.be.revertedWith("Not seal owner");
+    });
+});
+
+describe("Ownership Verification Helper", function () {
+    
+    beforeEach(async function () {
+        const sig1 = await createSignature(owner, user1.address, 2);
+        await pact.mint(user1.address, 2, sig1);
+        
+        const sig2 = await createSignature(owner, user2.address, 3);
+        await pact.mint(user2.address, 3, sig2);
+    });
+
+    it("Should verify correct ownership", async function () {
+        const sealId = await pact.addressToSealId(user1.address);
+        
+        const isOwner = await pact.verifyOwnership(user1.address, sealId);
+        expect(isOwner).to.be.true;
+    });
+
+    it("Should reject wrong user claiming seal", async function () {
+        const sealId = await pact.addressToSealId(user1.address);
+        
+        // user2 trying to claim user1's seal
+        const isOwner = await pact.verifyOwnership(user2.address, sealId);
+        expect(isOwner).to.be.false;
+    });
+
+    it("Should reject user claiming non-existent seal", async function () {
+        const fakeId = 9999;
+        
+        const isOwner = await pact.verifyOwnership(user1.address, fakeId);
+        expect(isOwner).to.be.false;
+    });
+
+    it("Should reject wrong seal ID for user", async function () {
+        const user1SealId = await pact.addressToSealId(user1.address);
+        const user2SealId = await pact.addressToSealId(user2.address);
+        
+        // user1 claiming user2's seal ID
+        const isOwner = await pact.verifyOwnership(user1.address, user2SealId);
+        expect(isOwner).to.be.false;
+    });
+
+    it("Should return false for burned seal", async function () {
+        const sealId = await pact.addressToSealId(user1.address);
+        
+        // Request and execute burn
+        await pact.connect(user1).requestBurn(sealId);
+        await ethers.provider.send("evm_increaseTime", [90 * 24 * 60 * 60]);
+        await ethers.provider.send("evm_mine");
+        await pact.connect(user1).executeBurn(sealId);
+        
+        const isOwner = await pact.verifyOwnership(user1.address, sealId);
+        expect(isOwner).to.be.false;
+    });
+
+    it("Should work correctly for multiple users", async function () {
+        const seal1 = await pact.addressToSealId(user1.address);
+        const seal2 = await pact.addressToSealId(user2.address);
+        
+        expect(await pact.verifyOwnership(user1.address, seal1)).to.be.true;
+        expect(await pact.verifyOwnership(user2.address, seal2)).to.be.true;
+        expect(await pact.verifyOwnership(user1.address, seal2)).to.be.false;
+        expect(await pact.verifyOwnership(user2.address, seal1)).to.be.false;
+    });
+});
 });

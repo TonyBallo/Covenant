@@ -30,17 +30,28 @@ contract IdentityPact is ERC721, Ownable, ReentrancyGuard {
         bool revoked;
         string revocationReason;
     }
-    
+    // Burn request structure
+    struct BurnRequest {
+        uint256 requestedAt;
+        bool pending;
+    }
+
+
     // State variables
     uint256 private _nextSealId = 1;
     mapping(uint256 => SealData) public sealData;
     mapping(address => uint256) public addressToSealId;
+
+    mapping(uint256 => BurnRequest) public burnRequests;
+    uint256 public constant BURN_DELAY = 90 days;
     
     // Events
     event SealMinted(address indexed to, uint256 indexed sealId, Tier tier);
     event SealRevoked(uint256 indexed sealId, address indexed owner, string reason);
     event SealUpgraded(uint256 indexed sealId, Tier oldTier, Tier newTier);
     event SealBurned(uint256 indexed sealId, address indexed owner);
+    event BurnRequested(uint256 indexed sealId, address indexed owner, uint256 executableAt);
+    event BurnCancelled(uint256 indexed sealId, address indexed owner);
     
     constructor() ERC721("Covenant Pact", "PACT") Ownable(msg.sender) {}
     
@@ -145,16 +156,30 @@ contract IdentityPact is ERC721, Ownable, ReentrancyGuard {
     function getVerificationStatus(address user) 
         external 
         view 
-        returns (bool isVerified, Tier tier, bool isRevoked) 
+        returns (
+            bool isVerified, 
+            Tier tier, 
+            bool isRevoked,
+            bool burnPending,
+            uint256 burnExecutableAt
+        ) 
     {
         uint256 sealId = addressToSealId[user];
         
         if (sealId == 0 && _ownerOf(sealId) != user) {
-            return (false, Tier.NONE, false);
+            return (false, Tier.NONE, false, false, 0);
         }
         
         SealData memory data = sealData[sealId];
-        return (true, data.tier, data.revoked);
+        BurnRequest memory burnReq = burnRequests[sealId];
+        
+        return (
+            true, 
+            data.tier, 
+            data.revoked,
+            burnReq.pending,
+            burnReq.pending ? burnReq.requestedAt + BURN_DELAY : 0
+        );
     }
     
     /**
@@ -169,16 +194,62 @@ contract IdentityPact is ERC721, Ownable, ReentrancyGuard {
     }
     
     /**
-     * @dev Allow users to burn their own seal (opt-out)
-     */
-    function burn(uint256 sealId) external {
+    * @dev Request to burn seal (starts 90-day countdown)
+    */
+    function requestBurn(uint256 sealId) external nonReentrant {
         require(_ownerOf(sealId) == msg.sender, "Not seal owner");
+        require(!sealData[sealId].revoked, "Cannot burn revoked seal");
+        require(!burnRequests[sealId].pending, "Burn already requested");
+        
+        burnRequests[sealId] = BurnRequest({
+            requestedAt: block.timestamp,
+            pending: true
+        });
+        
+        emit BurnRequested(sealId, msg.sender, block.timestamp + BURN_DELAY);
+    }
+
+    /**
+    * @dev Cancel pending burn request
+    */
+    function cancelBurnRequest(uint256 sealId) external nonReentrant {
+        require(_ownerOf(sealId) == msg.sender, "Not seal owner");
+        require(burnRequests[sealId].pending, "No pending burn request");
+        
+        delete burnRequests[sealId];
+        
+        emit BurnCancelled(sealId, msg.sender);
+    }
+
+    /**
+    * @dev Execute burn after delay period
+    */
+    function executeBurn(uint256 sealId) external nonReentrant {
+        require(_ownerOf(sealId) == msg.sender, "Not seal owner");
+        require(burnRequests[sealId].pending, "No pending burn request");
+        require(
+            block.timestamp >= burnRequests[sealId].requestedAt + BURN_DELAY,
+            "Burn delay not elapsed"
+        );
         
         address owner = msg.sender;
         delete sealData[sealId];
         delete addressToSealId[msg.sender];
+        delete burnRequests[sealId];
         _burn(sealId);
         
         emit SealBurned(sealId, owner);
+    }
+
+    /**
+    * @dev Verify that an address owns a specific seal
+    * Prevents spoofing attacks where users claim someone else's seal
+    */
+    function verifyOwnership(address user, uint256 sealId) 
+        external 
+        view 
+        returns (bool) 
+    {
+        return _ownerOf(sealId) == user && addressToSealId[user] == sealId;
     }
 }
