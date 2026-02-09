@@ -1,5 +1,5 @@
 # Project Covenant
-![Repository Logo](https://yourdomain.com/path/to/logo.png)   
+![Repository Logo]([https://github.com/TonyBallo/Covenant/blob/main/logo.png)   
 > A Web3 Certificate Authority - Soulbound identity verification with tiered trust levels
 
 ⚠️ **STATUS: Private Development - Stealth Mode**
