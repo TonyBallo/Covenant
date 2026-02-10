@@ -2,6 +2,7 @@
 
 > A Web3 Certificate Authority - Soulbound identity verification with tiered trust levels
 
+
 ⚠️ **STATUS: v2 Development Complete - Security Audit Pending**
 
 ---
@@ -258,6 +259,28 @@ npx hardhat coverage
 - Branches: 82%
 
 ---
+## Frontend Lookup Tool
+
+A web-based lookup tool for querying Covenant verification seals.
+
+**Location:** `covenant-lookup/`
+
+**Features:**
+- Search any Ethereum address
+- Display verification tier and status
+- Real-time blockchain data
+- Links to Etherscan for verification
+
+**Quick Start:**
+```bash
+cd covenant-lookup
+npm install
+npm run dev
+```
+
+**Live Demo:** (Coming soon)
+
+See `covenant-lookup/README.md` for full documentation.
 
 ## Contact
 

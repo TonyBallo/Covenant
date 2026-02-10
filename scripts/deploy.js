@@ -1,52 +1,24 @@
 const hre = require("hardhat");
-const fs = require("fs");
 
 async function main() {
-  console.log("🚀 Deploying IdentitySBT to Sepolia...");
-  
-  const IdentitySBT = await hre.ethers.getContractFactory("IdentitySBT");
-  const identitySBT = await IdentitySBT.deploy();
-  
-  await identitySBT.waitForDeployment();
-  
-  const address = await identitySBT.getAddress();
-  const deploymentTx = identitySBT.deploymentTransaction();
-  
-  console.log("✅ IdentitySBT deployed to:", address);
-  console.log("📍 View on Etherscan: https://sepolia.etherscan.io/address/" + address);
-  console.log("🔗 Deployment tx:", deploymentTx.hash);
-  
-  // Save deployment info
-  const deploymentInfo = {
-    network: hre.network.name,
-    contract: "IdentitySBT",
-    address: address,
-    deployer: deploymentTx.from,
-    txHash: deploymentTx.hash,
-    deployedAt: new Date().toISOString(),
-    blockNumber: deploymentTx.blockNumber
-  };
-  
-  // Read existing deployments or create new
-  let deployments = {};
-  if (fs.existsSync("deployments.json")) {
-    deployments = JSON.parse(fs.readFileSync("deployments.json", "utf8"));
-  }
-  
-  // Add this deployment
-  if (!deployments[hre.network.name]) {
-    deployments[hre.network.name] = {};
-  }
-  deployments[hre.network.name].IdentitySBT = deploymentInfo;
-  
-  // Save to file
-  fs.writeFileSync("deployments.json", JSON.stringify(deployments, null, 2));
-  
-  console.log("\n💾 Deployment info saved to deployments.json");
-  console.log("\n🔥 NEXT STEPS:");
-  console.log("1. Verify contract on Etherscan");
-  console.log("2. Tweet about your deployment!");
-  console.log("3. Test minting an SBT");
+  const [deployer] = await hre.ethers.getSigners();
+
+  console.log("🚀 Deploying IdentityPact v2 to Sepolia...");
+  console.log("Deployer address:", deployer.address);
+  console.log("Account balance:", hre.ethers.formatEther(await hre.ethers.provider.getBalance(deployer.address)), "ETH\n");
+
+  // Deploy IdentityPact (v2)
+  const IdentityPact = await hre.ethers.getContractFactory("IdentityPact");
+  const pact = await IdentityPact.deploy();
+
+  await pact.waitForDeployment();
+  const address = await pact.getAddress();
+
+  console.log("✅ IdentityPact v2 deployed to:", address);
+  console.log("\n📋 Save this address for your frontend!");
+  console.log("Contract address:", address);
+  console.log("\n🔗 View on Etherscan:");
+  console.log(`https://sepolia.etherscan.io/address/${address}`);
 }
 
 main().catch((error) => {

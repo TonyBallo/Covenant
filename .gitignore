@@ -40,3 +40,8 @@ npm-debug.log*
 # IMPORTANT: Keep these private during stealth phase
 stealth/
 
+# Frontend
+covenant-lookup/node_modules/
+covenant-lookup/dist/
+covenant-lookup/.env
+
