@@ -8,7 +8,7 @@ async function main() {
   console.log("Account balance:", ethers.formatEther(await ethers.provider.getBalance(owner.address)), "ETH\n");
 
   // Your deployed contract address
-  const pactAddress = "0x2E47219B0910dc76233cdAb56aDDaa8d196c030A";
+const pactAddress = "0x60859A972A9996cf24448323c7b1E49825f092a4";
   const pact = await ethers.getContractAt("IdentityPact", pactAddress);
 
   // Generate 10 deterministic test addresses (same every time for demo consistency)
