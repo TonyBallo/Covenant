@@ -79,19 +79,25 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-white shadow-sm border-b sticky top-0 z-50 backdrop-blur-sm bg-white/90">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-covenant-purple">
-                Covenant Protocol
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Web3 Identity Verification Lookup
-              </p>
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-covenant-purple to-purple-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-xl">C</span>
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-covenant-purple to-purple-600 bg-clip-text text-transparent">
+                  Covenant Protocol
+                </h1>
+                <p className="text-gray-600 mt-1 text-sm">
+                  Web3 Identity Verification Lookup
+                </p>
+              </div>
             </div>
-            <div className="hidden md:block">
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
+            <div className="hidden md:flex items-center gap-3">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200">
+                <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
                 Sepolia Testnet
               </span>
             </div>
@@ -129,34 +135,43 @@ function App() {
         )}
 
         {/* Results */}
-        {result && <ResultDisplay result={result} />}
-
+        {result && (
+        <div className="animate-fadeIn">
+          <ResultDisplay result={result} />
+        </div>
+      )}
         {/* Info Cards - Only show when no results */}
         {!result && !loading && !error && (
-          <div className="mt-12 grid md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-lg shadow p-6 text-center">
-              <div className="text-4xl mb-3">🔒</div>
-              <h3 className="font-bold text-gray-900 mb-2">On-Chain</h3>
-              <p className="text-sm text-gray-600">
-                All verification data is stored immutably on Ethereum blockchain
-              </p>
+        <div className="mt-12 grid md:grid-cols-3 gap-6">
+          <div className="bg-white rounded-lg shadow-md hover:shadow-xl p-6 text-center transition-all duration-300 transform hover:-translate-y-1">
+            <div className="w-16 h-16 mx-auto mb-4 bg-purple-100 rounded-full flex items-center justify-center">
+              <span className="text-4xl">🔒</span>
             </div>
-            <div className="bg-white rounded-lg shadow p-6 text-center">
-              <div className="text-4xl mb-3">🔍</div>
-              <h3 className="font-bold text-gray-900 mb-2">Transparent</h3>
-              <p className="text-sm text-gray-600">
-                Anyone can verify authenticity - no trust required
-              </p>
-            </div>
-            <div className="bg-white rounded-lg shadow p-6 text-center">
-              <div className="text-4xl mb-3">⚡</div>
-              <h3 className="font-bold text-gray-900 mb-2">Instant</h3>
-              <p className="text-sm text-gray-600">
-                Real-time verification status with no API delays
-              </p>
-            </div>
+            <h3 className="font-bold text-gray-900 mb-2">On-Chain</h3>
+            <p className="text-sm text-gray-600">
+              All verification data is stored immutably on Ethereum blockchain
+            </p>
           </div>
-        )}
+          <div className="bg-white rounded-lg shadow-md hover:shadow-xl p-6 text-center transition-all duration-300 transform hover:-translate-y-1">
+            <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+              <span className="text-4xl">🔍</span>
+            </div>
+            <h3 className="font-bold text-gray-900 mb-2">Transparent</h3>
+            <p className="text-sm text-gray-600">
+              Anyone can verify authenticity - no trust required
+            </p>
+          </div>
+          <div className="bg-white rounded-lg shadow-md hover:shadow-xl p-6 text-center transition-all duration-300 transform hover:-translate-y-1">
+            <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+              <span className="text-4xl">⚡</span>
+            </div>
+            <h3 className="font-bold text-gray-900 mb-2">Instant</h3>
+            <p className="text-sm text-gray-600">
+              Real-time verification status with no API delays
+            </p>
+          </div>
+        </div>
+      )}
       </main>
 
       {/* Footer */}
@@ -182,7 +197,7 @@ function App() {
                 View Contract
               </a>
               <a
-                href="https://github.com/yourusername/covenant"
+                href="https://github.com/tonyballo/covenant"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-covenant-purple hover:text-purple-700 text-sm font-semibold"

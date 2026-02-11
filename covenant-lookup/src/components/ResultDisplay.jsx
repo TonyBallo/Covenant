@@ -62,7 +62,7 @@ export function ResultDisplay({ result }) {
 
       <div className="p-8">
         <div className="flex items-center gap-6 mb-8 pb-8 border-b">
-          <div className={`text-7xl font-bold ${tierTextClasses[tierInfo.color]}`}>
+          <div className={`text-7xl font-bold ${tierTextClasses[tierInfo.color]} drop-shadow-lg`}>
             {tierInfo.numeral}
           </div>
           <div className="flex-1">
@@ -74,7 +74,7 @@ export function ResultDisplay({ result }) {
               {tierInfo.description}
             </p>
           </div>
-          <div className={`px-6 py-3 rounded-lg border-2 ${tierColorClasses[tierInfo.color]}`}>
+          <div className={`px-6 py-3 rounded-lg border-2 ${tierColorClasses[tierInfo.color]} shadow-lg transform hover:scale-105 transition-transform`}>
             <div className="text-center">
               <p className="text-xs font-semibold mb-1">TIER</p>
               <p className="text-3xl font-bold">{tierInfo.numeral}</p>
@@ -113,21 +113,33 @@ export function ResultDisplay({ result }) {
           </div>
         </div>
 
+        {/* Wallet Address */}
         <div className="bg-gray-50 rounded-lg p-4 mb-6">
           <p className="text-xs text-gray-600 mb-2 uppercase tracking-wide">Wallet Address</p>
-          <div className="flex items-center justify-between">
-            <p className="font-mono text-sm break-all flex-1 mr-4">
+          <div className="flex items-center justify-between gap-4">
+            <p className="font-mono text-sm break-all flex-1">
               {result.address}
             </p>
-            
-            <a
-              href={`${ETHERSCAN_BASE}/address/${result.address}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-covenant-purple hover:text-purple-700 text-sm font-semibold whitespace-nowrap"
-            >
-              View on Etherscan
-            </a>
+            <div className="flex gap-2 shrink-0">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(result.address);
+                  alert('Address copied!');
+                }}
+                className="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm font-semibold transition"
+                title="Copy address"
+              >
+                📋 Copy
+              </button>
+              <a
+                href={`${ETHERSCAN_BASE}/address/${result.address}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-2 bg-covenant-purple hover:bg-purple-700 text-white rounded text-sm font-semibold transition whitespace-nowrap"
+              >
+                View on Etherscan
+              </a>
+            </div>
           </div>
         </div>
 
