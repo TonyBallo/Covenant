@@ -45,3 +45,5 @@ covenant-lookup/node_modules/
 covenant-lookup/dist/
 covenant-lookup/.env
 
+.vercel
+.env*.local
