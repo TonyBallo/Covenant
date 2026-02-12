@@ -1,6 +1,5 @@
 // Backend API configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-
+const API_BASE_URL = 'https://covenant-production-4cf7.up.railway.app';
 /**
  * Submit KYC application
  */
