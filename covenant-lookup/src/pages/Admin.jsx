@@ -3,7 +3,11 @@ import { getPendingSubmissions, approveKYC, mintSeal, getReadyToMint } from '../
 import { TIERS } from '../utils/constants';
 
 export function Admin() {
-  const [activeTab, setActiveTab] = useState('pending'); // 'pending' or 'approved'
+  const [authenticated, setAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
+  const [authError, setAuthError] = useState(false);
+  
+  const [activeTab, setActiveTab] = useState('pending');
   const [pending, setPending] = useState([]);
   const [readyToMint, setReadyToMint] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -11,9 +15,32 @@ export function Admin() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
+  // CHANGE THIS PASSWORD!
+  const ADMIN_PASSWORD = 'covenant-demo-2026';
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (password === ADMIN_PASSWORD) {
+      setAuthenticated(true);
+      setAuthError(false);
+      localStorage.setItem('admin-auth', 'true'); // Remember login
+    } else {
+      setAuthError(true);
+    }
+  };
+
+  // Check if already logged in
   useEffect(() => {
-    fetchData();
+    if (localStorage.getItem('admin-auth') === 'true') {
+      setAuthenticated(true);
+    }
   }, []);
+
+  useEffect(() => {
+    if (authenticated) {
+      fetchData();
+    }
+  }, [authenticated]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -39,8 +66,6 @@ export function Admin() {
     try {
       const result = await approveKYC(submission.id);
       setSuccess(`Approved! Signature: ${result.signature.slice(0, 20)}...`);
-      
-      // Refresh data
       await fetchData();
     } catch (err) {
       setError(err.message);
@@ -55,10 +80,7 @@ export function Admin() {
     setSuccess(null);
 
     try {
-      // First approve to get signature
       const approval = await approveKYC(submission.id);
-      
-      // Then mint
       const result = await mintSeal({
         submissionId: submission.id,
         walletAddress: submission.wallet_address,
@@ -67,8 +89,6 @@ export function Admin() {
       });
 
       setSuccess(`Seal #${result.sealId} minted! Tx: ${result.transactionHash}`);
-      
-      // Refresh data
       await fetchData();
     } catch (err) {
       setError(err.message);
@@ -77,6 +97,57 @@ export function Admin() {
     }
   };
 
+  const handleLogout = () => {
+    setAuthenticated(false);
+    localStorage.removeItem('admin-auth');
+  };
+
+  // Login Screen
+  if (!authenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-gradient-to-br from-covenant-purple to-purple-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <span className="text-white font-bold text-2xl">🔒</span>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900">Admin Login</h2>
+            <p className="text-gray-600 mt-2">Enter password to access admin panel</p>
+          </div>
+          
+          <form onSubmit={handleLogin}>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Admin Password"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-covenant-purple focus:border-transparent"
+              autoFocus
+            />
+            
+            {authError && (
+              <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-3 rounded">
+                <p className="text-red-800 text-sm font-semibold">Invalid password</p>
+              </div>
+            )}
+            
+            <button
+              type="submit"
+              className="w-full bg-covenant-purple hover:bg-purple-700 text-white py-3 rounded-lg font-semibold transition"
+            >
+              Login
+            </button>
+          </form>
+          
+          <p className="text-xs text-gray-500 mt-6 text-center">
+            Demo password: covenant-demo-2026
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Loading Screen
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
@@ -88,13 +159,22 @@ export function Admin() {
     );
   }
 
+  // Admin Panel (authenticated)
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-8">
       <div className="max-w-6xl mx-auto px-4">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Admin Panel</h1>
-          <p className="text-gray-600">Manage KYC submissions and mint verification seals</p>
+        {/* Header with Logout */}
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">Admin Panel</h1>
+            <p className="text-gray-600">Manage KYC submissions and mint verification seals</p>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 text-red-600 hover:text-red-700 font-semibold transition"
+          >
+            Logout
+          </button>
         </div>
 
         {/* Notifications */}
