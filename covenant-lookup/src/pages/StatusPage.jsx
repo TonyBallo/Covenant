@@ -17,48 +17,49 @@ export function StatusPage({ walletAddress }) {
     if (!walletAddress) {
       navigate('/');
     }
-  }, [walletAddress]);
+  }, [walletAddress, navigate]);
 
   // Load status on mount
   useEffect(() => {
     if (!walletAddress) return;
+
+    const loadStatus = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Check application status from backend
+        const status = await checkKYCStatus(walletAddress);
+        setKycStatus(status);
+
+        // If minted, also fetch on-chain seal data
+        if (status.status === 'minted' || status.status === 'approved') {
+          const provider = new ethers.JsonRpcProvider(RPC_URL);
+          const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+          const [verified, tier, revoked, burnPending] = await contract.getVerificationStatus(walletAddress);
+          
+          if (verified) {
+            const sealId = await contract.addressToSealId(walletAddress);
+            const seal = await contract.sealData(sealId);
+            setSealData({
+              verified,
+              tier: Number(tier),
+              revoked,
+              burnPending,
+              sealId: Number(sealId),
+              mintedAt: Number(seal.mintedAt)
+            });
+          }
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadStatus();
   }, [walletAddress]);
-
-  const loadStatus = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Check application status from backend
-      const status = await checkKYCStatus(walletAddress);
-      setKycStatus(status);
-
-      // If minted, also fetch on-chain seal data
-      if (status.status === 'minted' || status.status === 'approved') {
-        const provider = new ethers.JsonRpcProvider(RPC_URL);
-        const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-        const [verified, tier, revoked, burnPending] = await contract.getVerificationStatus(walletAddress);
-        
-        if (verified) {
-          const sealId = await contract.addressToSealId(walletAddress);
-          const seal = await contract.sealData(sealId);
-          setSealData({
-            verified,
-            tier: Number(tier),
-            revoked,
-            burnPending,
-            sealId: Number(sealId),
-            mintedAt: Number(seal.mintedAt)
-          });
-        }
-      }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Tier color helpers
   const tierTextClasses = {
