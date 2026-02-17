@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getPendingSubmissions, approveKYC, mintSeal, getReadyToMint } from '../utils/api';
+import { getPendingSubmissions, approveKYC, mintSeal, getReadyToMint, rejectKYC } from '../utils/api';
 import { TIERS } from '../utils/constants';
 
 export function Admin() {
@@ -12,6 +12,8 @@ export function Admin() {
   const [readyToMint, setReadyToMint] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(null);
+  const [rejectionReasons, setRejectionReasons] = useState({});
+  const [rejecting, setRejecting] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
@@ -94,6 +96,28 @@ export function Admin() {
       setError(err.message);
     } finally {
       setProcessing(null);
+    }
+  };
+
+  const handleReject = async (submission) => {
+    const reason = rejectionReasons[submission.id];
+    if (!reason || reason.trim() === '') {
+      setError('Please enter a rejection reason');
+      return;
+    }
+
+    setRejecting(submission.id);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      await rejectKYC(submission.id, reason);
+      setSuccess(`Submission from ${submission.full_name} rejected`);
+      await fetchData();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setRejecting(null);
     }
   };
 
@@ -256,13 +280,35 @@ export function Admin() {
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => handleApprove(submission)}
-                    disabled={processing === submission.id}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
-                  >
-                    {processing === submission.id ? 'Processing...' : 'Approve & Generate Signature'}
-                  </button>
+                  <div className="flex flex-col gap-3">
+                    <button
+                      onClick={() => handleApprove(submission)}
+                      disabled={processing === submission.id || rejecting === submission.id}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    >
+                      {processing === submission.id ? 'Processing...' : 'Approve & Generate Signature'}
+                    </button>
+
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Rejection reason..."
+                        value={rejectionReasons[submission.id] || ''}
+                        onChange={(e) => setRejectionReasons({
+                          ...rejectionReasons,
+                          [submission.id]: e.target.value
+                        })}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-400 focus:border-transparent"
+                      />
+                      <button
+                        onClick={() => handleReject(submission)}
+                        disabled={processing === submission.id || rejecting === submission.id}
+                        className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition text-sm"
+                      >
+                        {rejecting === submission.id ? 'Rejecting...' : 'Reject'}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               ))
             )}

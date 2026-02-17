@@ -80,6 +80,24 @@ export async function mintSeal(data) {
 }
 
 /**
+ * Reject a KYC submission (admin only)
+ */
+export async function rejectKYC(submissionId, reason) {
+  const response = await fetch(`${API_BASE_URL}/api/admin/reject/${submissionId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reason })
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to reject submission');
+  }
+
+  return response.json();
+}
+
+/**
  * Get ready-to-mint submissions (admin only)
  */
 export async function getReadyToMint() {
