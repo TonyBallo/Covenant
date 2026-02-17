@@ -16,7 +16,7 @@ Project Covenant provides tiered identity verification for blockchain wallets th
 
 ## Live Demo
 
-**Frontend:** [covenant-lookup.vercel.app](https://covenant-lookup.vercel.app)  
+**Frontend:** [covenant-protocol.vercel.app](https://covenant-protocol.vercel.app)  
 **Backend API:** https://covenant-production-4cf7.up.railway.app  
 **Contract (Sepolia):** `0x60859A972A9996cf24448323c7b1E49825f092a4`  
 **Etherscan:** [View Contract](https://sepolia.etherscan.io/address/0x60859A972A9996cf24448323c7b1E49825f092a4)
