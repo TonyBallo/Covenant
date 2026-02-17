@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { ethers } from 'ethers';
 import { SearchBar } from './components/SearchBar';
 import { ResultDisplay } from './components/ResultDisplay';
-import { GetVerified } from './pages/GetVerified';
+import { TierSelect } from './pages/TierSelect';
+import { ApplyForm } from './pages/ApplyForm';
 import { CONTRACT_ADDRESS, CONTRACT_ABI, RPC_URL, ETHERSCAN_BASE } from './utils/contract';
 import { Admin } from './pages/Admin';
 
@@ -217,7 +218,8 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/get-verified" element={<GetVerified />} />
+        <Route path="/get-verified" element={<TierSelect />} />
+        <Route path="/get-verified/apply" element={<ApplyForm />} />
         <Route path="/admin" element={<Admin />} />
       </Routes>
     </BrowserRouter>
