@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ethers } from 'ethers';
 import { submitKYC } from '../utils/api';
 
 export function ApplyForm() {
@@ -12,6 +13,29 @@ export function ApplyForm() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
+  const [walletConnected, setWalletConnected] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+
+  const handleConnectWallet = async () => {
+    setConnecting(true);
+    setError(null);
+
+    try {
+      if (!window.ethereum) {
+        throw new Error('No wallet detected. Please install MetaMask.');
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const accounts = await provider.send('eth_requestAccounts', []);
+
+      setFormData({ ...formData, walletAddress: accounts[0] });
+      setWalletConnected(true);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setConnecting(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -80,20 +104,42 @@ export function ApplyForm() {
         <div className="bg-white rounded-lg shadow-lg p-8">
           <form onSubmit={handleSubmit}>
 
-            {/* Wallet Address */}
+            {/* Wallet Connection */}
             <div className="mb-6">
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Wallet Address *
               </label>
-              <input
-                type="text"
-                name="walletAddress"
-                value={formData.walletAddress}
-                onChange={handleChange}
-                placeholder="0x..."
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-covenant-purple focus:border-transparent"
-              />
+
+              {!walletConnected ? (
+                <button
+                  type="button"
+                  onClick={handleConnectWallet}
+                  disabled={connecting}
+                  className="w-full px-4 py-3 border-2 border-dashed border-covenant-purple text-covenant-purple font-semibold rounded-lg hover:bg-purple-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  {connecting ? 'Connecting...' : '🔗 Connect Wallet'}
+                </button>
+              ) : (
+                <div className="w-full px-4 py-3 bg-green-50 border border-green-300 rounded-lg flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-green-600 font-semibold">Connected</p>
+                    <p className="text-sm font-mono text-gray-800">
+                      {formData.walletAddress.slice(0, 6)}...{formData.walletAddress.slice(-4)}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWalletConnected(false);
+                      setFormData({ ...formData, walletAddress: '' });
+                    }}
+                    className="text-xs text-gray-500 hover:text-red-500 transition"
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              )}
+
               <p className="text-xs text-gray-500 mt-1">
                 The Ethereum address that will receive the verification seal
               </p>
@@ -142,11 +188,18 @@ export function ApplyForm() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !walletConnected}
               className="w-full bg-covenant-purple hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               {loading ? 'Submitting...' : 'Submit Application'}
             </button>
+
+            {!walletConnected && (
+              <p className="text-xs text-center text-gray-500 mt-3">
+                Connect your wallet to enable submission
+              </p>
+            )}
+
           </form>
 
           <p className="text-xs text-gray-500 mt-6 text-center">
