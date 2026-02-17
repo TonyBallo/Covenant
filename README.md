@@ -2,8 +2,7 @@
 
 > A Web3 Certificate Authority - Soulbound identity verification with tiered trust levels
 
-
-⚠️ **STATUS: v2 Development Complete - Security Audit Pending**
+⚠️ **STATUS: MVP Live on Testnet - Security Audit Pending**
 
 ---
 
@@ -15,35 +14,54 @@ Project Covenant provides tiered identity verification for blockchain wallets th
 
 ---
 
+## Live Demo
+
+**Frontend:** [covenant-lookup.vercel.app](https://covenant-lookup.vercel.app)  
+**Backend API:** https://covenant-production-4cf7.up.railway.app  
+**Contract (Sepolia):** `0x60859A972A9996cf24448323c7b1E49825f092a4`  
+**Etherscan:** [View Contract](https://sepolia.etherscan.io/address/0x60859A972A9996cf24448323c7b1E49825f092a4)
+
+### Test Addresses
+Search any of these on the lookup tool to see live seal data:
+```
+Tier 1 (Bronze): 0x1111111111111111111111111111111111111111
+Tier 2 (Silver): 0x3333333333333333333333333333333333333333
+Tier 3 (Gold):   0x5555555555555555555555555555555555555555
+Tier 4 (Platinum): 0x8888888888888888888888888888888888888888
+Tier 5 (Diamond):  0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+```
+
+---
+
 ## Current Status
 
-**Version:** 2.0 (Security Hardened)  
+**Version:** 2.0 (MVP Live)
 **Test Coverage:** 41 tests passing, 100% statement coverage, 82% branch coverage  
-**Deployment:** Ready for testnet deployment  
+**Deployment:** Live on Sepolia testnet  
 **Next Steps:** Security audit, then mainnet launch
 
 ---
 
-## What's New in v2
-
-### **Signature-Based Verification**
-Every seal mint includes cryptographic proof that Covenant verified the user. Prevents unauthorized minting even if owner wallet is compromised.
-
-### **Time-Locked Burn System**
-90-day delay between burn request and execution. Gives protocols warning to settle obligations before user can delete their seal.
-
-### **Zero On-Chain PII**
-Removed identity hash from contract. Only verification status lives on-chain - all personal data encrypted off-chain.
-
-### **Reentrancy Protection**
-All state-changing functions secured with OpenZeppelin's ReentrancyGuard.
-
-### **Ownership Verification**
-Helper function prevents spoofing attacks where users claim someone else's seal.
-
----
-
 ## Architecture
+
+### Stack
+| Layer | Technology | Platform |
+|-------|-----------|----------|
+| Smart Contract | Solidity / Hardhat | Sepolia Testnet |
+| Backend API | Node.js / Express / ethers.js | Railway |
+| Frontend | React / Vite / Tailwind CSS | Vercel |
+| Database | PostgreSQL | Supabase |
+
+### System Flow
+```
+User → Get Verified Form → Backend API → Admin Review
+                                              ↓
+                                    Signature Generated
+                                              ↓
+                                    Seal Minted On-Chain
+                                              ↓
+                               Anyone Can Verify via Lookup
+```
 
 ### On-Chain (Public)
 - Soulbound Seals (non-transferable NFTs)
@@ -63,17 +81,182 @@ Helper function prevents spoofing attacks where users claim someone else's seal.
 
 ## Verification Tiers
 
-| Tier | Requirements | Use Cases |
-|------|--------------|-----------|
-| **I** | Email | Basic access, airdrops, community membership |
-| **II** | + Phone OR Social Account OR Wallet History (6mo+) | Governance voting, token sales |
-| **III** | + Government ID | DeFi borrowing, marketplace trading |
-| **IV** | + Full KYC + Address Verification | High-value loans, premium features |
-| **V** | + Biometrics + Background Check | Institutional access, regulated services |
+| Tier | Name | Requirements | Use Cases |
+|------|------|--------------|-----------|
+| **I** | Bronze | Email | Basic access, airdrops, community membership |
+| **II** | Silver | + Phone or Social Account | Governance voting, token sales |
+| **III** | Gold | + Government ID | DeFi borrowing, marketplace trading |
+| **IV** | Platinum | + Full KYC + Address Verification | High-value loans, premium features |
+| **V** | Diamond | + Biometrics + Background Check | Institutional access, regulated services |
 
 ---
 
-## Quick Start
+## What's New in v2
+
+### Signature-Based Verification
+Every seal mint includes cryptographic proof that Covenant verified the user. Prevents unauthorized minting even if owner wallet is compromised.
+
+### Time-Locked Burn System
+90-day delay between burn request and execution. Gives protocols warning to settle obligations before user can delete their seal.
+
+### Zero On-Chain PII
+Removed identity hash from contract. Only verification status lives on-chain - all personal data encrypted off-chain.
+
+### Reentrancy Protection
+All state-changing functions secured with OpenZeppelin's ReentrancyGuard.
+
+### Full Backend & Frontend
+Complete KYC submission workflow with admin panel for approvals and on-chain minting.
+
+---
+
+## Project Structure
+
+```
+Project_Covenant/
+├── contracts/
+│   └── IdentityPact.sol              # v2 contract (signature-based, time-locked burns)
+├── scripts/
+│   ├── deploy.js                     # Deployment script
+│   └── mintTestSeals.js              # Test seal minting script
+├── test/
+│   └── IdentityPact.test.js          # 41 comprehensive tests
+├── covenant-backend/                 # Backend API
+│   ├── src/
+│   │   ├── server.js                 # Express server + CORS config
+│   │   ├── routes/
+│   │   │   ├── kyc.js                # KYC submission endpoints
+│   │   │   └── admin.js              # Admin approval + minting endpoints
+│   │   └── services/
+│   │       ├── signature.js          # Cryptographic signature generation
+│   │       └── blockchain.js         # On-chain minting interactions
+│   └── package.json
+├── covenant-lookup/                  # Frontend Application
+│   ├── src/
+│   │   ├── App.jsx                   # Main app with routing
+│   │   ├── pages/
+│   │   │   ├── GetVerified.jsx       # KYC submission form
+│   │   │   └── Admin.jsx             # Admin panel (password protected)
+│   │   ├── components/
+│   │   │   ├── SearchBar.jsx         # Address lookup input
+│   │   │   └── ResultDisplay.jsx     # Seal result visualization
+│   │   └── utils/
+│   │       ├── api.js                # Backend API helper functions
+│   │       ├── contract.js           # Contract ABI + config
+│   │       └── constants.js          # Tier definitions
+│   └── package.json
+├── docs/
+│   ├── ROADMAP.md
+│   ├── CHANGELOG.md
+│   ├── V2_SUMMARY.md
+│   └── SESSION_SUMMARY.md           # Full technical handoff document
+├── hardhat.config.js
+├── package.json
+└── README.md
+```
+
+---
+
+## Local Development
+
+### Prerequisites
+- Node.js v18+
+- Git
+
+### Smart Contract
+```bash
+# Install dependencies
+npm install
+
+# Run tests
+npx hardhat test
+
+# Run with coverage
+npx hardhat coverage
+
+# Deploy to Sepolia
+npx hardhat run scripts/deploy.js --network sepolia
+
+# Open Hardhat console
+npx hardhat console --network sepolia
+```
+
+### Backend API
+```bash
+cd covenant-backend
+
+# Install dependencies
+npm install
+
+# Create .env file (see Environment Variables below)
+cp .env.example .env
+
+# Start development server (localhost:3001)
+npm run dev
+```
+
+### Frontend
+```bash
+cd covenant-lookup
+
+# Install dependencies
+npm install
+
+# Create .env.local file
+echo "VITE_API_URL=http://localhost:3001" > .env.local
+
+# Start development server (localhost:5173)
+npm run dev
+```
+
+---
+
+## Environment Variables
+
+### Backend (`covenant-backend/.env`)
+```
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_KEY=your_supabase_service_key
+SEPOLIA_RPC_URL=your_alchemy_or_infura_url
+CONTRACT_ADDRESS=0x60859A972A9996cf24448323c7b1E49825f092a4
+OWNER_PRIVATE_KEY=your_deployer_wallet_private_key
+PORT=3001
+NODE_ENV=development
+```
+
+### Frontend (`covenant-lookup/.env.local`)
+```
+VITE_API_URL=http://localhost:3001
+```
+
+---
+
+## API Reference
+
+### KYC Endpoints
+```
+POST /api/kyc/submit         # Submit KYC application
+GET  /api/kyc/status/:address  # Check verification status
+```
+
+### Admin Endpoints (Protected)
+```
+GET  /api/admin/pending        # List pending submissions
+POST /api/admin/approve/:id    # Approve and generate signature
+POST /api/admin/mint           # Mint seal on-chain
+POST /api/admin/revoke         # Revoke an existing seal
+GET  /api/admin/ready-to-mint  # List approved, unminted submissions
+```
+
+### Health Check
+```
+GET  /health                   # Server status
+```
+
+---
+
+## Smart Contract Integration
 
 ### Check Verification Status
 ```javascript
@@ -84,7 +267,6 @@ console.log(`Verified: ${verified}`);
 console.log(`Tier: ${tier}`); // 0=NONE, 1-5=I-V
 console.log(`Revoked: ${revoked}`);
 console.log(`Burn Pending: ${burnPending}`);
-console.log(`Executable At: ${burnTime}`);
 ```
 
 ### Solidity Integration
@@ -99,10 +281,6 @@ interface IIdentityPact {
             bool burnPending,
             uint256 burnExecutableAt
         );
-    
-    function verifyOwnership(address user, uint256 sealId)
-        external view
-        returns (bool);
 }
 
 contract YourProtocol {
@@ -137,22 +315,9 @@ await pact.mint(userAddress, tier, signature);
 
 ### Time-Locked Burns
 ```javascript
-// User requests burn
-await pact.requestBurn(sealId);
-// 90-day countdown starts
-
-// User can cancel
-await pact.cancelBurnRequest(sealId);
-
-// After 90 days, user can execute
-await pact.executeBurn(sealId);
-```
-
-### Ownership Verification
-```javascript
-// Backend receives user claim: { address: "0xUser", sealId: 5 }
-const isValid = await pact.verifyOwnership(userAddress, sealId);
-// Prevents spoofing attacks
+await pact.requestBurn(sealId);    // 90-day countdown starts
+await pact.cancelBurnRequest(sealId); // User can cancel
+await pact.executeBurn(sealId);    // Execute after 90 days
 ```
 
 ---
@@ -165,78 +330,41 @@ const isValid = await pact.verifyOwnership(userAddress, sealId);
 - ✅ Revocation status (public safety info)
 - ✅ Burn request status (protocol warning)
 - ✅ Covenant signatures (cryptographic proof)
-- ✅ Timestamps (metadata)
 
 ### What's Off-Chain
 - ❌ Email addresses
-- ❌ Phone numbers
+- ❌ Phone numbers  
 - ❌ Legal names
-- ❌ Physical addresses
 - ❌ Government IDs
-- ❌ Biometric data
-- ❌ ANY personally identifiable information
+- ❌ Any personally identifiable information
 
 **Zero PII exposure on blockchain.**
 
 ---
 
-## Development Status
+## Roadmap
 
-### v2.0 - Production Hardening ✅ (COMPLETE)
-**Status:** Ready for audit  
-**Test Coverage:** 41 tests, 100% statement coverage
+### v2.0 - MVP Live ✅ (COMPLETE)
+- ✅ Signature-based verification
+- ✅ Time-locked burn system
+- ✅ Backend API with KYC workflow
+- ✅ Admin panel with approval + minting
+- ✅ Public lookup frontend
+- ✅ Deployed to Sepolia testnet
 
-**Features:**
-- ✅ Signature-based verification (cryptographic proof)
-- ✅ Time-locked burn system (90-day delay)
-- ✅ Identity hash removal (privacy upgrade)
-- ✅ Reentrancy protection
-- ✅ Ownership verification helper
-- ✅ Complete rebrand (Pact/Seal terminology)
-
-### v2.1 - Security Audit & Deployment 🔨 (NEXT)
-**Timeline:** Q2 2026  
-**Focus:** Production readiness
-
-**Tasks:**
+### v2.1 - Security Audit & Hardening 🔨 (NEXT - Q2 2026)
 - [ ] External security audit (Trail of Bits / OpenZeppelin)
-- [ ] Deploy to testnet (Sepolia)
-- [ ] Multi-chain deployment (Ethereum, Polygon, Arbitrum, Base)
-- [ ] Integration documentation
-- [ ] SDK development
+- [ ] User dashboard (check own KYC status)
+- [ ] Email notifications
+- [ ] Wallet-based admin authentication
+- [ ] Rate limiting + API hardening
+- [ ] Multi-chain deployment (Polygon, Arbitrum, Base)
 
-### v3.0 - Decentralization 🔮 (PLANNED)
-**Timeline:** 2027  
-**Focus:** Remove single points of failure
-
-**Features:**
+### v3.0 - Decentralization 🔮 (2027)
 - Multi-sig verification (3-of-5 verifiers)
 - DAO governance for revocations
 - Decentralized KYC verification network
 - Cross-chain messaging (LayerZero/Chainlink)
-
----
-
-## Files
-```
-Project_Covenant/
-├── contracts/
-│   └── IdentityPact.sol         # v2 contract (signature-based, time-locked burns)
-├── scripts/
-│   └── deploy.js                # Deployment script
-├── test/
-│   └── IdentityPact.test.js     # 41 comprehensive tests
-├── docs/
-│   ├── ROADMAP.md               # Development roadmap
-│   ├── CHANGELOG.md             # Version history
-│   ├── V2_SUMMARY.md            # v2 changes summary
-│   └── INTEGRATION.md           # Protocol integration guide
-├── coverage/                    # Test coverage reports
-├── deployments.json             # Deployed contract addresses
-├── hardhat.config.js
-├── package.json
-└── README.md
-```
 
 ---
 
@@ -259,28 +387,6 @@ npx hardhat coverage
 - Branches: 82%
 
 ---
-## Frontend Lookup Tool
-
-A web-based lookup tool for querying Covenant verification seals.
-
-**Location:** `covenant-lookup/`
-
-**Features:**
-- Search any Ethereum address
-- Display verification tier and status
-- Real-time blockchain data
-- Links to Etherscan for verification
-
-**Quick Start:**
-```bash
-cd covenant-lookup
-npm install
-npm run dev
-```
-
-**Live Demo:** (Coming soon)
-
-See `covenant-lookup/README.md` for full documentation.
 
 ## Contact
 
@@ -299,15 +405,15 @@ MIT License - see [LICENSE](LICENSE) for details
 
 ⚠️ **Not Audited - Testnet Only**
 
-v2 is ready for security audit but not yet audited.
+This codebase has not been professionally audited.
 
-- Do NOT use with real personal data yet
-- Do NOT deploy to mainnet without professional audit
+- Do NOT use with real personal data
+- Do NOT deploy to mainnet without a professional audit
 - Do NOT use for production applications
 
 Security audit scheduled for Q2 2026 before mainnet deployment.
 
 ---
 
-*Last Updated: February 2026*
-*Version: 2.0*
+*Last Updated: February 2026*  
+*Version: 2.0 - MVP Live*
