@@ -110,7 +110,64 @@ router.post('/approve/:id', async (req, res) => {
     });
   }
 });
+/**
+ * Reject a KYC submission
+ * POST /api/admin/reject/:id
+ */
+router.post('/reject/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
 
+    if (!reason) {
+      return res.status(400).json({ error: 'Rejection reason is required' });
+    }
+
+    // Get submission
+    const { data: submission, error: fetchError } = await supabase
+      .from('kyc_submissions')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (!submission) {
+      return res.status(404).json({ error: 'Submission not found' });
+    }
+
+    if (submission.status !== 'pending') {
+      return res.status(400).json({ error: 'Can only reject pending submissions' });
+    }
+
+    // Update status to rejected
+    const { error: updateError } = await supabase
+      .from('kyc_submissions')
+      .update({
+        status: 'rejected',
+        rejection_reason: reason,
+        reviewed_at: new Date().toISOString()
+      })
+      .eq('id', id);
+
+    if (updateError) throw updateError;
+
+    console.log(`❌ Rejected KYC for ${submission.wallet_address}: ${reason}`);
+
+    res.json({
+      success: true,
+      submissionId: id,
+      walletAddress: submission.wallet_address,
+      reason,
+      message: 'Submission rejected'
+    });
+
+  } catch (error) {
+    console.error('Rejection failed:', error);
+    res.status(500).json({
+      error: 'Failed to reject submission',
+      details: error.message
+    });
+  }
+});
 /**
  * Mint seal on-chain
  * POST /api/admin/mint
