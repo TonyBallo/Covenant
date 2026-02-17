@@ -5,8 +5,82 @@ import { SearchBar } from './components/SearchBar';
 import { ResultDisplay } from './components/ResultDisplay';
 import { TierSelect } from './pages/TierSelect';
 import { ApplyForm } from './pages/ApplyForm';
+import { StatusPage } from './pages/StatusPage';
 import { CONTRACT_ADDRESS, CONTRACT_ABI, RPC_URL, ETHERSCAN_BASE } from './utils/contract';
 import { Admin } from './pages/Admin';
+
+// ============ Shared Navbar ============
+
+function Navbar({ walletAddress, walletConnected, onConnect, onDisconnect }) {
+  return (
+    <header className="bg-white shadow-sm border-b sticky top-0 z-50 backdrop-blur-sm bg-white/90">
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-covenant-purple to-purple-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-xl">C</span>
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-covenant-purple to-purple-600 bg-clip-text text-transparent">
+                Covenant Protocol
+              </h1>
+              <p className="text-gray-600 mt-1 text-sm">Web3 Identity Verification</p>
+            </div>
+          </Link>
+          <div className="hidden md:flex items-center gap-3">
+            <Link
+              to="/admin"
+              className="px-4 py-2 text-covenant-purple hover:text-purple-700 font-semibold transition"
+            >
+              Admin
+            </Link>
+            {walletConnected && (
+              <Link
+                to="/status"
+                className="px-4 py-2 text-covenant-purple hover:text-purple-700 font-semibold transition"
+              >
+                My Status
+              </Link>
+            )}
+            <Link
+              to="/get-verified"
+              className="px-4 py-2 bg-covenant-purple text-white rounded-lg font-semibold hover:bg-purple-700 transition"
+            >
+              Get Verified
+            </Link>
+            {!walletConnected ? (
+              <button
+                onClick={onConnect}
+                className="px-4 py-2 border-2 border-covenant-purple text-covenant-purple rounded-lg font-semibold hover:bg-purple-50 transition"
+              >
+                Connect Wallet
+              </button>
+            ) : (
+              <div className="flex items-center gap-2 bg-green-50 border border-green-300 rounded-lg px-3 py-2">
+                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                <span className="text-sm font-mono text-gray-700">
+                  {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                </span>
+                <button
+                  onClick={onDisconnect}
+                  className="text-xs text-gray-400 hover:text-red-500 transition ml-1"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200">
+              <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
+              Sepolia Testnet
+            </span>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+// ============ Home Page ============
 
 function HomePage() {
   const [result, setResult] = useState(null);
@@ -25,19 +99,19 @@ function HomePage() {
 
       const provider = new ethers.JsonRpcProvider(RPC_URL);
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-      
-      const [verified, tier, revoked, burnPending, burnExecutableAt] = 
+
+      const [verified, tier, revoked, burnPending, burnExecutableAt] =
         await contract.getVerificationStatus(address);
-      
+
       const sealId = await contract.addressToSealId(address);
-      
+
       let mintedAt = null;
       let revocationReason = '';
 
       if (verified) {
-        const sealData = await contract.sealData(sealId);
-        mintedAt = Number(sealData.mintedAt);
-        revocationReason = sealData.reason || '';
+        const seal = await contract.sealData(sealId);
+        mintedAt = Number(seal.mintedAt);
+        revocationReason = seal.reason || '';
       }
 
       setResult({
@@ -70,44 +144,6 @@ function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
-      <header className="bg-white shadow-sm border-b sticky top-0 z-50 backdrop-blur-sm bg-white/90">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-covenant-purple to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">C</span>
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-covenant-purple to-purple-600 bg-clip-text text-transparent">
-                  Covenant Protocol
-                </h1>
-                <p className="text-gray-600 mt-1 text-sm">
-                  Web3 Identity Verification Lookup
-                </p>
-              </div>
-            </Link>
-            <div className="hidden md:flex items-center gap-3">
-              <Link
-                to="/admin"
-                className="px-4 py-2 text-covenant-purple hover:text-purple-700 font-semibold transition"
-              >
-                Admin
-              </Link>
-              <Link
-                to="/get-verified"
-                className="px-4 py-2 bg-covenant-purple text-white rounded-lg font-semibold hover:bg-purple-700 transition"
-              >
-                Get Verified
-              </Link>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200">
-                <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-                Sepolia Testnet
-              </span>
-            </div>
-          </div>
-        </div>
-      </header>
-
       <main className="max-w-4xl mx-auto px-4 py-12">
         <div className="text-center mb-12">
           <h2 className="text-5xl font-bold text-gray-900 mb-4">
@@ -204,7 +240,7 @@ function HomePage() {
             </div>
             <div className="flex gap-6">
               <a href={`${ETHERSCAN_BASE}/address/${CONTRACT_ADDRESS}`} target="_blank" rel="noopener noreferrer" className="text-covenant-purple hover:text-purple-700 text-sm font-semibold">View Contract</a>
-              <a href="https://github.com/yourusername/covenant" target="_blank" rel="noopener noreferrer" className="text-covenant-purple hover:text-purple-700 text-sm font-semibold">GitHub</a>
+              <a href="https://github.com/TonyBallo/Covenant" target="_blank" rel="noopener noreferrer" className="text-covenant-purple hover:text-purple-700 text-sm font-semibold">GitHub</a>
             </div>
           </div>
         </div>
@@ -213,13 +249,45 @@ function HomePage() {
   );
 }
 
+// ============ App ============
+
 function App() {
+  const [walletAddress, setWalletAddress] = useState('');
+  const [walletConnected, setWalletConnected] = useState(false);
+
+  const handleConnect = async () => {
+    try {
+      if (!window.ethereum) {
+        alert('No wallet detected. Please install MetaMask.');
+        return;
+      }
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const accounts = await provider.send('eth_requestAccounts', []);
+      setWalletAddress(accounts[0]);
+      setWalletConnected(true);
+    } catch (err) {
+      console.error('Wallet connection failed:', err);
+    }
+  };
+
+  const handleDisconnect = () => {
+    setWalletAddress('');
+    setWalletConnected(false);
+  };
+
   return (
     <BrowserRouter>
+      <Navbar
+        walletAddress={walletAddress}
+        walletConnected={walletConnected}
+        onConnect={handleConnect}
+        onDisconnect={handleDisconnect}
+      />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/get-verified" element={<TierSelect />} />
-        <Route path="/get-verified/apply" element={<ApplyForm />} />
+        <Route path="/get-verified/apply" element={<ApplyForm walletAddress={walletAddress} walletConnected={walletConnected} />} />
+        <Route path="/status" element={<StatusPage walletAddress={walletAddress} />} />
         <Route path="/admin" element={<Admin />} />
       </Routes>
     </BrowserRouter>

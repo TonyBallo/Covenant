@@ -1,11 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ethers } from 'ethers';
 import { submitKYC } from '../utils/api';
 
-export function ApplyForm() {
+export function ApplyForm({ walletAddress, walletConnected }) {
   const [formData, setFormData] = useState({
-    walletAddress: '',
+    walletAddress: walletAddress || '',
     fullName: '',
     email: '',
     tierRequested: 1  // Hardcoded - user never sees this
@@ -13,29 +12,11 @@ export function ApplyForm() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
-  const [walletConnected, setWalletConnected] = useState(false);
-  const [connecting, setConnecting] = useState(false);
 
-  const handleConnectWallet = async () => {
-    setConnecting(true);
-    setError(null);
-
-    try {
-      if (!window.ethereum) {
-        throw new Error('No wallet detected. Please install MetaMask.');
-      }
-
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const accounts = await provider.send('eth_requestAccounts', []);
-
-      setFormData({ ...formData, walletAddress: accounts[0] });
-      setWalletConnected(true);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setConnecting(false);
-    }
-  };
+  // Keep wallet address in sync if prop changes
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, walletAddress: walletAddress || '' }));
+  }, [walletAddress]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -71,12 +52,20 @@ export function ApplyForm() {
             Your Tier I application has been received and is pending review.
             You'll be notified once your verification is approved.
           </p>
-          <Link
-            to="/"
-            className="inline-block bg-covenant-purple text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition"
-          >
-            Return Home
-          </Link>
+          <div className="flex flex-col gap-3">
+            <Link
+              to="/status"
+              className="inline-block bg-covenant-purple text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition"
+            >
+              Check Application Status →
+            </Link>
+            <Link
+              to="/"
+              className="inline-block text-covenant-purple px-6 py-3 rounded-lg font-semibold hover:underline transition"
+            >
+              Return Home
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -104,42 +93,27 @@ export function ApplyForm() {
         <div className="bg-white rounded-lg shadow-lg p-8">
           <form onSubmit={handleSubmit}>
 
-            {/* Wallet Connection */}
+            {/* Wallet - pre-filled from navbar connection */}
             <div className="mb-6">
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Wallet Address *
               </label>
-
-              {!walletConnected ? (
-                <button
-                  type="button"
-                  onClick={handleConnectWallet}
-                  disabled={connecting}
-                  className="w-full px-4 py-3 border-2 border-dashed border-covenant-purple text-covenant-purple font-semibold rounded-lg hover:bg-purple-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                >
-                  {connecting ? 'Connecting...' : '🔗 Connect Wallet'}
-                </button>
-              ) : (
+              {walletConnected ? (
                 <div className="w-full px-4 py-3 bg-green-50 border border-green-300 rounded-lg flex items-center justify-between">
                   <div>
                     <p className="text-xs text-green-600 font-semibold">Connected</p>
                     <p className="text-sm font-mono text-gray-800">
-                      {formData.walletAddress.slice(0, 6)}...{formData.walletAddress.slice(-4)}
+                      {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setWalletConnected(false);
-                      setFormData({ ...formData, walletAddress: '' });
-                    }}
-                    className="text-xs text-gray-500 hover:text-red-500 transition"
-                  >
-                    Disconnect
-                  </button>
+                </div>
+              ) : (
+                <div className="w-full px-4 py-3 bg-yellow-50 border border-yellow-300 rounded-lg">
+                  <p className="text-sm text-yellow-800 font-semibold">
+                    ⚠️ Please connect your wallet using the button in the top right
+                  </p>
                 </div>
               )}
-
               <p className="text-xs text-gray-500 mt-1">
                 The Ethereum address that will receive the verification seal
               </p>
