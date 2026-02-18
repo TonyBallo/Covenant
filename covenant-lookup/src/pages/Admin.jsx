@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getPendingSubmissions, approveKYC, mintSeal, getReadyToMint, rejectKYC } from '../utils/api';
+import { getPendingSubmissions, approveKYC, mintSeal, getReadyToMint, rejectKYC, attestPolygon, checkPolygonStatus } from '../utils/api';
 import { TIERS } from '../utils/constants';
 
 export function Admin() {
@@ -14,6 +14,8 @@ export function Admin() {
   const [processing, setProcessing] = useState(null);
   const [rejectionReasons, setRejectionReasons] = useState({});
   const [rejecting, setRejecting] = useState(null);
+  const [polygonStatuses, setPolygonStatuses] = useState({});
+  const [attesting, setAttesting] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
@@ -53,6 +55,18 @@ export function Admin() {
       ]);
       setPending(pendingData.submissions || []);
       setReadyToMint(mintData.submissions || []);
+      
+      // Load Polygon attestation statuses
+      const statuses = {};
+      for (const submission of mintData.submissions || []) {
+        try {
+          const status = await checkPolygonStatus(submission.wallet_address);
+          statuses[submission.wallet_address] = status;
+        } catch {
+          statuses[submission.wallet_address] = { hasAttestation: false };
+        }
+      }
+      setPolygonStatuses(statuses);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -118,6 +132,22 @@ export function Admin() {
       setError(err.message);
     } finally {
       setRejecting(null);
+    }
+  };
+
+  const handleAttest = async (submission) => {
+    setAttesting(submission.id);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const result = await attestPolygon(submission.id);
+      setSuccess(`Attested on Polygon! Tx: ${result.polygonTxHash.slice(0, 10)}...`);
+      await fetchData();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setAttesting(null);
     }
   };
 
@@ -324,35 +354,57 @@ export function Admin() {
                 <p className="text-sm text-gray-500 mt-2">Approve pending submissions first</p>
               </div>
             ) : (
-              readyToMint.map((submission) => (
-                <div key={submission.id} className="bg-white rounded-lg shadow-md p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-900">{submission.full_name}</h3>
-                      <p className="text-sm text-gray-600">{submission.email}</p>
-                      <p className="text-xs text-gray-500 font-mono mt-1">{submission.wallet_address}</p>
+              readyToMint.map((submission) => {
+                const hasPolygonAttestation = polygonStatuses[submission.wallet_address]?.hasAttestation || false;
+                
+                return (
+                  <div key={submission.id} className="bg-white rounded-lg shadow-md p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-900">{submission.full_name}</h3>
+                        <p className="text-sm text-gray-600">{submission.email}</p>
+                        <p className="text-xs text-gray-500 font-mono mt-1">{submission.wallet_address}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          TIERS[submission.tier_requested].color === 'yellow'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : `bg-${TIERS[submission.tier_requested].color}-100 text-${TIERS[submission.tier_requested].color}-800`
+                        }`}>
+                          Tier {submission.tier_requested} - {TIERS[submission.tier_requested].name}
+                        </span>
+                        <p className="text-xs text-green-600 mt-2 font-semibold">✓ Approved</p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        TIERS[submission.tier_requested].color === 'yellow'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : `bg-${TIERS[submission.tier_requested].color}-100 text-${TIERS[submission.tier_requested].color}-800`
-                      }`}>
-                        Tier {submission.tier_requested} - {TIERS[submission.tier_requested].name}
-                      </span>
-                      <p className="text-xs text-green-600 mt-2 font-semibold">✓ Approved</p>
+
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={() => handleMint(submission)}
+                        disabled={processing === submission.id || attesting === submission.id}
+                        className="w-full bg-covenant-purple hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
+                      >
+                        {processing === submission.id ? 'Minting on Sepolia...' : '⛓️ Mint Seal on Blockchain'}
+                      </button>
+                      
+                      {!hasPolygonAttestation && (
+                        <button
+                          onClick={() => handleAttest(submission)}
+                          disabled={processing === submission.id || attesting === submission.id}
+                          className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
+                        >
+                          {attesting === submission.id ? 'Attesting on Polygon...' : '🟣 Attest to Polygon'}
+                        </button>
+                      )}
+                      
+                      {hasPolygonAttestation && (
+                        <div className="w-full bg-green-50 border border-green-300 text-green-800 font-semibold py-3 px-4 rounded-lg text-center">
+                          ✅ Attested on Polygon
+                        </div>
+                      )}
                     </div>
                   </div>
-
-                  <button
-                    onClick={() => handleMint(submission)}
-                    disabled={processing === submission.id}
-                    className="w-full bg-covenant-purple hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
-                  >
-                    {processing === submission.id ? 'Minting on Sepolia...' : '⛓️ Mint Seal on Blockchain'}
-                  </button>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         )}

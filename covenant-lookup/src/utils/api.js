@@ -98,6 +98,36 @@ export async function rejectKYC(submissionId, reason) {
 }
 
 /**
+ * Attest seal on Polygon (admin only)
+ */
+export async function attestPolygon(submissionId) {
+  const response = await fetch(`${API_BASE_URL}/api/admin/attest/${submissionId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to attest on Polygon');
+  }
+
+  return response.json();
+}
+
+/**
+ * Check Polygon attestation status (admin only)
+ */
+export async function checkPolygonStatus(address) {
+  const response = await fetch(`${API_BASE_URL}/api/admin/polygon-status/${address}`);
+  
+  if (!response.ok) {
+    throw new Error('Failed to check Polygon status');
+  }
+  
+  return response.json();
+}
+
+/**
  * Get ready-to-mint submissions (admin only)
  */
 export async function getReadyToMint() {

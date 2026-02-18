@@ -2,6 +2,7 @@ import express from 'express';
 import { supabase } from '../server.js';
 import { createMintSignature } from '../services/signature.js';
 import { mintSeal, getSealId, revokeSeal } from '../services/blockchain.js';
+import { attestOnPolygon, getPolygonAttestation } from '../services/polygon.js';
 
 const router = express.Router();
 
@@ -241,6 +242,84 @@ router.post('/mint', async (req, res) => {
 });
 
 /**
+ * Attest seal on Polygon
+ * POST /api/admin/attest/:id
+ */
+router.post('/attest/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Get submission
+    const { data: submission, error: fetchError } = await supabase
+      .from('kyc_submissions')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    if (!submission) {
+      return res.status(404).json({ error: 'Submission not found' });
+    }
+
+    if (submission.status !== 'approved') {
+      return res.status(400).json({ 
+        error: 'Can only attest approved submissions' 
+      });
+    }
+
+    if (!submission.signature) {
+      return res.status(400).json({ 
+        error: 'No signature found - approve first' 
+      });
+    }
+
+    // Get seal ID from Ethereum
+    const sealId = await getSealId(submission.wallet_address);
+    
+    if (sealId === 0) {
+      return res.status(400).json({ 
+        error: 'Seal not minted on Ethereum yet' 
+      });
+    }
+
+    // Check if already attested
+    const existingAttestation = await getPolygonAttestation(submission.wallet_address);
+    if (existingAttestation.hasAttestation) {
+      return res.status(400).json({ 
+        error: 'Already attested on Polygon',
+        polygonTier: existingAttestation.tier
+      });
+    }
+
+    // Attest on Polygon
+    const result = await attestOnPolygon(
+      submission.wallet_address,
+      submission.tier_requested,
+      sealId,
+      submission.signature
+    );
+
+    console.log(`✅ Attested seal #${sealId} on Polygon for ${submission.wallet_address}`);
+
+    res.json({
+      success: true,
+      sealId,
+      polygonTxHash: result.transactionHash,
+      credentialHash: result.credentialHash,
+      message: 'Seal attested on Polygon successfully!'
+    });
+
+  } catch (error) {
+    console.error('Attestation failed:', error);
+    res.status(500).json({ 
+      error: 'Failed to attest on Polygon',
+      details: error.message 
+    });
+  }
+});
+
+/**
  * Revoke a seal
  * POST /api/admin/revoke
  */
@@ -271,6 +350,30 @@ router.post('/revoke', async (req, res) => {
     console.error('Revocation failed:', error);
     res.status(500).json({ 
       error: 'Failed to revoke seal',
+      details: error.message 
+    });
+  }
+});
+
+/**
+ * Check Polygon attestation status
+ * GET /api/admin/polygon-status/:address
+ */
+router.get('/polygon-status/:address', async (req, res) => {
+  try {
+    const { address } = req.params;
+    const attestation = await getPolygonAttestation(address);
+    
+    res.json({
+      hasAttestation: attestation.hasAttestation,
+      tier: attestation.tier,
+      expiresAt: attestation.expiresAt,
+      isRevoked: attestation.isRevoked
+    });
+  } catch (error) {
+    console.error('Failed to check Polygon status:', error);
+    res.status(500).json({ 
+      error: 'Failed to check Polygon attestation',
       details: error.message 
     });
   }
