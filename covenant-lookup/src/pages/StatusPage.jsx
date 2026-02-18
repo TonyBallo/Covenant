@@ -250,7 +250,7 @@ export function StatusPage({ walletAddress }) {
             <div className="px-8 pb-6 pt-4 border-t">
               <div className="flex flex-col gap-3">
                 <a
-                  href={`${ETHERSCAN_BASE}/token/${CONTRACT_ADDRESS}?a=${sealData.sealId}`}
+                  href={`${ETHERSCAN_BASE}/nft/${CONTRACT_ADDRESS}/${sealData.sealId}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full bg-covenant-purple hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2"
