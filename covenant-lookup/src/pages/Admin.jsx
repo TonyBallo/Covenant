@@ -62,7 +62,7 @@ export function Admin() {
         try {
           const status = await checkPolygonStatus(submission.wallet_address);
           statuses[submission.wallet_address] = status;
-        } catch {
+        } catch  {
           statuses[submission.wallet_address] = { hasAttestation: false };
         }
       }
@@ -356,6 +356,7 @@ export function Admin() {
             ) : (
               readyToMint.map((submission) => {
                 const hasPolygonAttestation = polygonStatuses[submission.wallet_address]?.hasAttestation || false;
+                const isMinted = submission.isMinted || false;
                 
                 return (
                   <div key={submission.id} className="bg-white rounded-lg shadow-md p-6">
@@ -380,10 +381,14 @@ export function Admin() {
                     <div className="flex flex-col gap-2">
                       <button
                         onClick={() => handleMint(submission)}
-                        disabled={processing === submission.id || attesting === submission.id}
-                        className="w-full bg-covenant-purple hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
+                        disabled={isMinted || processing === submission.id || attesting === submission.id}
+                        className={`w-full font-semibold py-3 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition ${
+                          isMinted 
+                            ? 'bg-green-50 border border-green-300 text-green-800'
+                            : 'bg-covenant-purple hover:bg-purple-700 text-white'
+                        }`}
                       >
-                        {processing === submission.id ? 'Minting on Sepolia...' : '⛓️ Mint Seal on Blockchain'}
+                        {isMinted ? '✅ Minted on Sepolia' : (processing === submission.id ? 'Minting on Sepolia...' : '⛓️ Mint Seal on Blockchain')}
                       </button>
                       
                       {!hasPolygonAttestation && (

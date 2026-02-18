@@ -403,14 +403,25 @@ router.get('/ready-to-mint', async (req, res) => {
         const sealId = await getSealId(submission.wallet_address);
         const polygonStatus = await getPolygonAttestation(submission.wallet_address);
         
+        const isMinted = sealId > 0;
+        const needsAttestation = !polygonStatus.hasAttestation;
+        
         // Include if not minted yet OR minted but not attested on Polygon
-        if (sealId === 0 || !polygonStatus.hasAttestation) {
-          readyToMint.push(submission);
+        if (!isMinted || needsAttestation) {
+          readyToMint.push({
+            ...submission,
+            isMinted,
+            sealId: isMinted ? sealId : null
+          });
         }
       } catch (checkError) {
         console.error(`Error checking ${submission.wallet_address}:`, checkError);
         // Include submission even if check fails - better to show it than hide it
-        readyToMint.push(submission);
+        readyToMint.push({
+          ...submission,
+          isMinted: false,
+          sealId: null
+        });
       }
     }
 
