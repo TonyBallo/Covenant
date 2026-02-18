@@ -54,6 +54,27 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Cleanup job - runs every hour to delete unverified submissions older than 1 hour
+setInterval(async () => {
+  try {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    
+    const { error } = await supabase
+      .from('kyc_submissions')
+      .delete()
+      .eq('email_verified', false)
+      .lt('submitted_at', oneHourAgo.toISOString());
+    
+    if (error) {
+      console.error('Cleanup job failed:', error);
+    } else {
+      console.log(`🧹 Cleanup: Removed unverified submissions older than 1 hour`);
+    }
+  } catch (err) {
+    console.error('Cleanup job error:', err);
+  }
+}, 60 * 60 * 1000); // Every hour
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Covenant Backend running on http://localhost:${PORT}`);
@@ -64,12 +85,14 @@ Available endpoints:
   GET  /health
   
   KYC Routes:
-  POST /api/kyc/submit
+  POST /api/kyc/submit (rate limited: 3/15min per IP)
+  GET  /api/kyc/verify/:token
   GET  /api/kyc/status/:address
   
   Admin Routes:
   GET  /api/admin/pending
   POST /api/admin/approve/:id
+  POST /api/admin/reject/:id
   POST /api/admin/mint
   POST /api/admin/revoke
   GET  /api/admin/ready-to-mint

@@ -1,15 +1,31 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
+import { Resend } from 'resend';
+import crypto from 'crypto';
 import { supabase } from '../server.js';
 import { createMintSignature } from '../services/signature.js';
 import { hasSeal } from '../services/blockchain.js';
 
 const router = express.Router();
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Frontend URL for magic link redirect
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://covenant-sigma.vercel.app';
+
+// Rate limiting for submissions
+const submitLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 3, // 3 requests per IP
+  message: { error: 'Too many applications from this IP, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 /**
  * Submit KYC application
  * POST /api/kyc/submit
  */
-router.post('/submit', async (req, res) => {
+router.post('/submit', submitLimiter, async (req, res) => {
   try {
     const { walletAddress, email, phone, fullName, tierRequested } = req.body;
 
@@ -28,7 +44,7 @@ router.post('/submit', async (req, res) => {
       });
     }
 
-    // Check if already submitted
+    // Check if already submitted (pending)
     const { data: existing } = await supabase
       .from('kyc_submissions')
       .select('*')
@@ -60,7 +76,11 @@ router.post('/submit', async (req, res) => {
       user = newUser;
     }
 
-    // Create KYC submission
+    // Generate verification token (random 32-byte hex)
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    // Create KYC submission (unverified)
     const { data: submission, error: submitError } = await supabase
       .from('kyc_submissions')
       .insert({
@@ -70,20 +90,50 @@ router.post('/submit', async (req, res) => {
         phone,
         full_name: fullName,
         tier_requested: tierRequested,
-        status: 'pending'
+        status: 'pending',
+        email_verified: false,
+        verification_token: verificationToken,
+        verification_expires_at: expiresAt.toISOString()
       })
       .select()
       .single();
 
     if (submitError) throw submitError;
 
-    console.log(`📝 KYC submitted for ${walletAddress}`);
+    // Send verification email
+    const magicLink = `${process.env.BACKEND_URL || 'https://covenant-production-4cf7.up.railway.app'}/api/kyc/verify/${verificationToken}`;
+    
+    try {
+      await resend.emails.send({
+        from: 'Covenant Protocol <onboarding@resend.dev>',
+        to: email,
+        subject: 'Verify your email - Covenant Protocol',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #7c3aed;">Verify Your Email</h2>
+            <p>Hi ${fullName},</p>
+            <p>Thanks for applying for Covenant verification! Click the button below to verify your email and complete your application:</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${magicLink}" style="background-color: #7c3aed; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                Verify Email
+              </a>
+            </div>
+            <p style="color: #666; font-size: 14px;">This link expires in 15 minutes.</p>
+            <p style="color: #666; font-size: 14px;">If you didn't request this, you can safely ignore this email.</p>
+          </div>
+        `
+      });
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      // Don't fail the request - submission is saved, user can try again
+    }
+
+    console.log(`📝 KYC submitted for ${walletAddress} - awaiting email verification`);
 
     res.json({
       success: true,
       submissionId: submission.id,
-      status: 'pending',
-      message: 'KYC submission received. Awaiting review.'
+      message: 'Application received. Please check your email to verify and complete your submission.'
     });
 
   } catch (error) {
@@ -92,6 +142,59 @@ router.post('/submit', async (req, res) => {
       error: 'Failed to submit KYC',
       details: error.message 
     });
+  }
+});
+
+/**
+ * Verify email via magic link
+ * GET /api/kyc/verify/:token
+ */
+router.get('/verify/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    // Find submission by token
+    const { data: submission, error: fetchError } = await supabase
+      .from('kyc_submissions')
+      .select('*')
+      .eq('verification_token', token)
+      .single();
+
+    if (fetchError || !submission) {
+      return res.redirect(`${FRONTEND_URL}/verify-failed?reason=invalid`);
+    }
+
+    // Check if already verified
+    if (submission.email_verified) {
+      return res.redirect(`${FRONTEND_URL}/verify-success?already=true`);
+    }
+
+    // Check if expired
+    const now = new Date();
+    const expiresAt = new Date(submission.verification_expires_at);
+    if (now > expiresAt) {
+      return res.redirect(`${FRONTEND_URL}/verify-failed?reason=expired`);
+    }
+
+    // Mark as verified
+    const { error: updateError } = await supabase
+      .from('kyc_submissions')
+      .update({ 
+        email_verified: true,
+        verification_token: null // Clear token after use
+      })
+      .eq('id', submission.id);
+
+    if (updateError) throw updateError;
+
+    console.log(`✅ Email verified for ${submission.wallet_address}`);
+
+    // Redirect to success page
+    res.redirect(`${FRONTEND_URL}/verify-success`);
+
+  } catch (error) {
+    console.error('Verification error:', error);
+    res.redirect(`${FRONTEND_URL}/verify-failed?reason=error`);
   }
 });
 
@@ -125,7 +228,9 @@ router.get('/status/:address', async (req, res) => {
       status: latest.status,
       tierRequested: latest.tier_requested,
       submittedAt: latest.submitted_at,
-      reviewedAt: latest.reviewed_at
+      reviewedAt: latest.reviewed_at,
+      rejectionReason: latest.rejection_reason,
+      emailVerified: latest.email_verified
     });
 
   } catch (error) {

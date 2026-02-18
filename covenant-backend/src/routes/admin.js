@@ -286,6 +286,7 @@ router.get('/ready-to-mint', async (req, res) => {
       .from('kyc_submissions')
       .select('*')
       .eq('status', 'approved')
+      .eq('email_verified', true)
       .order('reviewed_at', { ascending: true });
 
     if (approvedError) throw approvedError;
