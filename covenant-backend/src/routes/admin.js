@@ -395,19 +395,18 @@ router.get('/ready-to-mint', async (req, res) => {
 
     if (approvedError) throw approvedError;
 
-    // Get already minted seals
-    const { data: minted, error: mintedError } = await supabase
-      .from('seals')
-      .select('wallet_address');
-
-    if (mintedError) throw mintedError;
-
-    const mintedAddresses = new Set(minted.map(s => s.wallet_address));
-
-    // Filter out already minted
-    const readyToMint = approved.filter(
-      sub => !mintedAddresses.has(sub.wallet_address)
-    );
+    // Check each submission to see if it needs minting or attestation
+    const readyToMint = [];
+    
+    for (const submission of approved) {
+      const sealId = await getSealId(submission.wallet_address);
+      const polygonStatus = await getPolygonAttestation(submission.wallet_address);
+      
+      // Include if not minted yet OR minted but not attested on Polygon
+      if (sealId === 0 || !polygonStatus.hasAttestation) {
+        readyToMint.push(submission);
+      }
+    }
 
     res.json({
       count: readyToMint.length,
