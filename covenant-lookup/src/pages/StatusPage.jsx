@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ethers } from 'ethers';
 import { checkKYCStatus } from '../utils/api';
@@ -17,15 +17,10 @@ export function StatusPage({ walletAddress }) {
     if (!walletAddress) {
       navigate('/');
     }
-  }, [walletAddress]);
+  }, [walletAddress, navigate]);
 
   // Load status on mount
-  useEffect(() => {
-    if (!walletAddress) return;
-    loadStatus();
-  }, [walletAddress]);
-
-  const loadStatus = async () => {
+  const loadStatus = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -58,7 +53,12 @@ export function StatusPage({ walletAddress }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [walletAddress]);
+
+  useEffect(() => {
+    if (!walletAddress) return;
+    loadStatus();
+  }, [walletAddress, loadStatus]);
 
   const handleAddToWallet = async () => {
     if (!window.ethereum) {
