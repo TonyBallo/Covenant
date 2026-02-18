@@ -6,6 +6,8 @@ import { ResultDisplay } from './components/ResultDisplay';
 import { TierSelect } from './pages/TierSelect';
 import { ApplyForm } from './pages/ApplyForm';
 import { StatusPage } from './pages/StatusPage';
+import { VerifySuccess } from './pages/VerifySuccess';
+import { VerifyFailed } from './pages/VerifyFailed';
 import { CONTRACT_ADDRESS, CONTRACT_ABI, RPC_URL, ETHERSCAN_BASE } from './utils/contract';
 import { Admin } from './pages/Admin';
 
@@ -252,8 +254,12 @@ function HomePage() {
 // ============ App ============
 
 function App() {
-  const [walletAddress, setWalletAddress] = useState('');
-  const [walletConnected, setWalletConnected] = useState(false);
+  const [walletAddress, setWalletAddress] = useState(
+    sessionStorage.getItem('walletAddress') || ''
+  );
+  const [walletConnected, setWalletConnected] = useState(
+    sessionStorage.getItem('walletConnected') === 'true'
+  );
 
   const handleConnect = async () => {
     try {
@@ -265,6 +271,8 @@ function App() {
       const accounts = await provider.send('eth_requestAccounts', []);
       setWalletAddress(accounts[0]);
       setWalletConnected(true);
+      sessionStorage.setItem('walletAddress', accounts[0]);
+      sessionStorage.setItem('walletConnected', 'true');
     } catch (err) {
       console.error('Wallet connection failed:', err);
     }
@@ -273,6 +281,8 @@ function App() {
   const handleDisconnect = () => {
     setWalletAddress('');
     setWalletConnected(false);
+    sessionStorage.removeItem('walletAddress');
+    sessionStorage.removeItem('walletConnected');
   };
 
   return (
@@ -288,6 +298,8 @@ function App() {
         <Route path="/get-verified" element={<TierSelect />} />
         <Route path="/get-verified/apply" element={<ApplyForm walletAddress={walletAddress} walletConnected={walletConnected} />} />
         <Route path="/status" element={<StatusPage walletAddress={walletAddress} />} />
+        <Route path="/verify-success" element={<VerifySuccess />} />
+        <Route path="/verify-failed" element={<VerifyFailed />} />
         <Route path="/admin" element={<Admin />} />
       </Routes>
     </BrowserRouter>
