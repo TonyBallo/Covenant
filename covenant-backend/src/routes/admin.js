@@ -15,6 +15,7 @@ router.get('/pending', async (req, res) => {
       .from('kyc_submissions')
       .select('*')
       .eq('status', 'pending')
+      .eq('email_verified', true) 
       .order('submitted_at', { ascending: true });
 
     if (error) throw error;
