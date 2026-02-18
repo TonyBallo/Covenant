@@ -17,49 +17,71 @@ export function StatusPage({ walletAddress }) {
     if (!walletAddress) {
       navigate('/');
     }
-  }, [walletAddress, navigate]);
+  }, [walletAddress]);
 
   // Load status on mount
   useEffect(() => {
     if (!walletAddress) return;
-
-    const loadStatus = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        // Check application status from backend
-        const status = await checkKYCStatus(walletAddress);
-        setKycStatus(status);
-
-        // If minted, also fetch on-chain seal data
-        if (status.status === 'minted' || status.status === 'approved') {
-          const provider = new ethers.JsonRpcProvider(RPC_URL);
-          const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-          const [verified, tier, revoked, burnPending] = await contract.getVerificationStatus(walletAddress);
-          
-          if (verified) {
-            const sealId = await contract.addressToSealId(walletAddress);
-            const seal = await contract.sealData(sealId);
-            setSealData({
-              verified,
-              tier: Number(tier),
-              revoked,
-              burnPending,
-              sealId: Number(sealId),
-              mintedAt: Number(seal.mintedAt)
-            });
-          }
-        }
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadStatus();
   }, [walletAddress]);
+
+  const loadStatus = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Check application status from backend
+      const status = await checkKYCStatus(walletAddress);
+      setKycStatus(status);
+
+      // If minted, also fetch on-chain seal data
+      if (status.status === 'minted' || status.status === 'approved') {
+        const provider = new ethers.JsonRpcProvider(RPC_URL);
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+        const [verified, tier, revoked, burnPending] = await contract.getVerificationStatus(walletAddress);
+        
+        if (verified) {
+          const sealId = await contract.addressToSealId(walletAddress);
+          const seal = await contract.sealData(sealId);
+          setSealData({
+            verified,
+            tier: Number(tier),
+            revoked,
+            burnPending,
+            sealId: Number(sealId),
+            mintedAt: Number(seal.mintedAt)
+          });
+        }
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddToWallet = async () => {
+    if (!window.ethereum) {
+      alert('No wallet detected');
+      return;
+    }
+
+    try {
+      await window.ethereum.request({
+        method: 'wallet_watchAsset',
+        params: {
+          type: 'ERC721',
+          options: {
+            address: CONTRACT_ADDRESS,
+            tokenId: sealData.sealId.toString(),
+          },
+        },
+      });
+    } catch {
+      // Fail silently if wallet doesn't support it
+      console.log('Add to wallet not supported or user rejected');
+    }
+  };
 
   // Tier color helpers
   const tierTextClasses = {
@@ -249,16 +271,38 @@ export function StatusPage({ walletAddress }) {
             )}
 
             {/* Footer */}
-            <div className="px-8 pb-6 pt-2 border-t flex justify-between items-center">
-              <p className="text-xs text-gray-400">Stored on Ethereum • Sepolia Testnet</p>
-              <a
-                href={`${ETHERSCAN_BASE}/address/${walletAddress}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-covenant-purple hover:underline font-semibold"
-              >
-                View on Etherscan →
-              </a>
+            <div className="px-8 pb-6 pt-4 border-t">
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={handleAddToWallet}
+                  className="w-full bg-covenant-purple hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2"
+                >
+                  <span>📲</span>
+                  Add to Wallet
+                </button>
+                
+                <div className="flex justify-between items-center text-xs">
+                  <p className="text-gray-400">Stored on Ethereum • Sepolia Testnet</p>
+                  <a
+                    href={`${ETHERSCAN_BASE}/address/${walletAddress}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-covenant-purple hover:underline font-semibold"
+                  >
+                    View on Etherscan →
+                  </a>
+                </div>
+                
+                <div className="bg-gray-50 rounded p-3 text-center">
+                  <p className="text-xs text-gray-500 mb-1">Manual Import</p>
+                  <p className="text-xs font-mono text-gray-700">
+                    Contract: {CONTRACT_ADDRESS.slice(0, 10)}...{CONTRACT_ADDRESS.slice(-8)}
+                  </p>
+                  <p className="text-xs font-mono text-gray-700">
+                    Token ID: {sealData.sealId}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         )}
