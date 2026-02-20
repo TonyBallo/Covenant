@@ -206,9 +206,9 @@ function HomePage() {
               <div className="w-16 h-16 mx-auto mb-4 bg-purple-100 rounded-full flex items-center justify-center">
                 <span className="text-4xl">🔒</span>
               </div>
-              <h3 className="font-bold text-gray-900 mb-2">On-Chain</h3>
+              <h3 className="font-bold text-gray-900 mb-2">Private</h3>
               <p className="text-sm text-gray-600">
-                All verification data is stored immutably on Ethereum blockchain
+                All personal data is stored securely off-chain.
               </p>
             </div>
             <div className="bg-white rounded-lg shadow-md hover:shadow-xl p-6 text-center transition-all duration-300 transform hover:-translate-y-1">
