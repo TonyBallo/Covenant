@@ -153,7 +153,7 @@ function HomePage() {
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Enter any Ethereum address to view its Covenant verification seal.
-            All data is stored on-chain and publicly verifiable.
+            All personal data is stored securely off-chain. All verification data is stored on-chain in a transparent and immutable way. No trust required - anyone can verify authenticity. 
           </p>
         </div>
 
