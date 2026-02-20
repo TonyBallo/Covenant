@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ethers } from 'ethers';
-import { checkKYCStatus } from '../utils/api';
+import { checkKYCStatus, getCrossChainStatus } from '../utils/api';
 import { TIERS, formatDate } from '../utils/constants';
 import { CONTRACT_ADDRESS, CONTRACT_ABI, RPC_URL, ETHERSCAN_BASE } from '../utils/contract';
 
@@ -9,6 +9,7 @@ export function StatusPage({ walletAddress }) {
   const navigate = useNavigate();
   const [kycStatus, setKycStatus] = useState(null);
   const [sealData, setSealData] = useState(null);
+  const [chainStatus, setChainStatus] = useState({ ethereum: false, polygon: false });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -17,47 +18,57 @@ export function StatusPage({ walletAddress }) {
     if (!walletAddress) {
       navigate('/');
     }
-  }, [walletAddress, navigate]);
+  }, [walletAddress]);
 
   // Load status on mount
   useEffect(() => {
     if (!walletAddress) return;
-    const loadStatus = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        // Check application status from backend
-        const status = await checkKYCStatus(walletAddress);
-        setKycStatus(status);
-
-        // If minted, also fetch on-chain seal data
-        if (status.status === 'minted' || status.status === 'approved') {
-          const provider = new ethers.JsonRpcProvider(RPC_URL);
-          const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-          const [verified, tier, revoked, burnPending] = await contract.getVerificationStatus(walletAddress);
-          
-          if (verified) {
-            const sealId = await contract.addressToSealId(walletAddress);
-            const seal = await contract.sealData(sealId);
-            setSealData({
-              verified,
-              tier: Number(tier),
-              revoked,
-              burnPending,
-              sealId: Number(sealId),
-              mintedAt: Number(seal.mintedAt)
-            });
-          }
-        }
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
     loadStatus();
   }, [walletAddress]);
+
+  const loadStatus = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Check application status from backend
+      const status = await checkKYCStatus(walletAddress);
+      setKycStatus(status);
+
+      // If minted, also fetch on-chain seal data
+      if (status.status === 'minted' || status.status === 'approved') {
+        const provider = new ethers.JsonRpcProvider(RPC_URL);
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+        const [verified, tier, revoked, burnPending] = await contract.getVerificationStatus(walletAddress);
+        
+        if (verified) {
+          const sealId = await contract.addressToSealId(walletAddress);
+          const seal = await contract.sealData(sealId);
+          setSealData({
+            verified,
+            tier: Number(tier),
+            revoked,
+            burnPending,
+            sealId: Number(sealId),
+            mintedAt: Number(seal.mintedAt)
+          });
+          
+          // Load cross-chain status
+          try {
+            const chains = await getCrossChainStatus(walletAddress);
+            setChainStatus(chains);
+          } catch (err) {
+            console.error('Failed to load chain status:', err);
+            setChainStatus({ ethereum: true, polygon: false });
+          }
+        }
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Tier color helpers
   const tierTextClasses = {
@@ -175,8 +186,20 @@ export function StatusPage({ walletAddress }) {
                   </p>
                   <p className="text-white text-xl font-bold">Identity Seal</p>
                 </div>
-                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-xl">C</span>
+                <div className="flex items-center gap-3">
+                  {chainStatus.ethereum && (
+                    <span className="text-2xl" title="Verified on Ethereum">
+                      ⟠
+                    </span>
+                  )}
+                  {chainStatus.polygon && (
+                    <span className="text-2xl" title="Attested on Polygon">
+                      🟣
+                    </span>
+                  )}
+                  <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                    <span className="text-white font-bold text-xl">C</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -250,7 +273,7 @@ export function StatusPage({ walletAddress }) {
             <div className="px-8 pb-6 pt-4 border-t">
               <div className="flex flex-col gap-3">
                 <a
-                  href={`${ETHERSCAN_BASE}/nft/${CONTRACT_ADDRESS}/${sealData.sealId}`}
+                  href={`${ETHERSCAN_BASE}/token/${CONTRACT_ADDRESS}?a=${sealData.sealId}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full bg-covenant-purple hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2"
