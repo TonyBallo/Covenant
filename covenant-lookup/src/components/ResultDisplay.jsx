@@ -1,7 +1,19 @@
 import { TIERS, formatDate } from '../utils/constants';
 import { ETHERSCAN_BASE, CONTRACT_ADDRESS } from '../utils/contract';
+import { getCrossChainStatus } from '../utils/api';
+import { useState, useEffect } from 'react';
 
 export function ResultDisplay({ result }) {
+  const [chainStatus, setChainStatus] = useState({ ethereum: true, polygon: false });
+
+  // Load cross-chain status when result changes
+  useEffect(() => {
+    if (result.verified) {
+      getCrossChainStatus(result.address)
+        .then(status => setChainStatus(status))
+        .catch(err => console.error('Failed to load chain status:', err));
+    }
+  }, [result.address, result.verified]);
   // Not verified - show empty state
   if (!result.verified) {
     return (
@@ -50,13 +62,25 @@ export function ResultDisplay({ result }) {
           <h3 className="text-2xl font-bold text-gray-900">
             Verification Seal
           </h3>
-          <span className={`px-4 py-2 rounded-full text-sm font-semibold border ${
-            result.revoked 
-              ? 'bg-red-100 text-red-800 border-red-300' 
-              : 'bg-green-100 text-green-800 border-green-300'
-          }`}>
-            {result.revoked ? '🚫 Revoked' : '✅ Active'}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className={`px-4 py-2 rounded-full text-sm font-semibold border ${
+              result.revoked 
+                ? 'bg-red-100 text-red-800 border-red-300' 
+                : 'bg-green-100 text-green-800 border-green-300'
+            }`}>
+              {result.revoked ? '🚫 Revoked' : '✅ Active'}
+            </span>
+            {chainStatus.ethereum && (
+              <span className="text-2xl" title="Verified on Ethereum">
+                ⟠
+              </span>
+            )}
+            {chainStatus.polygon && (
+              <span className="text-2xl" title="Attested on Polygon">
+                🟣
+              </span>
+            )}
+          </div>
         </div>
       </div>
 

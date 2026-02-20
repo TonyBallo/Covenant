@@ -19,6 +19,19 @@ export async function submitKYC(data) {
 }
 
 /**
+ * Check cross-chain status for an address
+ */
+export async function getCrossChainStatus(address) {
+  const response = await fetch(`${API_BASE_URL}/api/kyc/cross-chain-status/${address}`);
+  
+  if (!response.ok) {
+    throw new Error('Failed to check cross-chain status');
+  }
+  
+  return response.json();
+}
+
+/**
  * Check KYC status for an address
  */
 export async function checkKYCStatus(address) {

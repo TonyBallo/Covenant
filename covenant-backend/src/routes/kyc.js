@@ -199,6 +199,42 @@ router.get('/verify/:token', async (req, res) => {
 });
 
 /**
+ * Get cross-chain status for an address
+ * GET /api/kyc/cross-chain-status/:address
+ */
+router.get('/cross-chain-status/:address', async (req, res) => {
+  try {
+    const { address } = req.params;
+
+    // Check Ethereum seal
+    const ethereumSeal = await hasSeal(address);
+    
+    // Check Polygon attestation
+    let polygonAttestation = false;
+    try {
+      const { getPolygonAttestation } = await import('../services/polygon.js');
+      const attestation = await getPolygonAttestation(address);
+      polygonAttestation = attestation.hasAttestation;
+    } catch (err) {
+      console.error('Polygon check failed:', err);
+      // If Polygon check fails, just show Ethereum
+    }
+
+    res.json({
+      ethereum: ethereumSeal,
+      polygon: polygonAttestation
+    });
+
+  } catch (error) {
+    console.error('Cross-chain status check error:', error);
+    res.status(500).json({ 
+      error: 'Failed to check cross-chain status',
+      details: error.message 
+    });
+  }
+});
+
+/**
  * Check KYC status
  * GET /api/kyc/status/:address
  */
