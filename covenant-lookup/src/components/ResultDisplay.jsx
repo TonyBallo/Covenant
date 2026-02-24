@@ -38,15 +38,6 @@ export function ResultDisplay({ result }) {
   const tierInfo = TIERS[result.tier];
   const mintDate = formatDate(result.mintedAt);
 
-  // Color mapping for tier badges
-  const tierColorClasses = {
-    orange: 'bg-orange-100 text-orange-800 border-orange-300',
-    gray: 'bg-gray-100 text-gray-800 border-gray-300',
-    yellow: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-    blue: 'bg-blue-100 text-blue-800 border-blue-300',
-    purple: 'bg-purple-100 text-purple-800 border-purple-300',
-  };
-
   const tierTextClasses = {
     orange: 'text-orange-600',
     gray: 'text-gray-600',
@@ -85,24 +76,27 @@ export function ResultDisplay({ result }) {
       </div>
 
       <div className="p-8">
-        <div className="flex items-center gap-6 mb-8 pb-8 border-b">
-          <div className={`text-7xl font-bold ${tierTextClasses[tierInfo.color]} drop-shadow-lg`}>
-            {tierInfo.numeral}
+        <div className="mb-6 pb-6 border-b">
+          {/* Centered Emblem with Black Background - Fixed Height */}
+          <div className="flex justify-center items-center mb-6 bg-black h-80 -mx-8">
+            <div className="w-128 h-128 flex items-center justify-center">
+              <img 
+                src="/seals/tier1-bronze.png" 
+                alt="Tier I Bronze Seal" 
+                className="w-full h-full object-contain drop-shadow-lg"
+              />
+            </div>
           </div>
-          <div className="flex-1">
+          
+          {/* Centered Tier Info */}
+          <div className="text-center">
             <p className="text-sm text-gray-600 mb-1">Verification Tier</p>
             <p className={`text-4xl font-bold ${tierTextClasses[tierInfo.color]} mb-2`}>
               {tierInfo.name}
             </p>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 max-w-md mx-auto">
               {tierInfo.description}
             </p>
-          </div>
-          <div className={`px-6 py-3 rounded-lg border-2 ${tierColorClasses[tierInfo.color]} shadow-lg transform hover:scale-105 transition-transform`}>
-            <div className="text-center">
-              <p className="text-xs font-semibold mb-1">TIER</p>
-              <p className="text-3xl font-bold">{tierInfo.numeral}</p>
-            </div>
           </div>
         </div>
 

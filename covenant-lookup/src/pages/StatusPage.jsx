@@ -18,58 +18,57 @@ export function StatusPage({ walletAddress }) {
     if (!walletAddress) {
       navigate('/');
     }
-  }, [walletAddress, navigate]);
+  }, [walletAddress]);
 
   // Load status on mount
   useEffect(() => {
     if (!walletAddress) return;
-
-    const loadStatus = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        // Check application status from backend
-        const status = await checkKYCStatus(walletAddress);
-        setKycStatus(status);
-
-        // If minted, also fetch on-chain seal data
-        if (status.status === 'minted' || status.status === 'approved') {
-          const provider = new ethers.JsonRpcProvider(RPC_URL);
-          const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-          const [verified, tier, revoked, burnPending] = await contract.getVerificationStatus(walletAddress);
-          
-          if (verified) {
-            const sealId = await contract.addressToSealId(walletAddress);
-            const seal = await contract.sealData(sealId);
-            setSealData({
-              verified,
-              tier: Number(tier),
-              revoked,
-              burnPending,
-              sealId: Number(sealId),
-              mintedAt: Number(seal.mintedAt)
-            });
-            
-            // Load cross-chain status
-            try {
-              const chains = await getCrossChainStatus(walletAddress);
-              setChainStatus(chains);
-            } catch (err) {
-              console.error('Failed to load chain status:', err);
-              setChainStatus({ ethereum: true, polygon: false });
-            }
-          }
-        }
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadStatus();
   }, [walletAddress]);
+
+  const loadStatus = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Check application status from backend
+      const status = await checkKYCStatus(walletAddress);
+      setKycStatus(status);
+
+      // If minted, also fetch on-chain seal data
+      if (status.status === 'minted' || status.status === 'approved') {
+        const provider = new ethers.JsonRpcProvider(RPC_URL);
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+        const [verified, tier, revoked, burnPending] = await contract.getVerificationStatus(walletAddress);
+        
+        if (verified) {
+          const sealId = await contract.addressToSealId(walletAddress);
+          const seal = await contract.sealData(sealId);
+          setSealData({
+            verified,
+            tier: Number(tier),
+            revoked,
+            burnPending,
+            sealId: Number(sealId),
+            mintedAt: Number(seal.mintedAt)
+          });
+          
+          // Load cross-chain status
+          try {
+            const chains = await getCrossChainStatus(walletAddress);
+            setChainStatus(chains);
+          } catch (err) {
+            console.error('Failed to load chain status:', err);
+            setChainStatus({ ethereum: true, polygon: false });
+          }
+        }
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Tier color helpers
   const tierTextClasses = {
@@ -206,17 +205,25 @@ export function StatusPage({ walletAddress }) {
             </div>
 
             {/* Tier Display */}
-            <div className={`px-8 py-6 border-b flex items-center gap-6 
-              ${sealData.revoked ? 'bg-red-50' : 'bg-gray-50'}`}>
-              <div className={`text-6xl font-bold ${tierTextClasses[TIERS[sealData.tier].color]}`}>
-                {TIERS[sealData.tier].numeral}
+            <div className={`border-b ${sealData.revoked ? 'bg-red-50' : 'bg-gray-50'}`}>
+              {/* Centered Emblem with Black Background - Fixed Height */}
+              <div className="flex justify-center items-center mb-3 bg-black h-50">
+                <div className="w-128 h-128 flex items-center justify-center">
+                  <img 
+                    src="/seals/tier1-bronze.png" 
+                    alt="Tier I Bronze Seal" 
+                    className="w-full h-full object-contain drop-shadow-lg"
+                  />
+                </div>
               </div>
-              <div>
+              
+              {/* Centered Tier Info */}
+              <div className="text-center px-8 pb-4">
                 <p className="text-sm text-gray-500 mb-1">Verification Tier</p>
-                <p className={`text-3xl font-bold ${tierTextClasses[TIERS[sealData.tier].color]}`}>
+                <p className={`text-3xl font-bold ${tierTextClasses[TIERS[sealData.tier].color]} mb-2`}>
                   {TIERS[sealData.tier].name}
                 </p>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-500">
                   {TIERS[sealData.tier].description}
                 </p>
               </div>
