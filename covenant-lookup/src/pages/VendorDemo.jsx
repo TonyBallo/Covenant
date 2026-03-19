@@ -152,7 +152,12 @@ export function VendorDemo() {
 
       if (!walletConnected) {
         if (!window.ethereum) {
-          alert('No wallet detected. Please install MetaMask.');
+          const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+          if (isMobile) {
+            window.location.href = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;
+          } else {
+            alert('No wallet detected. Please install MetaMask.');
+          }
           return;
         }
         const browserProvider = new ethers.BrowserProvider(window.ethereum);

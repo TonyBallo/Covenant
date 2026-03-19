@@ -364,7 +364,12 @@ function App() {
   const handleConnect = async () => {
     try {
       if (!window.ethereum) {
-        alert('No wallet detected. Please install MetaMask.');
+        const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+        if (isMobile) {
+          window.location.href = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;
+        } else {
+          alert('No wallet detected. Please install MetaMask.');
+        }
         return;
       }
       const provider = new ethers.BrowserProvider(window.ethereum);
