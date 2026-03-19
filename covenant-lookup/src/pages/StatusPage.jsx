@@ -35,22 +35,21 @@ export function StatusPage({ walletAddress }) {
         const status = await checkKYCStatus(walletAddress);
         setKycStatus(status);
 
-        if (status.status === 'minted' || status.status === 'approved') {
-          const provider = new ethers.JsonRpcProvider(RPC_URL);
-          const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-          const [verified, tier, revoked, burnPending] = await contract.getVerificationStatus(walletAddress);
+        // Always check on-chain — the contract is the source of truth regardless of backend status
+        const provider = new ethers.JsonRpcProvider(RPC_URL);
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+        const [verified, tier, revoked, burnPending] = await contract.getVerificationStatus(walletAddress);
 
-          if (verified) {
-            const sealId = await contract.addressToSealId(walletAddress);
-            const seal = await contract.sealData(sealId);
-            setSealData({ verified, tier: Number(tier), revoked, burnPending, sealId: Number(sealId), mintedAt: Number(seal.mintedAt) });
+        if (verified) {
+          const sealId = await contract.addressToSealId(walletAddress);
+          const seal = await contract.sealData(sealId);
+          setSealData({ verified, tier: Number(tier), revoked, burnPending, sealId: Number(sealId), mintedAt: Number(seal.mintedAt), expiresAt: Number(seal.expiresAt) });
 
-            try {
-              const chains = await getCrossChainStatus(walletAddress);
-              setChainStatus(chains);
-            } catch {
-              setChainStatus({ ethereum: true, polygon: false });
-            }
+          try {
+            const chains = await getCrossChainStatus(walletAddress);
+            setChainStatus(chains);
+          } catch {
+            setChainStatus({ ethereum: true, polygon: false });
           }
         }
       } catch (err) {
@@ -96,7 +95,7 @@ export function StatusPage({ walletAddress }) {
         )}
 
         {/* No Application */}
-        {!kycStatus?.hasSubmission && (
+        {!kycStatus?.hasSubmission && !sealData?.verified && (
           <div className="border border-gold/20 bg-tyrian-darker p-10 text-center">
             <div className="w-px h-10 bg-gradient-to-b from-transparent via-gold/40 to-transparent mx-auto mb-6"></div>
             <h3 className="font-cinzel text-marble text-lg tracking-wide mb-3">No Application Found</h3>
@@ -113,7 +112,7 @@ export function StatusPage({ walletAddress }) {
         )}
 
         {/* Pending */}
-        {kycStatus?.hasSubmission && kycStatus.status === 'pending' && (
+        {kycStatus?.hasSubmission && kycStatus.status === 'pending' && !sealData?.verified && (
           <div className="border border-gold/20 bg-tyrian-darker p-10 text-center">
             <div className="w-px h-10 bg-gradient-to-b from-transparent via-gold/40 to-transparent mx-auto mb-6"></div>
             <h3 className="font-cinzel text-marble text-lg tracking-wide mb-3">Application Under Review</h3>
@@ -133,7 +132,7 @@ export function StatusPage({ walletAddress }) {
         )}
 
         {/* Rejected */}
-        {kycStatus?.hasSubmission && kycStatus.status === 'rejected' && (
+        {kycStatus?.hasSubmission && kycStatus.status === 'rejected' && !sealData?.verified && (
           <div className="border border-red-900/40 bg-tyrian-darker p-10 text-center">
             <div className="w-px h-10 bg-gradient-to-b from-transparent via-red-800/50 to-transparent mx-auto mb-6"></div>
             <h3 className="font-cinzel text-marble text-lg tracking-wide mb-3">Application Rejected</h3>
@@ -209,6 +208,12 @@ export function StatusPage({ walletAddress }) {
                 <p className="font-cormorant text-marble text-lg">{formatDate(sealData.mintedAt)}</p>
               </div>
               <div>
+                <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Expiry</p>
+                <p className="font-cormorant text-marble text-lg">
+                  {!sealData.expiresAt ? 'No expiry set' : formatDate(sealData.expiresAt)}
+                </p>
+              </div>
+              <div>
                 <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Status</p>
                 <p className={`font-cormorant text-lg font-semibold ${sealData.revoked ? 'text-red-400' : 'text-gold'}`}>
                   {sealData.revoked ? 'Revoked' : 'Active'}
@@ -219,6 +224,14 @@ export function StatusPage({ walletAddress }) {
                 <p className={`font-cormorant text-lg font-semibold ${sealData.burnPending ? 'text-gold/70' : 'text-marble-muted'}`}>
                   {sealData.burnPending ? 'Pending' : 'None'}
                 </p>
+              </div>
+              <div>
+                <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Polygon Attestation</p>
+                {chainStatus.polygon ? (
+                  <p className="font-cormorant text-purple-400 text-lg font-semibold">Witnessed on Amoy</p>
+                ) : (
+                  <p className="font-cormorant text-marble-muted text-lg font-semibold">Pending</p>
+                )}
               </div>
             </div>
 

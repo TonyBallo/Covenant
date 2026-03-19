@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getPendingSubmissions, approveKYC, mintSeal, getReadyToMint, rejectKYC, attestPolygon, checkPolygonStatus } from '../utils/api';
+import { getPendingSubmissions, approveKYC, mintSeal, getReadyToMint, rejectKYC, attestPolygon, checkPolygonStatus, revokeSeal, getRevokedSeals, lookupSeal } from '../utils/api';
 import { TIERS } from '../utils/constants';
 
 export function Admin() {
@@ -16,6 +16,12 @@ export function Admin() {
   const [rejecting, setRejecting] = useState(null);
   const [polygonStatuses, setPolygonStatuses] = useState({});
   const [attesting, setAttesting] = useState(null);
+  const [revoked, setRevoked] = useState([]);
+  const [revoking, setRevoking] = useState(null);
+  const [lookupAddress, setLookupAddress] = useState('');
+  const [lookupResult, setLookupResult] = useState(null);
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
@@ -48,12 +54,14 @@ export function Admin() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [pendingData, mintData] = await Promise.all([
+      const [pendingData, mintData, revokedData] = await Promise.all([
         getPendingSubmissions(),
-        getReadyToMint()
+        getReadyToMint(),
+        getRevokedSeals().catch(() => ({ submissions: [] }))
       ]);
       setPending(pendingData.submissions || []);
       setReadyToMint(mintData.submissions || []);
+      setRevoked(revokedData.submissions || []);
 
       const statuses = {};
       for (const submission of mintData.submissions || []) {
@@ -125,6 +133,45 @@ export function Admin() {
       setError(err.message);
     } finally {
       setRejecting(null);
+    }
+  };
+
+  const handleLookup = async (e) => {
+    e.preventDefault();
+    if (!lookupAddress.trim()) return;
+    setLookupLoading(true);
+    setLookupResult(null);
+    setLookupError(null);
+    try {
+      const result = await lookupSeal(lookupAddress.trim());
+      setLookupResult(result);
+    } catch (err) {
+      setLookupError(err.message);
+    } finally {
+      setLookupLoading(false);
+    }
+  };
+
+  const handleRevoke = async (submission) => {
+    setRevoking(submission.id);
+    setError(null);
+    setSuccess(null);
+    try {
+      await revokeSeal({
+        sealId: submission.sealId,
+        walletAddress: submission.wallet_address,
+        reason: 'Revoked by admin'
+      });
+      setSuccess(`Seal #${submission.sealId} revoked for ${submission.wallet_address}`);
+      // Refresh lookup result if this revoke came from the lookup tab
+      if (lookupResult?.found) {
+        setLookupResult({ ...lookupResult, revoked: true });
+      }
+      await fetchData();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setRevoking(null);
     }
   };
 
@@ -275,6 +322,26 @@ export function Admin() {
               }`}
             >
               Ready to Mint ({readyToMint.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('revoke-lookup')}
+              className={`font-cinzel text-xs tracking-widest uppercase px-6 py-3 border-b-2 transition-colors ${
+                activeTab === 'revoke-lookup'
+                  ? 'border-red-700 text-red-400'
+                  : 'border-transparent text-marble-muted hover:text-marble'
+              }`}
+            >
+              Revoke Seal
+            </button>
+            <button
+              onClick={() => setActiveTab('revoked')}
+              className={`font-cinzel text-xs tracking-widest uppercase px-6 py-3 border-b-2 transition-colors ${
+                activeTab === 'revoked'
+                  ? 'border-red-700 text-red-400'
+                  : 'border-transparent text-marble-muted hover:text-marble'
+              }`}
+            >
+              Revoked Seals ({revoked.length})
             </button>
           </div>
         </div>
@@ -442,11 +509,146 @@ export function Admin() {
                           {rejecting === submission.id ? 'Rejecting…' : 'Reject'}
                         </button>
                       </div>
+
+                      {isMinted && (
+                        <button
+                          onClick={() => handleRevoke(submission)}
+                          disabled={revoking === submission.id || processing === submission.id || attesting === submission.id}
+                          className="w-full font-cinzel text-xs tracking-widest uppercase py-3 border border-red-800/50 text-red-400 hover:bg-red-950/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {revoking === submission.id ? 'Revoking…' : 'Revoke Seal'}
+                        </button>
+                      )}
                     </div>
 
                   </div>
                 );
               })
+            )}
+          </div>
+        )}
+
+        {/* Revoke Seal Lookup */}
+        {activeTab === 'revoke-lookup' && (
+          <div className="space-y-4">
+            <form onSubmit={handleLookup} className="flex gap-2">
+              <input
+                type="text"
+                value={lookupAddress}
+                onChange={(e) => { setLookupAddress(e.target.value); setLookupResult(null); setLookupError(null); }}
+                placeholder="Wallet address (0x…)"
+                className="flex-1 px-4 py-3 bg-tyrian-dark border border-gold/30 text-marble placeholder-marble-muted/50 focus:outline-none focus:border-gold/70 font-mono text-sm transition-colors"
+              />
+              <button
+                type="submit"
+                disabled={lookupLoading || !lookupAddress.trim()}
+                className="font-cinzel text-xs tracking-widest uppercase px-6 py-3 bg-gold text-tyrian-deep hover:bg-gold-dim disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                {lookupLoading ? 'Looking up…' : 'Look Up'}
+              </button>
+            </form>
+
+            {lookupError && (
+              <div className="border-l-4 border-red-800 bg-red-950/30 px-6 py-4">
+                <p className="font-cinzel text-red-400 text-xs tracking-widest uppercase mb-1">Error</p>
+                <p className="font-cormorant text-red-300 italic text-lg">{lookupError}</p>
+              </div>
+            )}
+
+            {lookupResult && !lookupResult.found && (
+              <div className="border border-gold/20 bg-tyrian-darker p-8 text-center">
+                <p className="font-cormorant text-marble-muted italic text-xl">No seal found for this address</p>
+              </div>
+            )}
+
+            {lookupResult?.found && (
+              <div className="border border-gold/20 bg-tyrian-darker overflow-hidden">
+                <div className="bg-tyrian-dark border-b border-gold/15 px-6 py-4 flex justify-between items-start">
+                  <div>
+                    <p className="font-cinzel text-marble text-base tracking-wide">Seal #{lookupResult.sealId}</p>
+                    <p className="font-mono text-marble-muted/60 text-xs mt-1">{lookupAddress}</p>
+                  </div>
+                  <div className="text-right space-y-1">
+                    <span className={`block border font-cinzel text-xs tracking-widest uppercase px-3 py-1 ${tierBadgeClass[TIERS[lookupResult.tier]?.color] || ''}`}>
+                      Tier {lookupResult.tier} — {TIERS[lookupResult.tier]?.name ?? '—'}
+                    </span>
+                    {lookupResult.revoked && (
+                      <span className="block border border-red-800/50 font-cinzel text-xs tracking-widest uppercase px-3 py-1 text-red-400 bg-red-950/30">
+                        Already Revoked
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="px-6 py-4">
+                  {lookupResult.revoked ? (
+                    <div className="w-full border border-gold/15 bg-tyrian-dark font-cinzel text-xs tracking-widest uppercase py-3 text-center text-marble-muted">
+                      This seal has already been revoked
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleRevoke({ id: `lookup-${lookupResult.sealId}`, sealId: lookupResult.sealId, wallet_address: lookupAddress })}
+                      disabled={revoking === `lookup-${lookupResult.sealId}`}
+                      className="w-full font-cinzel text-xs tracking-widest uppercase py-3 border border-red-800/50 text-red-400 hover:bg-red-950/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {revoking === `lookup-${lookupResult.sealId}` ? 'Revoking…' : 'Revoke Seal'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Revoked Seals */}
+        {activeTab === 'revoked' && (
+          <div className="space-y-4">
+            {revoked.length === 0 ? (
+              <div className="border border-gold/20 bg-tyrian-darker p-10 text-center">
+                <div className="w-px h-8 bg-gradient-to-b from-transparent via-gold/30 to-transparent mx-auto mb-4"></div>
+                <p className="font-cormorant text-marble-muted italic text-xl">No revoked seals</p>
+              </div>
+            ) : (
+              revoked.map((submission) => (
+                <div key={submission.id} className="border border-red-900/30 bg-tyrian-darker overflow-hidden">
+
+                  <div className="bg-tyrian-dark border-b border-red-900/20 px-6 py-4 flex justify-between items-start">
+                    <div>
+                      <h3 className="font-cinzel text-marble text-base tracking-wide">{submission.full_name}</h3>
+                      <p className="font-mono text-marble-muted/60 text-xs mt-1">{submission.wallet_address}</p>
+                    </div>
+                    <span className="border border-red-800/50 font-cinzel text-xs tracking-widest uppercase px-3 py-1 text-red-400 bg-red-950/30">
+                      Revoked
+                    </span>
+                  </div>
+
+                  <div className="px-6 py-4 grid grid-cols-3 gap-4">
+                    <div>
+                      <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Seal ID</p>
+                      <p className="font-cormorant text-marble text-base">#{submission.sealId ?? '—'}</p>
+                    </div>
+                    <div>
+                      <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Tier</p>
+                      <p className="font-cormorant text-marble text-base">
+                        {TIERS[submission.sealTier ?? submission.tier_requested]
+                          ? `Tier ${submission.sealTier ?? submission.tier_requested} — ${TIERS[submission.sealTier ?? submission.tier_requested].name}`
+                          : '—'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Date Revoked</p>
+                      <p className="font-cormorant text-marble text-base">
+                        {submission.reviewed_at
+                          ? new Date(submission.reviewed_at).toLocaleDateString('en-US', {
+                              year: 'numeric', month: 'long', day: 'numeric'
+                            })
+                          : '—'}
+                      </p>
+                    </div>
+                  </div>
+
+                </div>
+              ))
             )}
           </div>
         )}

@@ -1,7 +1,7 @@
 import express from 'express';
 import { supabase } from '../server.js';
 import { createMintSignature } from '../services/signature.js';
-import { mintSeal, getSealId, revokeSeal } from '../services/blockchain.js';
+import { mintSeal, getSealId, revokeSeal, getSealInfo } from '../services/blockchain.js';
 import { attestOnPolygon, getPolygonAttestation } from '../services/polygon.js';
 
 const router = express.Router();
@@ -332,16 +332,31 @@ router.post('/attest/:id', async (req, res) => {
  */
 router.post('/revoke', async (req, res) => {
   try {
-    const { sealId, reason } = req.body;
+    const { sealId, walletAddress, reason } = req.body;
 
     if (!sealId || !reason) {
-      return res.status(400).json({ 
-        error: 'Missing required fields: sealId, reason' 
+      return res.status(400).json({
+        error: 'Missing required fields: sealId, reason'
       });
     }
 
     // Revoke on-chain
     const receipt = await revokeSeal(sealId, reason);
+
+    // Update submission status to 'revoked' in Supabase
+    if (walletAddress) {
+      const { error: updateError } = await supabase
+        .from('kyc_submissions')
+        .update({
+          status: 'revoked',
+          reviewed_at: new Date().toISOString()
+        })
+        .eq('wallet_address', walletAddress);
+
+      if (updateError) {
+        console.error('Failed to update submission status after revoke:', updateError);
+      }
+    }
 
     console.log(`🚫 Seal #${sealId} revoked`);
 
@@ -355,10 +370,65 @@ router.post('/revoke', async (req, res) => {
 
   } catch (error) {
     console.error('Revocation failed:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to revoke seal',
-      details: error.message 
+      details: error.message
     });
+  }
+});
+
+/**
+ * Get all revoked submissions
+ * GET /api/admin/revoked
+ */
+router.get('/revoked', async (_req, res) => {
+  try {
+    const { data: submissions, error } = await supabase
+      .from('kyc_submissions')
+      .select('*')
+      .eq('status', 'revoked')
+      .order('reviewed_at', { ascending: false });
+
+    if (error) throw error;
+
+    // Enrich each entry with seal data from the seals table
+    const enriched = await Promise.all((submissions || []).map(async (sub) => {
+      const { data: seal } = await supabase
+        .from('seals')
+        .select('seal_id, tier')
+        .eq('wallet_address', sub.wallet_address)
+        .single();
+
+      return {
+        ...sub,
+        sealId: seal?.seal_id || null,
+        sealTier: seal?.tier || sub.tier_requested,
+      };
+    }));
+
+    res.json({ count: enriched.length, submissions: enriched });
+
+  } catch (error) {
+    console.error('Failed to get revoked submissions:', error);
+    res.status(500).json({
+      error: 'Failed to fetch revoked submissions',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * Look up a seal by wallet address
+ * GET /api/admin/seal/:address
+ */
+router.get('/seal/:address', async (req, res) => {
+  try {
+    const { address } = req.params;
+    const info = await getSealInfo(address);
+    res.json(info);
+  } catch (error) {
+    console.error('Seal lookup failed:', error);
+    res.status(500).json({ error: 'Failed to look up seal', details: error.message });
   }
 });
 

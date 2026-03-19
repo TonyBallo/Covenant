@@ -10,6 +10,7 @@ import { VerifySuccess } from './pages/VerifySuccess';
 import { VerifyFailed } from './pages/VerifyFailed';
 import { CONTRACT_ADDRESS, CONTRACT_ABI, RPC_URL, ETHERSCAN_BASE } from './utils/contract';
 import { Admin } from './pages/Admin';
+import { VendorDemo } from './pages/VendorDemo';
 
 // ============ Shared Navbar ============
 
@@ -48,6 +49,12 @@ function Navbar({ walletAddress, walletConnected, onConnect, onDisconnect }) {
                 My Status
               </Link>
             )}
+            <Link
+              to="/vendor-demo"
+              className="font-cinzel text-marble-muted hover:text-gold text-xs tracking-widest uppercase transition-colors"
+            >
+              Vendor Demo
+            </Link>
             <Link
               to="/get-verified"
               className="font-cinzel text-xs tracking-widest uppercase px-5 py-2 border border-gold/60 text-gold hover:bg-gold/10 transition-colors"
@@ -316,6 +323,7 @@ function App() {
         <Route path="/verify-success" element={<VerifySuccess />} />
         <Route path="/verify-failed" element={<VerifyFailed />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/vendor-demo" element={<VendorDemo />} />
       </Routes>
     </BrowserRouter>
   );

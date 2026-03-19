@@ -82,6 +82,31 @@ export async function hasSeal(userAddress) {
 }
 
 /**
+ * Get full seal info for an address
+ * @param {string} userAddress - User's wallet address
+ * @returns {Object} { found, sealId, tier, revoked, verified }
+ */
+export async function getSealInfo(userAddress) {
+  try {
+    const sealId = await contract.addressToSealId(userAddress);
+    const id = Number(sealId);
+    if (id === 0) return { found: false };
+
+    const status = await contract.getVerificationStatus(userAddress);
+    return {
+      found: true,
+      sealId: id,
+      tier: Number(status[1]),
+      revoked: status[2],
+      verified: status[0],
+    };
+  } catch (error) {
+    console.error('Failed to get seal info:', error);
+    throw new Error(`Failed to get seal info: ${error.message}`);
+  }
+}
+
+/**
  * Revoke a seal
  * @param {number} sealId - Seal ID to revoke
  * @param {string} reason - Revocation reason

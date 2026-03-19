@@ -142,6 +142,51 @@ export async function checkPolygonStatus(address) {
 }
 
 /**
+ * Look up a seal by wallet address (admin only)
+ */
+export async function lookupSeal(address) {
+  const response = await fetch(`${API_BASE_URL}/api/admin/seal/${address}`);
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to look up seal');
+  }
+
+  return response.json();
+}
+
+/**
+ * Revoke a minted seal (admin only)
+ */
+export async function revokeSeal({ sealId, walletAddress, reason }) {
+  const response = await fetch(`${API_BASE_URL}/api/admin/revoke`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sealId, walletAddress, reason })
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to revoke seal');
+  }
+
+  return response.json();
+}
+
+/**
+ * Get all revoked submissions (admin only)
+ */
+export async function getRevokedSeals() {
+  const response = await fetch(`${API_BASE_URL}/api/admin/revoked`);
+
+  if (!response.ok) {
+    throw new Error('Failed to get revoked seals');
+  }
+
+  return response.json();
+}
+
+/**
  * Get ready-to-mint submissions (admin only)
  */
 export async function getReadyToMint() {
