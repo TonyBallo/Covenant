@@ -8,12 +8,12 @@ describe("Pact", function () {
   let user1;
   let user2;
 
-  // Helper: create a mint/upgrade signature that includes chain ID
-  async function createSignature(signer, userAddress, tier) {
+  // Helper: create a mint/upgrade signature that includes jurisdictionCode and chain ID
+  async function createSignature(signer, userAddress, tier, jurisdictionCode = 0) {
     const { chainId } = await ethers.provider.getNetwork();
     const message = ethers.solidityPackedKeccak256(
-      ["address", "uint8", "uint256"],
-      [userAddress, tier, chainId]
+      ["address", "uint8", "uint8", "uint256"],
+      [userAddress, tier, jurisdictionCode, chainId]
     );
     return await signer.signMessage(ethers.getBytes(message));
   }
@@ -33,7 +33,7 @@ describe("Pact", function () {
   describe("Minting", function () {
     it("Should mint seal with correct tier and valid signature", async function () {
       const signature = await createSignature(owner, user1.address, 2);
-      await pact.mint(user1.address, 2, signature, 0);
+      await pact.mint(user1.address, 2, 0, signature, 0);
 
       const [isVerified, tier, isRevoked] = await pact.getVerificationStatus(user1.address);
 
@@ -44,18 +44,18 @@ describe("Pact", function () {
 
     it("Should prevent duplicate seals to same address", async function () {
       const sig1 = await createSignature(owner, user1.address, 1);
-      await pact.mint(user1.address, 1, sig1, 0);
+      await pact.mint(user1.address, 1, 0, sig1, 0);
 
       const sig2 = await createSignature(owner, user1.address, 2);
       await expect(
-        pact.mint(user1.address, 2, sig2, 0)
+        pact.mint(user1.address, 2, 0, sig2, 0)
       ).to.be.revertedWith("Address already has seal");
     });
 
     it("Should only allow owner to mint", async function () {
       const signature = await createSignature(user1, user2.address, 1);
       await expect(
-        pact.connect(user1).mint(user2.address, 1, signature, 0)
+        pact.connect(user1).mint(user2.address, 1, 0, signature, 0)
       ).to.be.reverted;
     });
 
@@ -64,7 +64,7 @@ describe("Pact", function () {
       const badSignature = await createSignature(user2, user1.address, 3);
 
       await expect(
-        pact.mint(user1.address, 3, badSignature, 0)
+        pact.mint(user1.address, 3, 0, badSignature, 0)
       ).to.be.revertedWith("Invalid Covenant signature");
     });
 
@@ -73,14 +73,14 @@ describe("Pact", function () {
       const signature = await createSignature(owner, user2.address, 3);
 
       await expect(
-        pact.mint(user1.address, 3, signature, 0)
+        pact.mint(user1.address, 3, 0, signature, 0)
       ).to.be.revertedWith("Invalid Covenant signature");
     });
 
     it("Should emit SealMinted event", async function () {
       const signature = await createSignature(owner, user1.address, 2);
 
-      await expect(pact.mint(user1.address, 2, signature, 0))
+      await expect(pact.mint(user1.address, 2, 0, signature, 0))
         .to.emit(pact, "SealMinted")
         .withArgs(user1.address, 1, 2); // sealId=1, tier=2
     });
@@ -91,7 +91,7 @@ describe("Pact", function () {
       const signature = await createSignature(owner, user1.address, 1);
 
       await expect(
-        pact.mint(user1.address, 1, signature, 0)
+        pact.mint(user1.address, 1, 0, signature, 0)
       ).to.be.revertedWith("Tier not yet active");
     });
   });
@@ -99,7 +99,7 @@ describe("Pact", function () {
   describe("Soulbound Mechanics", function () {
     beforeEach(async function () {
       const signature = await createSignature(owner, user1.address, 2);
-      await pact.mint(user1.address, 2, signature, 0);
+      await pact.mint(user1.address, 2, 0, signature, 0);
     });
 
     it("Should prevent transfers", async function () {
@@ -128,7 +128,7 @@ describe("Pact", function () {
   describe("Revocation", function () {
     beforeEach(async function () {
       const signature = await createSignature(owner, user1.address, 3);
-      await pact.mint(user1.address, 3, signature, 0);
+      await pact.mint(user1.address, 3, 0, signature, 0);
     });
 
     it("Should allow owner to revoke seal", async function () {
@@ -170,14 +170,14 @@ describe("Pact", function () {
   describe("Tier Upgrades", function () {
     beforeEach(async function () {
       const signature = await createSignature(owner, user1.address, 1);
-      await pact.mint(user1.address, 1, signature, 0);
+      await pact.mint(user1.address, 1, 0, signature, 0);
     });
 
     it("Should allow tier upgrades with valid signature", async function () {
       const sealId = await pact.addressToSealId(user1.address);
       const newSignature = await createSignature(owner, user1.address, 3);
 
-      await pact.upgradeTier(sealId, 3, newSignature);
+      await pact.upgradeTier(sealId, 3, 0, newSignature);
 
       const [, tier] = await pact.getVerificationStatus(user1.address);
       expect(tier).to.equal(3);
@@ -187,7 +187,7 @@ describe("Pact", function () {
       const sealId = await pact.addressToSealId(user1.address);
       const newSignature = await createSignature(owner, user1.address, 2);
 
-      await expect(pact.upgradeTier(sealId, 2, newSignature))
+      await expect(pact.upgradeTier(sealId, 2, 0, newSignature))
         .to.emit(pact, "SealUpgraded")
         .withArgs(sealId, 1, 2); // oldTier=1, newTier=2
     });
@@ -197,12 +197,12 @@ describe("Pact", function () {
 
       // First upgrade to tier 2
       const sig2 = await createSignature(owner, user1.address, 2);
-      await pact.upgradeTier(sealId, 2, sig2);
+      await pact.upgradeTier(sealId, 2, 0, sig2);
 
       // Try to downgrade to tier 1
       const sig1 = await createSignature(owner, user1.address, 1);
       await expect(
-        pact.upgradeTier(sealId, 1, sig1)
+        pact.upgradeTier(sealId, 1, 0, sig1)
       ).to.be.revertedWith("Can only upgrade tier");
     });
 
@@ -213,7 +213,7 @@ describe("Pact", function () {
       const badSignature = await createSignature(user2, user1.address, 3);
 
       await expect(
-        pact.upgradeTier(sealId, 3, badSignature)
+        pact.upgradeTier(sealId, 3, 0, badSignature)
       ).to.be.revertedWith("Invalid Covenant signature");
     });
 
@@ -224,8 +224,18 @@ describe("Pact", function () {
 
       const newSignature = await createSignature(owner, user1.address, 3);
       await expect(
-        pact.upgradeTier(sealId, 3, newSignature)
+        pact.upgradeTier(sealId, 3, 0, newSignature)
       ).to.be.revertedWith("Seal is revoked");
+    });
+
+    it("Should store updated jurisdictionCode after upgrade", async function () {
+      const sealId = await pact.addressToSealId(user1.address);
+      const newSignature = await createSignature(owner, user1.address, 2, 42);
+
+      await pact.upgradeTier(sealId, 2, 42, newSignature);
+
+      const [, , , jurisdictionCode] = await pact.getSeal(user1.address);
+      expect(jurisdictionCode).to.equal(42);
     });
   });
 
@@ -240,7 +250,7 @@ describe("Pact", function () {
 
     it("Should return correct status for verified user", async function () {
       const signature = await createSignature(owner, user1.address, 4);
-      await pact.mint(user1.address, 4, signature, 0);
+      await pact.mint(user1.address, 4, 0, signature, 0);
 
       const [isVerified, tier, isRevoked] = await pact.getVerificationStatus(user1.address);
 
@@ -250,10 +260,70 @@ describe("Pact", function () {
     });
   });
 
+  describe("getSeal", function () {
+    it("Should return all zeros for address with no seal", async function () {
+      const [tier, issuedAt, expiresAt, jurisdictionCode, revoked] =
+        await pact.getSeal(user1.address);
+
+      expect(tier).to.equal(0);
+      expect(issuedAt).to.equal(0);
+      expect(expiresAt).to.equal(0);
+      expect(jurisdictionCode).to.equal(0);
+      expect(revoked).to.equal(false);
+    });
+
+    it("Should return correct tier and jurisdictionCode after mint", async function () {
+      const signature = await createSignature(owner, user1.address, 2, 7);
+      await pact.mint(user1.address, 2, 7, signature, 0);
+
+      const [tier, issuedAt, expiresAt, jurisdictionCode, revoked] =
+        await pact.getSeal(user1.address);
+
+      expect(tier).to.equal(2);
+      expect(issuedAt).to.be.gt(0);
+      expect(expiresAt).to.equal(0);
+      expect(jurisdictionCode).to.equal(7);
+      expect(revoked).to.equal(false);
+    });
+
+    it("Should return correct expiresAt", async function () {
+      const future = Math.floor(Date.now() / 1000) + 86400 * 365;
+      const signature = await createSignature(owner, user1.address, 1);
+      await pact.mint(user1.address, 1, 0, signature, future);
+
+      const [, , expiresAt] = await pact.getSeal(user1.address);
+      expect(expiresAt).to.equal(future);
+    });
+
+    it("Should reflect revoked status", async function () {
+      const signature = await createSignature(owner, user1.address, 1);
+      await pact.mint(user1.address, 1, 0, signature, 0);
+
+      const sealId = await pact.addressToSealId(user1.address);
+      await pact.revoke(sealId, "Test");
+
+      const [, , , , revoked] = await pact.getSeal(user1.address);
+      expect(revoked).to.equal(true);
+    });
+
+    it("Should reflect updated tier and jurisdictionCode after upgrade", async function () {
+      const sig1 = await createSignature(owner, user1.address, 1, 5);
+      await pact.mint(user1.address, 1, 5, sig1, 0);
+
+      const sealId = await pact.addressToSealId(user1.address);
+      const sig2 = await createSignature(owner, user1.address, 3, 9);
+      await pact.upgradeTier(sealId, 3, 9, sig2);
+
+      const [tier, , , jurisdictionCode] = await pact.getSeal(user1.address);
+      expect(tier).to.equal(3);
+      expect(jurisdictionCode).to.equal(9);
+    });
+  });
+
   describe("Expiry", function () {
     it("Should return false for seal with no expiry set", async function () {
       const signature = await createSignature(owner, user1.address, 1);
-      await pact.mint(user1.address, 1, signature, 0);
+      await pact.mint(user1.address, 1, 0, signature, 0);
 
       expect(await pact.isExpired(user1.address)).to.be.false;
     });
@@ -261,7 +331,7 @@ describe("Pact", function () {
     it("Should return false for seal with future expiry", async function () {
       const future = Math.floor(Date.now() / 1000) + 86400 * 365; // 1 year from now
       const signature = await createSignature(owner, user1.address, 1);
-      await pact.mint(user1.address, 1, signature, future);
+      await pact.mint(user1.address, 1, 0, signature, future);
 
       expect(await pact.isExpired(user1.address)).to.be.false;
     });
@@ -270,7 +340,7 @@ describe("Pact", function () {
       const block = await ethers.provider.getBlock("latest");
       const expiry = block.timestamp + 100; // expires in 100 seconds
       const signature = await createSignature(owner, user1.address, 1);
-      await pact.mint(user1.address, 1, signature, expiry);
+      await pact.mint(user1.address, 1, 0, signature, expiry);
 
       // Fast forward past expiry
       await ethers.provider.send("evm_increaseTime", [200]);
@@ -288,14 +358,14 @@ describe("Pact", function () {
     it("Should have nonReentrant on mint", async function () {
       // This is more of a coverage test - ReentrancyGuard is battle-tested
       const signature = await createSignature(owner, user1.address, 2);
-      await expect(pact.mint(user1.address, 2, signature, 0)).to.not.be.reverted;
+      await expect(pact.mint(user1.address, 2, 0, signature, 0)).to.not.be.reverted;
     });
   });
 
   describe("Time-Locked Burn System", function () {
     beforeEach(async function () {
       const signature = await createSignature(owner, user1.address, 2);
-      await pact.mint(user1.address, 2, signature, 0);
+      await pact.mint(user1.address, 2, 0, signature, 0);
     });
 
     it("Should allow user to request burn", async function () {
@@ -466,10 +536,10 @@ describe("Pact", function () {
   describe("Ownership Verification Helper", function () {
     beforeEach(async function () {
       const sig1 = await createSignature(owner, user1.address, 2);
-      await pact.mint(user1.address, 2, sig1, 0);
+      await pact.mint(user1.address, 2, 0, sig1, 0);
 
       const sig2 = await createSignature(owner, user2.address, 3);
-      await pact.mint(user2.address, 3, sig2, 0);
+      await pact.mint(user2.address, 3, 0, sig2, 0);
     });
 
     it("Should verify correct ownership", async function () {

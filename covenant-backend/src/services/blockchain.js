@@ -5,8 +5,7 @@ dotenv.config();
 
 // Pact contract ABI — only the functions this service needs to call
 const CONTRACT_ABI = [
-  // expiresAt: Unix timestamp for seal expiry; pass 0 for no expiry
-  "function mint(address to, uint8 tier, bytes signature, uint256 expiresAt)",
+  "function mint(address to, uint8 tier, uint8 jurisdictionCode, bytes signature, uint256 expiresAt)",
   "function revoke(uint256 sealId, string reason)",
   "function getVerificationStatus(address user) view returns (bool verified, uint8 tier, bool revoked, bool burnPending, uint256 burnExecutableAt)",
   "function addressToSealId(address user) view returns (uint256)",
@@ -23,19 +22,30 @@ const contract = new ethers.Contract(
   wallet
 );
 
+// Expiry durations by tier (in seconds)
+const EXPIRY_BY_TIER = {
+  1: 365 * 24 * 60 * 60,       // Tier I  — 12 months
+  2: 2 * 365 * 24 * 60 * 60,   // Tier II — 24 months
+};
+
 /**
  * Mint a seal on-chain via the Pact contract on Arbitrum Sepolia
- * @param {string} userAddress - Recipient wallet address
- * @param {number} tier - Verification tier (1–5)
- * @param {string} signature - ECDSA signature from createMintSignature (chainId 421614)
- * @param {number} expiresAt - Unix timestamp for seal expiry; 0 means no expiry
+ * @param {string} userAddress      - Recipient wallet address
+ * @param {number} tier             - Verification tier (1–5)
+ * @param {string} signature        - ECDSA signature from createMintSignature
+ * @param {number} jurisdictionCode - ISO 3166-1 numeric country code, or 0 for global (default: 0)
  * @returns {Object} Transaction receipt { transactionHash, blockNumber, gasUsed }
  */
-export async function mintSeal(userAddress, tier, signature, expiresAt = 0) {
+export async function mintSeal(userAddress, tier, signature, jurisdictionCode = 0) {
   try {
-    console.log(`⛓️  Minting seal for ${userAddress} at tier ${tier}...`);
+    // Calculate expiry: 12 months for Tier I, 24 months for Tier II, no expiry otherwise
+    const expiresAt = EXPIRY_BY_TIER[tier]
+      ? Math.floor(Date.now() / 1000) + EXPIRY_BY_TIER[tier]
+      : 0;
 
-    const tx = await contract.mint(userAddress, tier, signature, expiresAt, {
+    console.log(`⛓️  Minting seal for ${userAddress} tier ${tier} jurisdiction ${jurisdictionCode} expiresAt ${expiresAt || 'never'}...`);
+
+    const tx = await contract.mint(userAddress, tier, jurisdictionCode, signature, expiresAt, {
       gasLimit: 300000  // Conservative ceiling; actual usage is ~150–180k
     });
 

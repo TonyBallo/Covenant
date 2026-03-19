@@ -30,6 +30,7 @@ contract Pact is ERC721, Ownable, ReentrancyGuard {
         uint256 expiresAt;
         bool revoked;
         string revocationReason;
+        uint8 jurisdictionCode;
     }
 
     // Burn request structure
@@ -98,7 +99,7 @@ contract Pact is ERC721, Ownable, ReentrancyGuard {
     /**
      * @dev Mint a new seal to an address
      */
-    function mint(address to, Tier tier, bytes calldata covenantSignature, uint256 expiresAt)
+    function mint(address to, Tier tier, uint8 jurisdictionCode, bytes calldata covenantSignature, uint256 expiresAt)
     external
     onlyOwner
     nonReentrant
@@ -107,8 +108,8 @@ contract Pact is ERC721, Ownable, ReentrancyGuard {
     require(tier != Tier.NONE, "Invalid tier");
     require(tierActive[tier], "Tier not yet active");
 
-    // Verify Covenant signature (includes chain ID to prevent replay attacks)
-    bytes32 message = keccak256(abi.encodePacked(to, uint8(tier), block.chainid));
+    // Verify Covenant signature (includes jurisdictionCode and chain ID to prevent replay attacks)
+    bytes32 message = keccak256(abi.encodePacked(to, uint8(tier), jurisdictionCode, block.chainid));
     require(recoverSigner(message, covenantSignature) == owner(), "Invalid Covenant signature");
 
     uint256 sealId = _nextSealId++;
@@ -120,7 +121,8 @@ contract Pact is ERC721, Ownable, ReentrancyGuard {
         mintedAt: block.timestamp,
         expiresAt: expiresAt,
         revoked: false,
-        revocationReason: ""
+        revocationReason: "",
+        jurisdictionCode: jurisdictionCode
     });
 
     addressToSealId[to] = sealId;
@@ -144,7 +146,7 @@ contract Pact is ERC721, Ownable, ReentrancyGuard {
     /**
      * @dev Upgrade tier of existing seal
      */
-    function upgradeTier(uint256 sealId, Tier newTier, bytes calldata newSignature)
+    function upgradeTier(uint256 sealId, Tier newTier, uint8 jurisdictionCode, bytes calldata newSignature)
     external
     onlyOwner
     nonReentrant
@@ -153,17 +155,43 @@ contract Pact is ERC721, Ownable, ReentrancyGuard {
     require(!sealData[sealId].revoked, "Seal is revoked");
     require(newTier > sealData[sealId].tier, "Can only upgrade tier");
 
-    // Verify new signature (includes chain ID to prevent replay attacks)
+    // Verify new signature (includes jurisdictionCode and chain ID to prevent replay attacks)
     address sealOwner = _ownerOf(sealId);
-    bytes32 message = keccak256(abi.encodePacked(sealOwner, uint8(newTier), block.chainid));
+    bytes32 message = keccak256(abi.encodePacked(sealOwner, uint8(newTier), jurisdictionCode, block.chainid));
     require(recoverSigner(message, newSignature) == owner(), "Invalid Covenant signature");
 
     Tier oldTier = sealData[sealId].tier;
     sealData[sealId].tier = newTier;
     sealData[sealId].covenantSignature = newSignature;
+    sealData[sealId].jurisdictionCode = jurisdictionCode;
 
     emit SealUpgraded(sealId, oldTier, newTier);
 }
+
+    /**
+     * @dev Return the key seal fields for a wallet address.
+     * Returns all zero values if the wallet has no seal.
+     */
+    function getSeal(address wallet) public view returns (
+        uint8 tier,
+        uint256 issuedAt,
+        uint256 expiresAt,
+        uint8 jurisdictionCode,
+        bool revoked
+    ) {
+        uint256 sealId = addressToSealId[wallet];
+        if (sealId == 0) {
+            return (0, 0, 0, 0, false);
+        }
+        SealData memory data = sealData[sealId];
+        return (
+            uint8(data.tier),
+            data.mintedAt,
+            data.expiresAt,
+            data.jurisdictionCode,
+            data.revoked
+        );
+    }
 
     /**
      * @dev Check if an address is verified and get their seal tier

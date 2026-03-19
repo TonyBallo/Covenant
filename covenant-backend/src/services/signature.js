@@ -9,29 +9,30 @@ const wallet = new ethers.Wallet(process.env.OWNER_PRIVATE_KEY);
 /**
  * Create an ECDSA signature authorising a seal mint or tier upgrade.
  *
- * The message hash includes chainId so that a signature produced for one
- * chain (e.g. Arbitrum Sepolia 421614) cannot be replayed on another
- * (e.g. Polygon Amoy 80002). Both Pact.sol and PactWitness.sol reconstruct
- * this same hash on-chain before calling ecrecover.
+ * The message hash includes jurisdictionCode and chainId so that:
+ *   - A signature cannot be replayed across chains (chainId binding)
+ *   - A signature cannot be used to mint with a different jurisdiction (jurisdictionCode binding)
+ * Both Pact.sol and PactWitness.sol reconstruct this same hash on-chain
+ * before calling ecrecover.
  *
- * @param {string} userAddress - Recipient wallet address
- * @param {number} tier - Verification tier (1–5)
- * @param {number} chainId - Target chain ID (default: 421614 Arbitrum Sepolia)
+ * @param {string} userAddress      - Recipient wallet address
+ * @param {number} tier             - Verification tier (1–5)
+ * @param {number} jurisdictionCode - ISO 3166-1 numeric country code, or 0 for global
+ * @param {number} chainId          - Target chain ID (default: 421614 Arbitrum Sepolia)
  * @returns {string} Hex-encoded ECDSA signature
  */
-export async function createMintSignature(userAddress, tier, chainId = 421614) {
+export async function createMintSignature(userAddress, tier, jurisdictionCode = 0, chainId = 421614) {
   try {
-    // keccak256(abi.encodePacked(address, uint8 tier, uint256 chainId))
+    // keccak256(abi.encodePacked(address, uint8 tier, uint8 jurisdictionCode, uint256 chainId))
     const messageHash = ethers.solidityPackedKeccak256(
-      ["address", "uint8", "uint256"],
-      [userAddress, tier, chainId]
+      ["address", "uint8", "uint8", "uint256"],
+      [userAddress, tier, jurisdictionCode, chainId]
     );
 
-    // Sign the message
     const signature = await wallet.signMessage(ethers.getBytes(messageHash));
 
-    console.log(`✍️  Created signature for ${userAddress} at tier ${tier}`);
-    
+    console.log(`✍️  Created signature for ${userAddress} tier ${tier} jurisdiction ${jurisdictionCode}`);
+
     return signature;
   } catch (error) {
     console.error('Signature creation failed:', error);
@@ -41,16 +42,18 @@ export async function createMintSignature(userAddress, tier, chainId = 421614) {
 
 /**
  * Verify a signature is valid
- * @param {string} userAddress - User's wallet address
- * @param {number} tier - Verification tier
- * @param {string} signature - Signature to verify
+ * @param {string} userAddress      - User's wallet address
+ * @param {number} tier             - Verification tier
+ * @param {number} jurisdictionCode - Jurisdiction code used when signing
+ * @param {string} signature        - Signature to verify
+ * @param {number} chainId          - Chain ID used when signing (default: 421614)
  * @returns {boolean} Is valid
  */
-export function verifySignature(userAddress, tier, signature, chainId = 421614) {
+export function verifySignature(userAddress, tier, jurisdictionCode = 0, signature, chainId = 421614) {
   try {
     const messageHash = ethers.solidityPackedKeccak256(
-      ["address", "uint8", "uint256"],
-      [userAddress, tier, chainId]
+      ["address", "uint8", "uint8", "uint256"],
+      [userAddress, tier, jurisdictionCode, chainId]
     );
 
     const recoveredAddress = ethers.verifyMessage(

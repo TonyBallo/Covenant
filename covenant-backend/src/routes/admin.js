@@ -75,10 +75,11 @@ router.post('/approve/:id', async (req, res) => {
       });
     }
 
-    // Create new signature
+    // Create new signature (jurisdictionCode defaults to 0 — global)
     const signature = await createMintSignature(
       submission.wallet_address,
-      submission.tier_requested
+      submission.tier_requested,
+      0
     );
 
     // Update submission with signature
@@ -173,28 +174,34 @@ router.post('/reject/:id', async (req, res) => {
 /**
  * Mint seal on-chain
  * POST /api/admin/mint
+ * Body: { submissionId, walletAddress, tier, jurisdictionCode? }
+ * jurisdictionCode defaults to 0 (global) if not provided.
+ * The signature is always regenerated here so it binds to the correct jurisdictionCode.
  */
 router.post('/mint', async (req, res) => {
   try {
-    const { submissionId, walletAddress, tier, signature } = req.body;
+    const { submissionId, walletAddress, tier, jurisdictionCode = 0 } = req.body;
 
-    if (!walletAddress || !tier || !signature) {
-      return res.status(400).json({ 
-        error: 'Missing required fields: walletAddress, tier, signature' 
+    if (!walletAddress || !tier) {
+      return res.status(400).json({
+        error: 'Missing required fields: walletAddress, tier'
       });
     }
 
     // Check if already minted
     const existingSealId = await getSealId(walletAddress);
     if (existingSealId > 0) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Seal already minted for this address',
         sealId: existingSealId
       });
     }
 
+    // Regenerate signature bound to the exact jurisdictionCode being minted
+    const signature = await createMintSignature(walletAddress, tier, jurisdictionCode);
+
     // Mint on-chain
-    const receipt = await mintSeal(walletAddress, tier, signature);
+    const receipt = await mintSeal(walletAddress, tier, signature, jurisdictionCode);
 
     // Get the seal ID
     const sealId = await getSealId(walletAddress);
@@ -292,10 +299,11 @@ router.post('/attest/:id', async (req, res) => {
       });
     }
 
-    // Generate a Polygon-specific signature (chainId 80002)
+    // Generate a Polygon-specific signature (jurisdictionCode 0 — global, chainId 80002)
     const polygonSignature = await createMintSignature(
       submission.wallet_address,
       submission.tier_requested,
+      0,
       80002
     );
 

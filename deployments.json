@@ -4,10 +4,10 @@
       "network": "arbitrumSepolia",
       "chainId": 421614,
       "contract": "Pact",
-      "address": "0x2E47219B0910dc76233cdAb56aDDaa8d196c030A",
+      "address": "0xFa71D3c2dAbD20A3ceEb3Ef08319CE64548ecbA4",
       "deployer": "0xaDff4AF90C4f354eF21B6225fAEE61FbED1E642b",
-      "deployedAt": "Mar-18-2026",
-      "arbiscan": "https://sepolia.arbiscan.io/address/0x2E47219B0910dc76233cdAb56aDDaa8d196c030A#code"
+      "deployedAt": "Mar-19-2026",
+      "arbiscan": "https://sepolia.arbiscan.io/address/0xFa71D3c2dAbD20A3ceEb3Ef08319CE64548ecbA4#code"
     }
   },
   "polygonAmoy": {

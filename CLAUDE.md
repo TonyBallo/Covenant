@@ -1,6 +1,6 @@
 # CLAUDE.md — Project Covenant
 
-Persistent context for Claude Code sessions. Generated 2026-03-18.
+Persistent context for Claude Code sessions. Updated 2026-03-19.
 
 ---
 
@@ -9,16 +9,16 @@ Persistent context for Claude Code sessions. Generated 2026-03-18.
 ```
 Project_Covenant/
 ├── contracts/
-│   ├── IdentitySBT.sol                  # Main ERC721 soulbound NFT contract (IdentityPact v2, token name "Covenant Pact" / symbol "PACT")
-│   └── CovenantAttestationBuild.sol     # Polygon Amoy attestation contract
+│   ├── Pact.sol                         # Main ERC721 soulbound NFT contract (ERC721 name "Covenant Pact" / symbol "PACT")
+│   └── PactWitness.sol                  # Polygon Amoy attestation contract
 ├── covenant-backend/                    # Node.js/Express REST API
 │   ├── src/
 │   │   ├── server.js                    # Express app setup, CORS, Supabase init, hourly cleanup job
 │   │   ├── routes/
 │   │   │   ├── kyc.js                   # KYC submit, email verification, status, cross-chain status
-│   │   │   └── admin.js                 # Approve/reject/mint/revoke/attest endpoints
+│   │   │   └── admin.js                 # Approve/reject/mint/revoke/attest/lookup endpoints
 │   │   └── services/
-│   │       ├── blockchain.js            # ethers.js v6 calls to Sepolia contract (mint, revoke, getSealId)
+│   │       ├── blockchain.js            # ethers.js v6 calls to Arbitrum Sepolia (mint, revoke, getSealId, getSealInfo)
 │   │       ├── polygon.js               # Polygon Amoy attestation calls (attest, get, revoke)
 │   │       └── signature.js             # ECDSA signature creation/verification for mint authorization
 │   ├── package.json
@@ -28,10 +28,11 @@ Project_Covenant/
 │   │   ├── App.jsx                      # Router, navbar, wallet connection, homepage search
 │   │   ├── pages/
 │   │   │   ├── ApplyForm.jsx            # KYC submission form (Tier I / Bronze only)
-│   │   │   ├── Admin.jsx                # Admin panel (password-protected, Pending + Ready-to-Mint tabs)
-│   │   │   ├── StatusPage.jsx           # Logged-in user's own verification status
+│   │   │   ├── Admin.jsx                # Admin panel (password-protected; Pending, Ready-to-Mint, Revoke Seal, Revoked Seals tabs)
+│   │   │   ├── StatusPage.jsx           # Logged-in user's own verification status (always checks on-chain)
 │   │   │   ├── TierSelect.jsx           # Tier picker (only Tier I currently active)
 │   │   │   ├── GetVerified.jsx          # Entry point for verification flow
+│   │   │   ├── VendorDemo.jsx           # Vendor integration demo — gates a mock DeFi dashboard behind isValid(address, 2)
 │   │   │   ├── VerifySuccess.jsx        # Post email-verification success screen
 │   │   │   └── VerifyFailed.jsx         # Post email-verification failure screen
 │   │   ├── components/
@@ -39,7 +40,7 @@ Project_Covenant/
 │   │   │   └── ResultDisplay.jsx        # Seal visualization with cross-chain badges
 │   │   └── utils/
 │   │       ├── api.js                   # All fetch calls to backend (API_BASE_URL from env)
-│   │       ├── contract.js              # ABI + contract address + ethers.js read calls
+│   │       ├── contract.js              # ABI + contract address + ethers.js read calls (Arbitrum Sepolia)
 │   │       └── constants.js             # TIERS map, formatDate(), formatAddress()
 │   ├── package.json
 │   ├── vite.config.js
@@ -48,14 +49,16 @@ Project_Covenant/
 │   ├── .env.local                       # VITE_API_URL (Railway production URL)
 │   └── vercel.json
 ├── scripts/
-│   ├── deploy.js                        # Hardhat deploy script for IdentityPact
-│   ├── deployAttestation.js             # Hardhat deploy for Polygon attestation contract
-│   └── mintTestSeals.js                 # Dev script to mint test seals
+│   ├── deploy.js                        # Hardhat deploy script for Pact
+│   ├── deployAttestation.js             # Hardhat deploy for PactWitness (Polygon Amoy)
+│   ├── activateTiers.js                 # One-off script to enable tier levels on a deployed Pact contract
+│   ├── mintTestSeals.js                 # Dev script to mint test seals
+│   └── repopulateSeals.js               # Migration script — re-mints all seals from an old contract onto a new one
 ├── test/
 │   └── IdentitySBT.test.js              # 41 tests, 100% statement/function/line coverage
-├── hardhat.config.js                    # Solidity 0.8.28, Sepolia + Amoy networks, Etherscan
+├── hardhat.config.js                    # Solidity 0.8.28, arbitrumSepolia + amoy networks, Arbiscan
 ├── package.json                         # Root: Hardhat toolbox, OpenZeppelin, dotenv
-├── deployments.json                     # Canonical deployed contract addresses
+├── deployments.json                     # Canonical deployed contract addresses (Arbitrum Sepolia + Polygon Amoy)
 ├── .env                                 # Root: RPC URLs, private keys (TESTNET DEMO ONLY)
 ├── README.md
 ├── CHANGELOG.md
@@ -109,13 +112,19 @@ Project_Covenant/
 
 ## Environment Variables
 
-### Root `.env` (Hardhat scripts)
+### Root `.env` (Hardhat scripts + repopulateSeals)
 ```
-SEPOLIA_RPC_URL
-SEPOLIA_PRIVATE_KEY
-ETHERSCAN_API_KEY
+ARBITRUM_SEPOLIA_RPC_URL
+ARBITRUM_SEPOLIA_PRIVATE_KEY
+ARBISCAN_API_KEY
 POLYGON_PRIVATE_KEY
 POLYGON_AMOY_RPC_URL
+
+# Migration script (repopulateSeals.js) — set before running
+OLD_CONTRACT_ADDRESS
+NEW_CONTRACT_ADDRESS
+MIGRATE_FROM_BLOCK        # optional: deployment block of old contract, speeds up event scan
+INCLUDE_REVOKED           # optional: "true" to re-mint and re-revoke revoked seals
 ```
 
 ### `covenant-backend/.env`
@@ -124,9 +133,11 @@ SUPABASE_URL
 SUPABASE_ANON_KEY
 SUPABASE_SERVICE_KEY
 SUPABASE_PRIVATE_KEY
-SEPOLIA_RPC_URL
+ARBITRUM_SEPOLIA_RPC_URL
 CONTRACT_ADDRESS
 OWNER_PRIVATE_KEY
+POLYGON_RPC_URL
+POLYGON_ATTESTATION_ADDRESS
 PORT
 NODE_ENV
 ```
@@ -140,23 +151,22 @@ VITE_API_URL
 
 ## Deployed Contracts & Chain Info
 
-### Ethereum Sepolia (Chain ID: 11155111)
+### Arbitrum Sepolia (Chain ID: 421614)
 | Field | Value |
 |---|---|
-| Contract | IdentitySBT (IdentityPact v2) |
-| Active Address | `0x60859A972A9996cf24448323c7b1E49825f092a4` |
-| Deployments.json Address | `0x2E47219B0910dc76233cdAb56aDDaa8d196c030A` |
-| RPC | Alchemy Sepolia |
-| Explorer | https://sepolia.etherscan.io |
+| Contract | Pact |
+| Address | `0xFa71D3c2dAbD20A3ceEb3Ef08319CE64548ecbA4` |
+| Deployer | `0xaDff4AF90C4f354eF21B6225fAEE61FbED1E642b` |
+| RPC | Alchemy Arbitrum Sepolia |
+| Explorer | https://sepolia.arbiscan.io |
 | ERC721 Name | "Covenant Pact" |
 | Symbol | "PACT" |
-
-> Note: `CONTRACT_ADDRESS` in backend `.env` (`0x60859A...`) is the active one. `deployments.json` records the original deploy (`0x2E47...`).
 
 ### Polygon Amoy (Chain ID: 80002)
 | Field | Value |
 |---|---|
-| Contract | CovenantAttestationBuild |
+| Contract | PactWitness |
+| Address | `0xbbb4288A3a28dBC5f0770a6a078943977e7AaAD0` |
 | RPC | https://rpc-amoy.polygon.technology/ |
 | Explorer | https://amoy.polygonscan.com |
 
@@ -182,17 +192,22 @@ Admin views /api/admin/pending
 
 Admin approves submission
   → POST /api/admin/approve/:id
-    → signature.js: ECDSA sign keccak256(address + tier) with OWNER_PRIVATE_KEY
+    → signature.js: ECDSA sign keccak256(address + tier + chainId) with OWNER_PRIVATE_KEY
     → Supabase: status='approved', signature stored
 
 Admin mints seal
   → POST /api/admin/mint
-    → blockchain.js: contract.mint(address, tier, signature) on Sepolia
+    → blockchain.js: contract.mint(address, tier, signature, expiresAt) on Arbitrum Sepolia
     → Supabase: record in 'seals' table with txHash and sealId
 
 Admin attests on Polygon
   → POST /api/admin/attest/:id
     → polygon.js: attestationContract.attestSeal() on Polygon Amoy
+
+Admin revokes seal
+  → POST /api/admin/revoke  { sealId, walletAddress, reason }
+    → blockchain.js: contract.revoke(sealId, reason) on Arbitrum Sepolia
+    → Supabase: kyc_submissions status set to 'revoked'
 ```
 
 ### Frontend → Backend
@@ -202,15 +217,16 @@ Admin attests on Polygon
 - Admin endpoints have no server-side auth (password checked client-side only)
 
 ### Frontend → Smart Contract (Read-Only)
-- `covenant-lookup/src/utils/contract.js` creates a `JsonRpcProvider` (hardcoded Alchemy URL)
-- ABI has 3 functions: `getVerificationStatus`, `addressToSealId`, `sealData`
-- Used in `App.jsx` (homepage lookup) and `ResultDisplay.jsx` (cross-chain badges)
+- `covenant-lookup/src/utils/contract.js` creates a `JsonRpcProvider` pointed at Arbitrum Sepolia (Alchemy)
+- ABI exposes 4 view functions: `getVerificationStatus`, `addressToSealId`, `sealData`, `isValid`
+- Used in `App.jsx` (homepage lookup), `ResultDisplay.jsx` (cross-chain badges), `StatusPage.jsx`, and `VendorDemo.jsx`
 - Wallet connection uses `ethers.BrowserProvider(window.ethereum)` — MetaMask required
 
 ### Backend → Smart Contract
-- `covenant-backend/src/services/blockchain.js` uses `ethers.JsonRpcProvider` (SEPOLIA_RPC_URL)
+- `covenant-backend/src/services/blockchain.js` uses `ethers.JsonRpcProvider` (`ARBITRUM_SEPOLIA_RPC_URL`)
 - Signed transactions via `new ethers.Wallet(OWNER_PRIVATE_KEY, provider)`
 - Gas limits hardcoded: 300,000 for mint, 200,000 for revoke
+- Exports: `mintSeal`, `revokeSeal`, `getSealId`, `hasSeal`, `getSealInfo`
 
 ### Wallet Connection Pattern
 - `ethers.BrowserProvider(window.ethereum)` → `provider.send('eth_requestAccounts', [])`
@@ -239,6 +255,7 @@ struct SealData {
   Tier tier;
   bytes covenantSignature;
   uint256 mintedAt;
+  uint256 expiresAt;       // 0 = no expiry
   bool revoked;
   string revocationReason;
 }
@@ -249,15 +266,60 @@ struct BurnRequest {
 }
 ```
 
+### Key Functions
+- `mint(address, Tier, bytes signature, uint256 expiresAt)` — onlyOwner; validates ECDSA signature
+- `revoke(uint256 sealId, string reason)` — onlyOwner
+- `upgradeTier(uint256 sealId, Tier newTier, bytes newSignature)` — onlyOwner
+- `isValid(address, Tier minTier) view returns (bool)` — returns true only if seal is active, unrevoked, unexpired, and at or above minTier; primary integration point for vendor protocols
+- `isExpired(address) view returns (bool)`
+- `getVerificationStatus(address)` — returns (verified, tier, revoked, burnPending, burnExecutableAt)
+- `setTierActive(Tier, bool)` — onlyOwner; gates which tiers can be minted
+
 ### Key Constants
 - **Burn delay:** 90 days (time-locked, user-initiated)
 - **One seal per address** (enforced by `addressToSealId` mapping)
 - **Soulbound:** transfer/safeTransfer overridden to revert
 
+### Signature Scheme
+`keccak256(abi.encodePacked(address, uint8 tier, uint256 chainId))` — chainId is included to prevent cross-chain replay attacks. Arbitrum Sepolia = 421614, Polygon Amoy = 80002.
+
 ### Security
 - `ReentrancyGuard` on all state-changing functions
 - ECDSA `recoverSigner()` validates backend signature on mint
 - `verifyOwnership(address, sealId)` prevents spoofing
+
+---
+
+## API Endpoints
+
+### User-facing (`/api/kyc/`)
+| Method | Path | Description |
+|---|---|---|
+| POST | `/api/kyc/submit` | Submit KYC application (rate-limited: 3/15min) |
+| GET | `/api/kyc/verify/:token` | Email verification magic link |
+| GET | `/api/kyc/status/:address` | KYC submission status for address |
+| GET | `/api/kyc/cross-chain-status/:address` | Cross-chain attestation status |
+
+### Admin-facing (`/api/admin/`)
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/admin/pending` | Submissions where status='pending' AND email_verified=true |
+| GET | `/api/admin/ready-to-mint` | Approved submissions not yet fully minted+attested |
+| GET | `/api/admin/revoked` | All submissions where status='revoked', enriched with seal data |
+| GET | `/api/admin/seal/:address` | On-chain seal lookup by wallet address |
+| GET | `/api/admin/polygon-status/:address` | Polygon attestation status |
+| POST | `/api/admin/approve/:id` | Approve submission, generate ECDSA signature |
+| POST | `/api/admin/reject/:id` | Reject submission with reason |
+| POST | `/api/admin/mint` | Mint seal on Arbitrum Sepolia |
+| POST | `/api/admin/revoke` | Revoke seal on-chain + set Supabase status to 'revoked' |
+| POST | `/api/admin/attest/:id` | Attest seal on Polygon Amoy |
+
+> No server-side auth on admin routes — password is checked client-side only (`covenant-demo-2026`). Production requires server-side auth.
+
+### Health
+| Method | Path |
+|---|---|
+| GET | `/health` |
 
 ---
 
@@ -279,11 +341,6 @@ struct BurnRequest {
 - `services/` — external integrations (blockchain, polygon, signature)
 - Supabase client exported from `server.js`, imported by routes
 
-### API Endpoints
-- User-facing: `/api/kyc/*`
-- Admin-facing: `/api/admin/*`
-- Health check: `GET /health`
-
 ### Tailwind Dynamic Classes
 Tier colors use dynamic class names — kept in `tailwind.config.js` safelist:
 `bg-{orange,gray,yellow,blue,purple}-100`, `text-{color}-{600,800}`
@@ -291,7 +348,7 @@ Tier colors use dynamic class names — kept in `tailwind.config.js` safelist:
 ### State Management
 - No Redux or Zustand — plain React `useState`/`useEffect`
 - Backend state in Supabase
-- On-chain state is source of truth for verification status
+- On-chain state is source of truth for verification status (`StatusPage` always checks on-chain regardless of Supabase status)
 
 ### Database Schema (Supabase)
 Tables: `users`, `kyc_submissions`, `seals`, `attestations`
@@ -305,8 +362,13 @@ Tables: `users`, `kyc_submissions`, `seals`, `attestations`
 npx hardhat test
 npx hardhat coverage
 REPORT_GAS=true npx hardhat test
-npx hardhat run scripts/deploy.js --network sepolia
+npx hardhat run scripts/deploy.js --network arbitrumSepolia
 npx hardhat run scripts/deployAttestation.js --network amoy
+npx hardhat run scripts/activateTiers.js --network arbitrumSepolia
+
+# Contract migration (after redeploying — set OLD/NEW_CONTRACT_ADDRESS in .env first)
+npx hardhat run scripts/repopulateSeals.js --network arbitrumSepolia -- --dry-run
+npx hardhat run scripts/repopulateSeals.js --network arbitrumSepolia
 
 # Backend
 cd covenant-backend
@@ -325,5 +387,4 @@ npm run build
 1. **Admin auth is client-side only** — password `'covenant-demo-2026'` hardcoded in `Admin.jsx`. Production requires server-side auth.
 2. **No auth on admin API routes** — any request to `/api/admin/*` succeeds if the correct body is sent.
 3. **Testnet only** — not audited, not ready for mainnet or real personal data.
-4. **`deployments.json` is stale** — the address there (`0x2E47...`) differs from the active contract in backend `.env` (`0x60859...`).
-5. **Frontend contract address is hardcoded** in `utils/contract.js` (not in env).
+4. **Frontend contract address is hardcoded** in `utils/contract.js` (not in env).
