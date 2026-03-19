@@ -19,7 +19,7 @@ export default {
         marble: {
           DEFAULT: '#f0ece3',
           dim:     '#c8bfb0',
-          muted:   '#7a6e65',
+          muted:   '#a09488',
         },
         gold: {
           DEFAULT: '#d4af5a',
