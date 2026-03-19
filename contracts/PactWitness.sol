@@ -4,10 +4,10 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
- * @title CovenantAttestation
+ * @title PactWitness
  * @notice Cross-chain verification attestation for Covenant Protocol
  */
-contract CovenantAttestation is Ownable {
+contract PactWitness is Ownable {
     
     // ============ State Variables ============
     
@@ -56,8 +56,8 @@ contract CovenantAttestation is Ownable {
         require(wallet != address(0), "Invalid wallet");
         require(attestations[wallet].tier == 0, "Wallet already has attestation");
         
-        // Verify signature matches IdentityPact format: keccak256(wallet, tier)
-        bytes32 messageHash = keccak256(abi.encodePacked(wallet, tier));
+        // Verify signature matches Pact format: keccak256(wallet, tier, chainId)
+        bytes32 messageHash = keccak256(abi.encodePacked(wallet, tier, block.chainid));
         require(recoverSigner(messageHash, signature) == owner(), "Invalid signature");
         
         // Create the attestation with 1-year expiry
@@ -128,7 +128,7 @@ contract CovenantAttestation is Ownable {
     
     /**
      * @dev Recover signer address from message and signature
-     * @dev This matches IdentityPact's signature verification exactly
+     * @dev This matches Pact's signature verification exactly
      */
     function recoverSigner(bytes32 message, bytes memory signature) 
         internal 

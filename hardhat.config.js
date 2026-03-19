@@ -14,16 +14,14 @@ module.exports = {
     }
   },
   etherscan: {
-    apiKey: {
-      arbitrumSepolia: process.env.ARBISCAN_API_KEY || "",
-    }
+    apiKey: process.env.ARBISCAN_API_KEY || "",
   },
   customChains: [
     {
       network: "arbitrumSepolia",
       chainId: 421614,
       urls: {
-        apiURL: "https://api-sepolia.arbiscan.io/api",
+        apiURL: "https://api.etherscan.io/v2/api",
         browserURL: "https://sepolia.arbiscan.io"
       }
     },
@@ -31,7 +29,7 @@ module.exports = {
       network: "amoy",
       chainId: 80002,
       urls: {
-        apiURL: "https://api-amoy.polygonscan.com/api",
+        apiURL: "https://api.etherscan.io/v2/api",
         browserURL: "https://amoy.polygonscan.com"
       }
     }

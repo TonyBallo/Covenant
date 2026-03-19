@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Attestation contract ABI
+// PactWitness contract ABI
 const ATTESTATION_ABI = [
   "function attestSeal(address wallet, uint8 tier, bytes32 credentialHash, bytes signature)",
   "function getVerificationStatus(address wallet) view returns (uint8 tier, uint256 expiresAt, bool isRevoked)",

@@ -1,15 +1,15 @@
 const hre = require("hardhat");
 
 async function main() {
-  console.log("Deploying CovenantAttestation to Polygon Amoy...");
+  console.log("Deploying PactWitness to Polygon Amoy...");
 
   const [deployer] = await hre.ethers.getSigners();
   console.log("Deploying with account:", deployer.address);
 
-  const CovenantAttestation = await hre.ethers.getContractFactory("CovenantAttestation");
-  
+  const PactWitness = await hre.ethers.getContractFactory("PactWitness");
+
   // Deploy with manual gas settings to reduce cost
-  const attestation = await CovenantAttestation.deploy({
+  const attestation = await PactWitness.deploy({
     gasLimit: 3000000,  // Set a reasonable gas limit
     gasPrice: hre.ethers.parseUnits("30", "gwei")  // Lower gas price for testnet
   });
