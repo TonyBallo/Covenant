@@ -93,7 +93,7 @@ export function ApplyForm({ walletAddress, walletConnected }) {
               ) : (
                 <div className="border border-gold/30 bg-gold/5 px-4 py-3">
                   <p className="font-cormorant text-gold italic text-base">
-                    Please connect your wallet using the button in the top right.
+                    Please connect your wallet using the navigation menu.
                   </p>
                 </div>
               )}
