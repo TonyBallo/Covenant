@@ -7,14 +7,21 @@ dotenv.config();
 const wallet = new ethers.Wallet(process.env.OWNER_PRIVATE_KEY);
 
 /**
- * Create a signature for minting a seal
- * @param {string} userAddress - User's wallet address
- * @param {number} tier - Verification tier (1-5)
- * @returns {string} Signature
+ * Create an ECDSA signature authorising a seal mint or tier upgrade.
+ *
+ * The message hash includes chainId so that a signature produced for one
+ * chain (e.g. Arbitrum Sepolia 421614) cannot be replayed on another
+ * (e.g. Polygon Amoy 80002). Both Pact.sol and PactWitness.sol reconstruct
+ * this same hash on-chain before calling ecrecover.
+ *
+ * @param {string} userAddress - Recipient wallet address
+ * @param {number} tier - Verification tier (1–5)
+ * @param {number} chainId - Target chain ID (default: 421614 Arbitrum Sepolia)
+ * @returns {string} Hex-encoded ECDSA signature
  */
 export async function createMintSignature(userAddress, tier, chainId = 421614) {
   try {
-    // Create message hash (same format as contract expects, includes chainId to prevent replay attacks)
+    // keccak256(abi.encodePacked(address, uint8 tier, uint256 chainId))
     const messageHash = ethers.solidityPackedKeccak256(
       ["address", "uint8", "uint256"],
       [userAddress, tier, chainId]

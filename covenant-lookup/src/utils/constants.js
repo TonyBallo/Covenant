@@ -1,4 +1,5 @@
-// Tier definitions with colors matching the Imperial theme
+// Tier definitions keyed by tier number (0–5).
+// color strings are used as keys in dynamic Tailwind class maps in ResultDisplay and StatusPage.
 export const TIERS = {
   0: { 
     name: 'None', 
@@ -38,7 +39,8 @@ export const TIERS = {
   },
 };
 
-// Format timestamp to readable date
+// Format a Unix timestamp (seconds) to a human-readable date string.
+// Multiplies by 1000 because JS Date expects milliseconds.
 export function formatDate(timestamp) {
   if (!timestamp) return 'Unknown';
   const date = new Date(timestamp * 1000);

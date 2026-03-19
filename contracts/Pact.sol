@@ -39,12 +39,12 @@ contract Pact is ERC721, Ownable, ReentrancyGuard {
     }
 
     // State variables
-    uint256 private _nextSealId = 1;
-    mapping(uint256 => SealData) public sealData;
-    mapping(address => uint256) public addressToSealId;
-    mapping(uint256 => BurnRequest) public burnRequests;
-    mapping(Tier => bool) public tierActive;
-    uint256 public constant BURN_DELAY = 90 days;
+    uint256 private _nextSealId = 1;                         // Auto-incrementing seal ID; starts at 1 so 0 means "no seal"
+    mapping(uint256 => SealData) public sealData;            // sealId => seal metadata
+    mapping(address => uint256) public addressToSealId;      // wallet => sealId (0 if no seal)
+    mapping(uint256 => BurnRequest) public burnRequests;     // sealId => pending burn request
+    mapping(Tier => bool) public tierActive;                 // gates which tiers can be minted; set by owner
+    uint256 public constant BURN_DELAY = 90 days;            // Time-lock before a requested burn can be executed
 
     // Events
     event SealMinted(address indexed to, uint256 indexed sealId, Tier tier);
@@ -67,7 +67,9 @@ contract Pact is ERC721, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Recover signer address from message and signature
+     * @dev Recover the signer address from a raw message hash and ECDSA signature.
+     * Applies the Ethereum signed message prefix (\x19Ethereum Signed Message:\n32)
+     * to match the output of ethers.js wallet.signMessage(), which prefixes automatically.
      */
     function recoverSigner(bytes32 message, bytes memory signature)
         internal

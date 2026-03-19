@@ -8,7 +8,7 @@ import adminRoutes from './routes/admin.js';
 dotenv.config();
 
 const app = express();
-app.set('trust proxy', 1);
+app.set('trust proxy', 1); // Required for express-rate-limit to read real IP behind Railway's reverse proxy
 const PORT = process.env.PORT || 3001;
 
 // Middleware
@@ -23,7 +23,8 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Initialize Supabase client
+// Initialize Supabase client using the service key (bypasses row-level security —
+// required for server-side writes. Never expose this key to the frontend.)
 export const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
@@ -55,7 +56,9 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Cleanup job - runs every hour to delete unverified submissions older than 1 hour
+// Hourly cleanup: deletes submissions where the user never clicked the verification
+// email link. Keeps the database free of abandoned applications and limits exposure
+// of unverified personal data.
 setInterval(async () => {
   try {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);

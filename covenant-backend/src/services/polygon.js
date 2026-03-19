@@ -23,18 +23,24 @@ const attestationContract = new ethers.Contract(
 );
 
 /**
- * Attest a seal on Polygon
- * @param {string} userAddress - User's wallet address
- * @param {number} tier - Verification tier
- * @param {number} ethereumSealId - Seal ID from Ethereum
- * @param {string} signature - Same signature used for Ethereum mint
- * @returns {Object} Transaction receipt
+ * Attest a verified seal on Polygon Amoy via PactWitness.
+ *
+ * The signature must be generated with chainId 80002 (Polygon Amoy) —
+ * NOT the Arbitrum mint signature. Use createMintSignature(address, tier, 80002).
+ *
+ * @param {string} userAddress - Wallet address being attested
+ * @param {number} tier - Verification tier (1–5)
+ * @param {number} ethereumSealId - Seal ID from the Arbitrum Pact contract
+ * @param {string} signature - Polygon-specific ECDSA signature (chainId 80002)
+ * @returns {Object} { transactionHash, blockNumber, gasUsed, credentialHash }
  */
 export async function attestOnPolygon(userAddress, tier, ethereumSealId, signature) {
   try {
     console.log(`🟣 Attesting seal for ${userAddress} on Polygon...`);
 
-    // Generate credentialHash: keccak256("COVENANT_SEAL", ethereumSealId)
+    // Credential hash links this Polygon attestation back to the Arbitrum seal.
+    // Format: keccak256(abi.encode("COVENANT_SEAL", sealId))
+    // Stored on PactWitness so the attestation can be invalidated if the Arbitrum seal is revoked.
     const credentialHash = ethers.keccak256(
       ethers.AbiCoder.defaultAbiCoder().encode(
         ['string', 'uint256'],
@@ -48,7 +54,7 @@ export async function attestOnPolygon(userAddress, tier, ethereumSealId, signatu
       credentialHash,
       signature,
       {
-        gasLimit: 300000
+        gasLimit: 300000  // Conservative ceiling; actual usage is ~80–120k
       }
     );
 

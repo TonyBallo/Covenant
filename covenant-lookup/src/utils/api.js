@@ -1,4 +1,5 @@
-// Backend API configuration
+// Railway backend base URL. All fetch calls in this file route through here.
+// Update this if the Railway deployment URL changes.
 const API_BASE_URL = 'https://covenant-production-4cf7.up.railway.app';
 /**
  * Submit KYC application

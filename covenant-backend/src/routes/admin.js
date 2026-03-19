@@ -402,18 +402,21 @@ router.get('/ready-to-mint', async (req, res) => {
 
     if (approvedError) throw approvedError;
 
-    // Check each submission to see if it needs minting or attestation
+    // For each approved submission, check on-chain state on both networks.
+    // A submission stays in the ready-to-mint list until BOTH conditions are met:
+    //   1. Seal is minted on Arbitrum (sealId > 0)
+    //   2. Seal is attested on Polygon Amoy (PactWitness.hasAttestation)
     const readyToMint = [];
-    
+
     for (const submission of approved) {
       try {
         const sealId = await getSealId(submission.wallet_address);
         const polygonStatus = await getPolygonAttestation(submission.wallet_address);
-        
+
         const isMinted = sealId > 0;
         const needsAttestation = !polygonStatus.hasAttestation;
-        
-        // Include if not minted yet OR minted but not attested on Polygon
+
+        // Keep in list if either action is still pending
         if (!isMinted || needsAttestation) {
           readyToMint.push({
             ...submission,

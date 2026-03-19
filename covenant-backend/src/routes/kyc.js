@@ -9,13 +9,15 @@ import { hasSeal } from '../services/blockchain.js';
 const router = express.Router();
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Frontend URL for magic link redirect
+// Frontend URL used for email verification redirect after clicking the link.
+// Must point to the deployed frontend (Vercel). Falls back to the primary deployment.
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://covenant-sigma.vercel.app';
 
-// Rate limiting for submissions
+// Rate limit KYC submissions to 3 per IP per 15 minutes.
+// Prevents spam applications and protects the Resend email quota.
 const submitLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 3, // 3 requests per IP
+  windowMs: 15 * 60 * 1000,
+  max: 3,
   message: { error: 'Too many applications from this IP, please try again later' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -206,7 +208,7 @@ router.get('/cross-chain-status/:address', async (req, res) => {
   try {
     const { address } = req.params;
 
-    // Check Ethereum seal
+    // Check Arbitrum Sepolia seal
     const ethereumSeal = await hasSeal(address);
     
     // Check Polygon attestation

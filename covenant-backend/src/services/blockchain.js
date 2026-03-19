@@ -3,15 +3,16 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Contract ABI (only functions we need)
+// Pact contract ABI — only the functions this service needs to call
 const CONTRACT_ABI = [
+  // expiresAt: Unix timestamp for seal expiry; pass 0 for no expiry
   "function mint(address to, uint8 tier, bytes signature, uint256 expiresAt)",
   "function revoke(uint256 sealId, string reason)",
   "function getVerificationStatus(address user) view returns (bool verified, uint8 tier, bool revoked, bool burnPending, uint256 burnExecutableAt)",
   "function addressToSealId(address user) view returns (uint256)",
 ];
 
-// Create provider and wallet
+// Arbitrum Sepolia provider and deployer wallet (used for all state-changing calls)
 const provider = new ethers.JsonRpcProvider(process.env.ARBITRUM_SEPOLIA_RPC_URL);
 const wallet = new ethers.Wallet(process.env.OWNER_PRIVATE_KEY, provider);
 
@@ -23,18 +24,19 @@ const contract = new ethers.Contract(
 );
 
 /**
- * Mint a seal on-chain
- * @param {string} userAddress - User's wallet address
- * @param {number} tier - Verification tier
- * @param {string} signature - Valid signature
- * @returns {Object} Transaction receipt
+ * Mint a seal on-chain via the Pact contract on Arbitrum Sepolia
+ * @param {string} userAddress - Recipient wallet address
+ * @param {number} tier - Verification tier (1–5)
+ * @param {string} signature - ECDSA signature from createMintSignature (chainId 421614)
+ * @param {number} expiresAt - Unix timestamp for seal expiry; 0 means no expiry
+ * @returns {Object} Transaction receipt { transactionHash, blockNumber, gasUsed }
  */
 export async function mintSeal(userAddress, tier, signature, expiresAt = 0) {
   try {
     console.log(`⛓️  Minting seal for ${userAddress} at tier ${tier}...`);
 
     const tx = await contract.mint(userAddress, tier, signature, expiresAt, {
-      gasLimit: 300000
+      gasLimit: 300000  // Conservative ceiling; actual usage is ~150–180k
     });
 
     console.log(`📤 Transaction sent: ${tx.hash}`);
@@ -90,7 +92,7 @@ export async function revokeSeal(sealId, reason) {
     console.log(`🚫 Revoking seal #${sealId}: ${reason}`);
 
     const tx = await contract.revoke(sealId, reason, {
-      gasLimit: 200000
+      gasLimit: 200000  // Conservative ceiling; actual usage is ~50–80k
     });
 
     const receipt = await tx.wait();
