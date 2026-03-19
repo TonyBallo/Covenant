@@ -4,9 +4,9 @@ require("dotenv").config();
 module.exports = {
   solidity: "0.8.28",
   networks: {
-    sepolia: {
-      url: process.env.SEPOLIA_RPC_URL || "",
-      accounts: process.env.SEPOLIA_PRIVATE_KEY ? [process.env.SEPOLIA_PRIVATE_KEY] : [],
+    arbitrumSepolia: {
+      url: process.env.ARBITRUM_SEPOLIA_RPC_URL || "https://sepolia-rollup.arbitrum.io/rpc",
+      accounts: process.env.ARBITRUM_SEPOLIA_PRIVATE_KEY ? [process.env.ARBITRUM_SEPOLIA_PRIVATE_KEY] : [],
     },
     amoy: {
       url: process.env.POLYGON_AMOY_RPC_URL || "https://rpc-amoy.polygon.technology/",
@@ -14,9 +14,19 @@ module.exports = {
     }
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY  // Single API key for all networks
+    apiKey: {
+      arbitrumSepolia: process.env.ARBISCAN_API_KEY || "",
+    }
   },
   customChains: [
+    {
+      network: "arbitrumSepolia",
+      chainId: 421614,
+      urls: {
+        apiURL: "https://api-sepolia.arbiscan.io/api",
+        browserURL: "https://sepolia.arbiscan.io"
+      }
+    },
     {
       network: "amoy",
       chainId: 80002,

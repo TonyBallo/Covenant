@@ -12,12 +12,12 @@ const wallet = new ethers.Wallet(process.env.OWNER_PRIVATE_KEY);
  * @param {number} tier - Verification tier (1-5)
  * @returns {string} Signature
  */
-export async function createMintSignature(userAddress, tier) {
+export async function createMintSignature(userAddress, tier, chainId = 421614) {
   try {
-    // Create message hash (same format as contract expects)
+    // Create message hash (same format as contract expects, includes chainId to prevent replay attacks)
     const messageHash = ethers.solidityPackedKeccak256(
-      ["address", "uint8"],
-      [userAddress, tier]
+      ["address", "uint8", "uint256"],
+      [userAddress, tier, chainId]
     );
 
     // Sign the message
@@ -39,11 +39,11 @@ export async function createMintSignature(userAddress, tier) {
  * @param {string} signature - Signature to verify
  * @returns {boolean} Is valid
  */
-export function verifySignature(userAddress, tier, signature) {
+export function verifySignature(userAddress, tier, signature, chainId = 421614) {
   try {
     const messageHash = ethers.solidityPackedKeccak256(
-      ["address", "uint8"],
-      [userAddress, tier]
+      ["address", "uint8", "uint256"],
+      [userAddress, tier, chainId]
     );
 
     const recoveredAddress = ethers.verifyMessage(

@@ -8,8 +8,8 @@ async function main() {
   console.log("Account balance:", ethers.formatEther(await ethers.provider.getBalance(owner.address)), "ETH\n");
 
   // Your deployed contract address
-const pactAddress = "0x60859A972A9996cf24448323c7b1E49825f092a4";
-  const pact = await ethers.getContractAt("IdentityPact", pactAddress);
+const pactAddress = "0x2E47219B0910dc76233cdAb56aDDaa8d196c030A";
+  const pact = await ethers.getContractAt("Pact", pactAddress);
 
   // Generate 10 deterministic test addresses (same every time for demo consistency)
   const testWallets = [
@@ -43,15 +43,16 @@ const pactAddress = "0x60859A972A9996cf24448323c7b1E49825f092a4";
         continue;
       }
 
-      // Create signature
+      // Create signature (includes chain ID to prevent replay attacks)
+      const { chainId } = await ethers.provider.getNetwork();
       const message = ethers.solidityPackedKeccak256(
-        ["address", "uint8"],
-        [address, tier]
+        ["address", "uint8", "uint256"],
+        [address, tier, chainId]
       );
       const signature = await owner.signMessage(ethers.getBytes(message));
 
-      // Mint
-      const tx = await pact.mint(address, tier, signature);
+      // Mint (0 = no expiry)
+      const tx = await pact.mint(address, tier, signature, 0);
       const receipt = await tx.wait();
 
       console.log(`✅ Minted ${tierNames[tier]} (Tier ${tier}) for ${address}`);

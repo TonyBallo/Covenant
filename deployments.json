@@ -1,12 +1,13 @@
 {
-  "sepolia": {
-    "IdentitySBT": {
-      "network": "sepolia",
-      "contract": "IdentitySBT",
+  "arbitrumSepolia": {
+    "Pact": {
+      "network": "arbitrumSepolia",
+      "chainId": 421614,
+      "contract": "Pact",
       "address": "0x2E47219B0910dc76233cdAb56aDDaa8d196c030A",
-      "deployer": "0xadff4af90c4f354ef21b6225faee61fbed1e642b",
-      "deployedAt": "Jan-25-2026 10:40:00 PM UTC",
-      "etherscan": "https://sepolia.etherscan.io/address/0x2E47219B0910dc76233cdAb56aDDaa8d196c030A"
+      "deployer": "0xaDff4AF90C4f354eF21B6225fAEE61FbED1E642b",
+      "deployedAt": "Mar-18-2026",
+      "arbiscan": "https://sepolia.arbiscan.io/address/0x2E47219B0910dc76233cdAb56aDDaa8d196c030A"
     }
   }
 }

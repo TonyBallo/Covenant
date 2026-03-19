@@ -5,14 +5,14 @@ dotenv.config();
 
 // Contract ABI (only functions we need)
 const CONTRACT_ABI = [
-  "function mint(address to, uint8 tier, bytes signature)",
+  "function mint(address to, uint8 tier, bytes signature, uint256 expiresAt)",
   "function revoke(uint256 sealId, string reason)",
   "function getVerificationStatus(address user) view returns (bool verified, uint8 tier, bool revoked, bool burnPending, uint256 burnExecutableAt)",
   "function addressToSealId(address user) view returns (uint256)",
 ];
 
 // Create provider and wallet
-const provider = new ethers.JsonRpcProvider(process.env.SEPOLIA_RPC_URL);
+const provider = new ethers.JsonRpcProvider(process.env.ARBITRUM_SEPOLIA_RPC_URL);
 const wallet = new ethers.Wallet(process.env.OWNER_PRIVATE_KEY, provider);
 
 // Create contract instance
@@ -29,11 +29,11 @@ const contract = new ethers.Contract(
  * @param {string} signature - Valid signature
  * @returns {Object} Transaction receipt
  */
-export async function mintSeal(userAddress, tier, signature) {
+export async function mintSeal(userAddress, tier, signature, expiresAt = 0) {
   try {
     console.log(`⛓️  Minting seal for ${userAddress} at tier ${tier}...`);
 
-    const tx = await contract.mint(userAddress, tier, signature, {
+    const tx = await contract.mint(userAddress, tier, signature, expiresAt, {
       gasLimit: 300000
     });
 
