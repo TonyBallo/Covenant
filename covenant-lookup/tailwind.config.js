@@ -7,20 +7,37 @@ export default {
   theme: {
     extend: {
       colors: {
-        covenant: {
-          purple: '#6B46C1',
-          gold: '#D4AF37',
-          dark: '#1A202C',
-        }
-      }
+        tyrian: {
+          deep:   '#0a0006',
+          darker: '#14000c',
+          dark:   '#1f0112',
+          mid:    '#33011e',
+          rich:   '#520230',
+          vivid:  '#66023c',
+        },
+        obsidian: '#08070a',
+        marble: {
+          DEFAULT: '#f0ece3',
+          dim:     '#c8bfb0',
+          muted:   '#7a6e65',
+        },
+        gold: {
+          DEFAULT: '#d4af5a',
+          dim:     '#a07c30',
+        },
+      },
+      fontFamily: {
+        cinzel:    ['Cinzel', 'Trajan Pro', 'serif'],
+        cormorant: ['Cormorant Garamond', 'Georgia', 'serif'],
+      },
     },
   },
   plugins: [],
   safelist: [
-    'bg-orange-100', 'text-orange-600', 'text-orange-800',
-    'bg-gray-100', 'text-gray-600', 'text-gray-800',
-    'bg-yellow-100', 'text-yellow-600', 'text-yellow-800',
-    'bg-blue-100', 'text-blue-600', 'text-blue-800',
-    'bg-purple-100', 'text-purple-600', 'text-purple-800',
-  ]
+    // Tier text colors (dynamically constructed in components)
+    'text-gold', 'text-marble-dim', 'text-blue-300', 'text-purple-300',
+    // Tier badge background + border (dynamically constructed)
+    'bg-tyrian-mid', 'bg-tyrian-dark', 'bg-tyrian-darker',
+    'border-blue-700', 'border-purple-700',
+  ],
 }

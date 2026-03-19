@@ -15,67 +15,72 @@ import { Admin } from './pages/Admin';
 
 function Navbar({ walletAddress, walletConnected, onConnect, onDisconnect }) {
   return (
-    <header className="bg-white shadow-sm border-b sticky top-0 z-50 backdrop-blur-sm bg-white/90">
-      <div className="max-w-7xl mx-auto px-4 py-6">
+    <header className="bg-tyrian-darker/95 border-b border-gold/20 sticky top-0 z-50 backdrop-blur-sm">
+      <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
+
           <Link to="/" className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-covenant-purple to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">C</span>
+            <div className="w-9 h-9 border border-gold/50 flex items-center justify-center">
+              <span className="font-cinzel text-gold font-semibold text-lg leading-none">C</span>
             </div>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-covenant-purple to-purple-600 bg-clip-text text-transparent">
-                Covenant Protocol
+              <h1 className="font-cinzel text-marble tracking-[0.2em] uppercase text-base leading-tight">
+                Covenant
               </h1>
-              <p className="text-gray-600 mt-1 text-sm">Web3 Identity Verification</p>
+              <p className="font-cormorant text-marble-muted italic text-xs tracking-wider leading-tight">
+                Web3 Identity Verification
+              </p>
             </div>
           </Link>
-          <div className="hidden md:flex items-center gap-3">
+
+          <div className="hidden md:flex items-center gap-6">
             <Link
               to="/admin"
-              className="px-4 py-2 text-covenant-purple hover:text-purple-700 font-semibold transition"
+              className="font-cinzel text-marble-muted hover:text-gold text-xs tracking-widest uppercase transition-colors"
             >
               Admin
             </Link>
             {walletConnected && (
               <Link
                 to="/status"
-                className="px-4 py-2 text-covenant-purple hover:text-purple-700 font-semibold transition"
+                className="font-cinzel text-marble-muted hover:text-gold text-xs tracking-widest uppercase transition-colors"
               >
                 My Status
               </Link>
             )}
             <Link
               to="/get-verified"
-              className="px-4 py-2 bg-covenant-purple text-white rounded-lg font-semibold hover:bg-purple-700 transition"
+              className="font-cinzel text-xs tracking-widest uppercase px-5 py-2 border border-gold/60 text-gold hover:bg-gold/10 transition-colors"
             >
               Get Verified
             </Link>
             {!walletConnected ? (
               <button
                 onClick={onConnect}
-                className="px-4 py-2 border-2 border-covenant-purple text-covenant-purple rounded-lg font-semibold hover:bg-purple-50 transition"
+                className="font-cinzel text-xs tracking-widest uppercase px-5 py-2 border border-gold/30 text-marble-muted hover:border-gold/60 hover:text-gold transition-colors"
               >
                 Connect Wallet
               </button>
             ) : (
-              <div className="flex items-center gap-2 bg-green-50 border border-green-300 rounded-lg px-3 py-2">
-                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                <span className="text-sm font-mono text-gray-700">
-                  {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+              <div className="flex items-center gap-2 bg-gold/10 border border-gold/30 px-3 py-2">
+                <span className="w-1.5 h-1.5 bg-gold rounded-full"></span>
+                <span className="font-mono text-xs text-marble-dim">
+                  {walletAddress.slice(0, 6)}…{walletAddress.slice(-4)}
                 </span>
                 <button
                   onClick={onDisconnect}
-                  className="text-xs text-gray-400 hover:text-red-500 transition ml-1"
+                  className="text-marble-muted hover:text-gold transition-colors ml-1 text-xs"
                 >
                   ✕
                 </button>
               </div>
             )}
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200">
-              <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-              Sepolia Testnet
+            <span className="font-cinzel text-xs tracking-widest text-marble-muted uppercase flex items-center gap-2">
+              <span className="w-1.5 h-1.5 bg-gold rounded-full animate-pulse"></span>
+              Arbitrum Sepolia
             </span>
           </div>
+
         </div>
       </div>
     </header>
@@ -134,9 +139,9 @@ function HomePage() {
       if (err.message.includes('Invalid address')) {
         errorMessage = 'Please enter a valid Ethereum address (should start with 0x)';
       } else if (err.message.includes('network')) {
-        errorMessage = 'Network error - please check your internet connection';
+        errorMessage = 'Network error — please check your internet connection';
       } else if (err.code === 'CALL_EXCEPTION') {
-        errorMessage = 'Contract call failed - the contract may not be deployed on this network';
+        errorMessage = 'Contract call failed — the contract may not be deployed on this network';
       }
       setError(errorMessage);
     } finally {
@@ -145,104 +150,114 @@ function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
-      <main className="max-w-4xl mx-auto px-4 py-12">
-        <div className="text-center mb-12">
-          <h2 className="text-5xl font-bold text-gray-900 mb-4">
-            Check Verification Status
+    <div className="min-h-screen">
+      <main className="max-w-4xl mx-auto px-6 py-16">
+
+        {/* Hero */}
+        <div className="text-center mb-14">
+          <div className="flex items-center justify-center gap-4 mb-8 opacity-60">
+            <div className="h-px w-16 bg-gradient-to-r from-transparent to-gold-dim"></div>
+            <div className="w-1.5 h-1.5 bg-gold rotate-45"></div>
+            <div className="h-px w-16 bg-gradient-to-l from-transparent to-gold-dim"></div>
+          </div>
+          <h2 className="font-cinzel text-marble text-4xl md:text-5xl tracking-wide mb-6">
+            Verify an Identity
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Enter any Ethereum address to view its Covenant verification seal.
-            All personal data is stored securely off-chain. All verification data is stored on-chain in a transparent and immutable way. No trust required - anyone can verify authenticity. 
+          <p className="font-cormorant text-marble-dim text-xl italic max-w-2xl mx-auto leading-relaxed">
+            Enter any wallet address to inspect its Covenant verification seal.
+            All verification data is immutably recorded on-chain — no trust required.
           </p>
         </div>
 
         <SearchBar onSearch={handleSearch} loading={loading} />
 
+        {/* Loading skeleton */}
         {loading && (
-          <div className="mt-8 bg-white rounded-lg shadow-lg overflow-hidden animate-pulse">
-            <div className="bg-gradient-to-r from-purple-50 to-blue-50 px-8 py-6 border-b">
-              <div className="h-6 bg-gray-200 rounded w-1/4"></div>
+          <div className="mt-10 border border-gold/20 bg-tyrian-darker animate-pulse">
+            <div className="border-b border-gold/10 px-8 py-5">
+              <div className="h-4 bg-gold/10 rounded w-1/4"></div>
             </div>
             <div className="p-8">
               <div className="flex gap-6 mb-8">
-                <div className="w-20 h-20 bg-gray-200 rounded"></div>
+                <div className="w-16 h-16 bg-gold/10 rounded"></div>
                 <div className="flex-1 space-y-3">
-                  <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-                  <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-3 bg-gold/10 rounded w-1/3"></div>
+                  <div className="h-6 bg-gold/10 rounded w-1/2"></div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-6">
-                <div className="h-20 bg-gray-200 rounded"></div>
-                <div className="h-20 bg-gray-200 rounded"></div>
-                <div className="h-20 bg-gray-200 rounded"></div>
-                <div className="h-20 bg-gray-200 rounded"></div>
+              <div className="grid grid-cols-2 gap-4">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-16 bg-gold/5 rounded"></div>
+                ))}
               </div>
             </div>
           </div>
         )}
 
+        {/* Error */}
         {error && (
-          <div className="mt-6 bg-red-50 border-l-4 border-red-500 p-4 rounded">
-            <div className="flex items-start">
-              <div className="text-xl mr-3">❌</div>
-              <div>
-                <p className="text-red-800 font-semibold">Error</p>
-                <p className="text-red-700 text-sm mt-1">{error}</p>
-              </div>
-            </div>
+          <div className="mt-8 border-l-4 border-red-800 bg-red-950/30 px-6 py-4">
+            <p className="font-cinzel text-red-400 text-xs tracking-widest uppercase mb-1">Error</p>
+            <p className="font-cormorant text-red-300 text-lg">{error}</p>
           </div>
         )}
 
+        {/* Result */}
         {result && (
           <div className="animate-fadeIn">
             <ResultDisplay result={result} />
           </div>
         )}
 
+        {/* Feature cards */}
         {!result && !loading && !error && (
-          <div className="mt-12 grid md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-lg shadow-md hover:shadow-xl p-6 text-center transition-all duration-300 transform hover:-translate-y-1">
-              <div className="w-16 h-16 mx-auto mb-4 bg-purple-100 rounded-full flex items-center justify-center">
-                <span className="text-4xl">🔒</span>
+          <div className="mt-16 grid md:grid-cols-3 gap-6">
+            {[
+              { label: 'Private', body: 'All personal data is stored securely off-chain.' },
+              { label: 'Transparent', body: 'Anyone can verify authenticity — no trust required.' },
+              { label: 'Instant', body: 'Real-time verification status read directly from the chain.' },
+            ].map(({ label, body }) => (
+              <div
+                key={label}
+                className="border border-gold/15 bg-tyrian-darker p-8 text-center hover:border-gold/35 transition-colors"
+              >
+                <div className="w-px h-8 bg-gradient-to-b from-gold/50 to-transparent mx-auto mb-6"></div>
+                <h3 className="font-cinzel text-marble text-xs tracking-widest uppercase mb-3">{label}</h3>
+                <p className="font-cormorant text-marble-muted italic text-lg leading-relaxed">{body}</p>
               </div>
-              <h3 className="font-bold text-gray-900 mb-2">Private</h3>
-              <p className="text-sm text-gray-600">
-                All personal data is stored securely off-chain.
-              </p>
-            </div>
-            <div className="bg-white rounded-lg shadow-md hover:shadow-xl p-6 text-center transition-all duration-300 transform hover:-translate-y-1">
-              <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-4xl">🔍</span>
-              </div>
-              <h3 className="font-bold text-gray-900 mb-2">Transparent</h3>
-              <p className="text-sm text-gray-600">
-                Anyone can verify authenticity - no trust required
-              </p>
-            </div>
-            <div className="bg-white rounded-lg shadow-md hover:shadow-xl p-6 text-center transition-all duration-300 transform hover:-translate-y-1">
-              <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
-                <span className="text-4xl">⚡</span>
-              </div>
-              <h3 className="font-bold text-gray-900 mb-2">Instant</h3>
-              <p className="text-sm text-gray-600">
-                Real-time verification status with no API delays
-              </p>
-            </div>
+            ))}
           </div>
         )}
       </main>
 
-      <footer className="mt-16 border-t bg-white">
-        <div className="max-w-7xl mx-auto px-4 py-8">
+      <footer className="border-t border-gold/15 mt-16">
+        <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="text-center md:text-left">
-              <p className="text-gray-600 text-sm">Powered by Ethereum • Sepolia Testnet</p>
-              <p className="text-gray-500 text-xs mt-1">Proof of Concept - Not for production use</p>
+            <div>
+              <p className="font-cormorant text-marble-muted italic text-sm">
+                Stored on Arbitrum Sepolia
+              </p>
+              <p className="font-cormorant text-marble-muted/60 italic text-xs mt-0.5">
+                Proof of Concept — not for production use
+              </p>
             </div>
-            <div className="flex gap-6">
-              <a href={`${ETHERSCAN_BASE}/address/${CONTRACT_ADDRESS}`} target="_blank" rel="noopener noreferrer" className="text-covenant-purple hover:text-purple-700 text-sm font-semibold">View Contract</a>
-              <a href="https://github.com/TonyBallo/Covenant" target="_blank" rel="noopener noreferrer" className="text-covenant-purple hover:text-purple-700 text-sm font-semibold">GitHub</a>
+            <div className="flex gap-8">
+              <a
+                href={`${ETHERSCAN_BASE}/address/${CONTRACT_ADDRESS}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-cinzel text-gold/70 hover:text-gold text-xs tracking-widest uppercase transition-colors"
+              >
+                View Contract
+              </a>
+              <a
+                href="https://github.com/TonyBallo/Covenant"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-cinzel text-gold/70 hover:text-gold text-xs tracking-widest uppercase transition-colors"
+              >
+                GitHub
+              </a>
             </div>
           </div>
         </div>

@@ -14,67 +14,58 @@ export function SearchBar({ onSearch, loading }) {
     setInput('');
   };
 
-  // Sample addresses for quick testing
   const sampleAddresses = [
     { label: 'Try Bronze', value: '0x1111111111111111111111111111111111111111' },
-    { label: 'Try Gold', value: '0x5555555555555555555555555555555555555555' },
+    { label: 'Try Gold',   value: '0x5555555555555555555555555555555555555555' },
     { label: 'Try Diamond', value: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' },
   ];
 
   return (
     <div className="max-w-2xl mx-auto">
       <form onSubmit={handleSubmit}>
-        <div className="flex gap-2">
+        <div className="flex gap-0 border border-gold/30 focus-within:border-gold/70 transition-colors">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Enter Ethereum address (0x...)"
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-covenant-purple focus:border-transparent text-sm font-mono"
+            placeholder="Enter wallet address  0x…"
+            className="flex-1 px-5 py-4 bg-tyrian-dark text-marble font-mono text-sm placeholder-marble-muted focus:outline-none"
             disabled={loading}
           />
           {input && (
             <button
               type="button"
               onClick={handleClear}
-              className="px-4 py-3 text-gray-600 hover:text-gray-800 transition"
+              className="px-4 text-marble-muted hover:text-gold transition-colors bg-tyrian-dark"
               disabled={loading}
             >
               ✕
             </button>
           )}
           <button
-        type="submit"
-        disabled={loading || !input.trim()}
-        className="bg-covenant-purple hover:bg-purple-700 text-white font-bold px-8 py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
-      >
-        {loading ? (
-          <span className="flex items-center gap-2">
-            <div className="relative">
-              <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
-            </div>
-            Searching...
-          </span>
-        ) : (
-          <span className="flex items-center gap-2">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            Search
-          </span>
-        )}
-      </button>
+            type="submit"
+            disabled={loading || !input.trim()}
+            className="font-cinzel text-xs tracking-widest uppercase px-8 py-4 bg-gold text-tyrian-deep font-semibold hover:bg-gold-dim disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <div className="w-3.5 h-3.5 border border-tyrian-deep border-t-transparent rounded-full animate-spin"></div>
+                Searching
+              </span>
+            ) : (
+              'Search'
+            )}
+          </button>
         </div>
       </form>
 
-      {/* Quick sample buttons - remove for production */}
-      <div className="mt-4 flex gap-2 justify-center">
-        <p className="text-sm text-gray-600 mr-2">Quick test:</p>
+      <div className="mt-4 flex gap-3 justify-center items-center">
+        <span className="font-cinzel text-marble-muted text-xs tracking-widest uppercase">Quick test</span>
         {sampleAddresses.map((sample) => (
           <button
             key={sample.value}
             onClick={() => setInput(sample.value)}
-            className="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded transition"
+            className="font-cinzel text-xs tracking-wide text-marble-muted border border-gold/20 px-3 py-1 hover:border-gold/50 hover:text-gold transition-colors disabled:opacity-40"
             disabled={loading}
           >
             {sample.label}

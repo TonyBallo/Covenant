@@ -2,76 +2,70 @@ import { Link } from 'react-router-dom';
 import { TIERS } from '../utils/constants';
 
 const TIER_STYLES = {
-  1: { bg: 'bg-orange-50', border: 'border-orange-300', badge: 'bg-orange-100 text-orange-800', button: 'bg-orange-500 hover:bg-orange-600 text-white' },
-  2: { bg: 'bg-gray-50', border: 'border-gray-200', badge: 'bg-gray-100 text-gray-500', button: '' },
-  3: { bg: 'bg-yellow-50', border: 'border-yellow-200', badge: 'bg-yellow-100 text-yellow-700', button: '' },
-  4: { bg: 'bg-blue-50', border: 'border-blue-200', badge: 'bg-blue-100 text-blue-700', button: '' },
-  5: { bg: 'bg-purple-50', border: 'border-purple-200', badge: 'bg-purple-100 text-purple-700', button: '' },
+  1: { border: 'border-gold/50',    badge: 'border-gold/40 text-gold bg-gold/10',    available: true  },
+  2: { border: 'border-gold/10',    badge: 'border-marble-muted/20 text-marble-muted bg-tyrian-dark', available: false },
+  3: { border: 'border-gold/10',    badge: 'border-gold/20 text-gold/50 bg-tyrian-dark', available: false },
+  4: { border: 'border-blue-900/40', badge: 'border-blue-900/30 text-blue-400/50 bg-tyrian-dark', available: false },
+  5: { border: 'border-purple-900/40', badge: 'border-purple-900/30 text-purple-400/50 bg-tyrian-dark', available: false },
 };
 
 export function TierSelect() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-12 px-4">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen py-16 px-6">
+      <div className="max-w-2xl mx-auto">
 
-        {/* Header */}
-        <div className="text-center mb-10">
-          <Link to="/" className="text-sm text-covenant-purple hover:underline mb-4 inline-block">
-            ← Back to Home
+        <div className="text-center mb-12">
+          <Link to="/" className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors mb-6 inline-block">
+            ← Return
           </Link>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Get Verified</h1>
-          <p className="text-gray-600">
+          <h1 className="font-cinzel text-marble text-4xl tracking-wide mb-3">Get Verified</h1>
+          <p className="font-cormorant text-marble-muted italic text-xl">
             Select the verification tier that matches your needs
           </p>
         </div>
 
-        {/* Tier Cards */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           {[1, 2, 3, 4, 5].map((tierNum) => {
             const tier = TIERS[tierNum];
             const styles = TIER_STYLES[tierNum];
-            const isAvailable = tierNum === 1;
 
             return (
               <div
                 key={tierNum}
-                className={`
-                  relative rounded-lg border-2 p-6 transition-all
-                  ${styles.bg} ${styles.border}
-                  ${isAvailable ? 'shadow-md hover:shadow-lg' : 'opacity-60'}
-                `}
+                className={`border bg-tyrian-darker px-6 py-5 transition-colors ${styles.border} ${
+                  styles.available ? 'hover:bg-tyrian-dark' : 'opacity-50'
+                }`}
               >
-                {/* Coming Soon Badge */}
-                {!isAvailable && (
-                  <span className={`absolute top-4 right-4 text-xs font-semibold px-2 py-1 rounded-full ${styles.badge}`}>
+                {!styles.available && (
+                  <span className="float-right font-cinzel text-xs tracking-widest text-marble-muted uppercase">
                     Coming Soon
                   </span>
                 )}
-
                 <div className="flex items-center justify-between">
-                  {/* Left: Tier info */}
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${styles.badge}`}>
+                  <div className="flex items-center gap-5">
+                    <div className={`w-11 h-11 border flex items-center justify-center font-cinzel font-bold text-sm ${styles.badge}`}>
                       {tier.numeral}
                     </div>
                     <div>
-                      <h3 className="font-bold text-gray-900 text-lg">
+                      <h3 className="font-cinzel text-marble text-sm tracking-wide">
                         Tier {tierNum} — {tier.name}
                       </h3>
-                      <p className="text-gray-600 text-sm">{tier.description}</p>
+                      <p className="font-cormorant text-marble-muted italic text-base mt-0.5">
+                        {tier.description}
+                      </p>
                     </div>
                   </div>
-
-                  {/* Right: Action */}
-                  {isAvailable ? (
+                  {styles.available ? (
                     <Link
                       to="/get-verified/apply"
-                      className={`px-5 py-2 rounded-lg font-semibold text-sm transition ${styles.button}`}
+                      className="font-cinzel text-xs tracking-widest uppercase px-5 py-2 bg-gold text-tyrian-deep hover:bg-gold-dim transition-colors shrink-0"
                     >
-                      Apply →
+                      Apply
                     </Link>
                   ) : (
-                    <span className="text-gray-400 text-sm font-medium">Unavailable</span>
+                    <span className="font-cinzel text-marble-muted/40 text-xs tracking-widest uppercase shrink-0">
+                      Unavailable
+                    </span>
                   )}
                 </div>
               </div>
@@ -79,9 +73,10 @@ export function TierSelect() {
           })}
         </div>
 
-        <p className="text-xs text-gray-400 text-center mt-8">
+        <p className="font-cormorant text-marble-muted/50 italic text-sm text-center mt-8">
           Higher tiers require additional documentation and review time.
         </p>
+
       </div>
     </div>
   );
