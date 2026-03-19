@@ -5,7 +5,7 @@ dotenv.config();
 
 // PactWitness contract ABI
 const ATTESTATION_ABI = [
-  "function attestSeal(address wallet, uint8 tier, bytes32 credentialHash, bytes signature)",
+  "function attestSeal(address wallet, uint8 tier, uint8 jurisdictionCode, bytes32 credentialHash, bytes signature)",
   "function getVerificationStatus(address wallet) view returns (uint8 tier, uint256 expiresAt, bool isRevoked)",
   "function isVerified(address wallet, uint8 minTier) view returns (bool)",
   "function revokeCredential(bytes32 credentialHash)"
@@ -48,9 +48,11 @@ export async function attestOnPolygon(userAddress, tier, ethereumSealId, signatu
       )
     );
 
+    // jurisdictionCode 0 = global — all Polygon attestations are cross-jurisdiction
     const tx = await attestationContract.attestSeal(
       userAddress,
       tier,
+      0,
       credentialHash,
       signature,
       {

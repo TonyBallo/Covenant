@@ -42,12 +42,15 @@ contract PactWitness is Ownable {
      * @notice Create an attestation for a verified wallet
      * @param wallet Address being verified
      * @param tier Verification tier (1-5)
-     * @param credentialHash Hash linking to Ethereum seal
-     * @param signature Proof from Covenant authority
+     * @param jurisdictionCode ISO 3166-1 numeric country code, or 0 for global
+     * @param credentialHash Hash linking to Arbitrum seal for revocation
+     * @param signature Proof from Covenant authority — must be signed with
+     *                  keccak256(wallet, tier, jurisdictionCode, chainId)
      */
     function attestSeal(
         address wallet,
         uint8 tier,
+        uint8 jurisdictionCode,
         bytes32 credentialHash,
         bytes memory signature
     ) external onlyOwner {
@@ -55,9 +58,10 @@ contract PactWitness is Ownable {
         require(tier >= 1 && tier <= 5, "Invalid tier");
         require(wallet != address(0), "Invalid wallet");
         require(attestations[wallet].tier == 0, "Wallet already has attestation");
-        
-        // Verify signature matches Pact format: keccak256(wallet, tier, chainId)
-        bytes32 messageHash = keccak256(abi.encodePacked(wallet, tier, block.chainid));
+
+        // Verify signature — same scheme as Pact.sol:
+        // keccak256(abi.encodePacked(wallet, uint8 tier, uint8 jurisdictionCode, uint256 chainId))
+        bytes32 messageHash = keccak256(abi.encodePacked(wallet, tier, jurisdictionCode, block.chainid));
         require(recoverSigner(messageHash, signature) == owner(), "Invalid signature");
         
         // Create the attestation with 1-year expiry
