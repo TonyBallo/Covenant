@@ -393,7 +393,7 @@ export function Admin() {
                     <div className="px-6 py-4 flex flex-col gap-3">
                       <button
                         onClick={() => handleMint(submission)}
-                        disabled={isMinted || processing === submission.id || attesting === submission.id}
+                        disabled={isMinted || processing === submission.id || attesting === submission.id || rejecting === submission.id}
                         className={`w-full font-cinzel text-xs tracking-widest uppercase py-3 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
                           isMinted
                             ? 'border border-gold/30 text-gold/60 cursor-default'
@@ -410,7 +410,7 @@ export function Admin() {
                       {!hasPolygonAttestation && (
                         <button
                           onClick={() => handleAttest(submission)}
-                          disabled={processing === submission.id || attesting === submission.id}
+                          disabled={processing === submission.id || attesting === submission.id || rejecting === submission.id}
                           className="w-full font-cinzel text-xs tracking-widest uppercase py-3 border border-purple-900/40 text-purple-400 hover:bg-purple-950/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                         >
                           {attesting === submission.id ? 'Attesting on Polygon…' : 'Attest to Polygon'}
@@ -422,6 +422,26 @@ export function Admin() {
                           Attested on Polygon
                         </div>
                       )}
+
+                      <div className="flex gap-2 pt-1">
+                        <input
+                          type="text"
+                          placeholder="Rejection reason…"
+                          value={rejectionReasons[submission.id] || ''}
+                          onChange={(e) => setRejectionReasons({
+                            ...rejectionReasons,
+                            [submission.id]: e.target.value
+                          })}
+                          className="flex-1 px-4 py-2 bg-tyrian-dark border border-red-900/40 text-marble placeholder-marble-muted/40 focus:outline-none focus:border-red-700/60 font-cormorant text-base transition-colors"
+                        />
+                        <button
+                          onClick={() => handleReject(submission)}
+                          disabled={processing === submission.id || attesting === submission.id || rejecting === submission.id}
+                          className="font-cinzel text-xs tracking-widest uppercase py-2 px-5 border border-red-900/60 text-red-400 hover:bg-red-950/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {rejecting === submission.id ? 'Rejecting…' : 'Reject'}
+                        </button>
+                      </div>
                     </div>
 
                   </div>

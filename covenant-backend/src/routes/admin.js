@@ -136,8 +136,8 @@ router.post('/reject/:id', async (req, res) => {
       return res.status(404).json({ error: 'Submission not found' });
     }
 
-    if (submission.status !== 'pending') {
-      return res.status(400).json({ error: 'Can only reject pending submissions' });
+    if (submission.status !== 'pending' && submission.status !== 'approved') {
+      return res.status(400).json({ error: 'Can only reject pending or approved submissions' });
     }
 
     // Update status to rejected
