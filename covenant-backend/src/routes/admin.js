@@ -274,30 +274,37 @@ router.post('/attest/:id', async (req, res) => {
       });
     }
 
-    // Get seal ID from Ethereum
+    // Get seal ID from Arbitrum
     const sealId = await getSealId(submission.wallet_address);
-    
+
     if (sealId === 0) {
-      return res.status(400).json({ 
-        error: 'Seal not minted on Ethereum yet' 
+      return res.status(400).json({
+        error: 'Seal not minted on Arbitrum yet'
       });
     }
 
     // Check if already attested
     const existingAttestation = await getPolygonAttestation(submission.wallet_address);
     if (existingAttestation.hasAttestation) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Already attested on Polygon',
         polygonTier: existingAttestation.tier
       });
     }
+
+    // Generate a Polygon-specific signature (chainId 80002)
+    const polygonSignature = await createMintSignature(
+      submission.wallet_address,
+      submission.tier_requested,
+      80002
+    );
 
     // Attest on Polygon
     const result = await attestOnPolygon(
       submission.wallet_address,
       submission.tier_requested,
       sealId,
-      submission.signature
+      polygonSignature
     );
 
     console.log(`✅ Attested seal #${sealId} on Polygon for ${submission.wallet_address}`);
