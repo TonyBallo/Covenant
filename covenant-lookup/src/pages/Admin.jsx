@@ -270,9 +270,9 @@ export function Admin() {
       <div className="max-w-4xl mx-auto">
 
         {/* Header */}
-        <div className="flex justify-between items-start mb-10">
+        <div className="flex justify-between items-start mb-8 sm:mb-10">
           <div>
-            <h1 className="font-cinzel text-marble text-4xl tracking-wide mb-2">Admin Panel</h1>
+            <h1 className="font-cinzel text-marble text-3xl sm:text-4xl tracking-wide mb-2">Admin Panel</h1>
             <p className="font-cormorant text-marble-muted italic text-lg">
               Manage KYC submissions and mint verification seals
             </p>
@@ -302,10 +302,10 @@ export function Admin() {
 
         {/* Tabs */}
         <div className="mb-6 border-b border-gold/15">
-          <div className="flex gap-0">
+          <div className="flex gap-0 overflow-x-auto scrollbar-none">
             <button
               onClick={() => setActiveTab('pending')}
-              className={`font-cinzel text-xs tracking-widest uppercase px-6 py-3 border-b-2 transition-colors ${
+              className={`font-cinzel text-xs tracking-widest uppercase px-4 sm:px-6 py-3 border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'pending'
                   ? 'border-gold text-gold'
                   : 'border-transparent text-marble-muted hover:text-marble'
@@ -315,7 +315,7 @@ export function Admin() {
             </button>
             <button
               onClick={() => setActiveTab('approved')}
-              className={`font-cinzel text-xs tracking-widest uppercase px-6 py-3 border-b-2 transition-colors ${
+              className={`font-cinzel text-xs tracking-widest uppercase px-4 sm:px-6 py-3 border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'approved'
                   ? 'border-gold text-gold'
                   : 'border-transparent text-marble-muted hover:text-marble'
@@ -325,7 +325,7 @@ export function Admin() {
             </button>
             <button
               onClick={() => setActiveTab('revoke-lookup')}
-              className={`font-cinzel text-xs tracking-widest uppercase px-6 py-3 border-b-2 transition-colors ${
+              className={`font-cinzel text-xs tracking-widest uppercase px-4 sm:px-6 py-3 border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'revoke-lookup'
                   ? 'border-red-700 text-red-400'
                   : 'border-transparent text-marble-muted hover:text-marble'
@@ -335,7 +335,7 @@ export function Admin() {
             </button>
             <button
               onClick={() => setActiveTab('revoked')}
-              className={`font-cinzel text-xs tracking-widest uppercase px-6 py-3 border-b-2 transition-colors ${
+              className={`font-cinzel text-xs tracking-widest uppercase px-4 sm:px-6 py-3 border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'revoked'
                   ? 'border-red-700 text-red-400'
                   : 'border-transparent text-marble-muted hover:text-marble'
@@ -372,7 +372,7 @@ export function Admin() {
 
                   {/* Card Body */}
                   <div className="px-6 py-4">
-                    <div className="grid grid-cols-2 gap-4 mb-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-5">
                       <div>
                         <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Phone</p>
                         <p className="font-cormorant text-marble text-base">{submission.phone || '—'}</p>
@@ -396,7 +396,7 @@ export function Admin() {
                         {processing === submission.id ? 'Processing…' : 'Approve & Generate Signature'}
                       </button>
 
-                      <div className="flex gap-2">
+                      <div className="flex flex-col sm:flex-row gap-2">
                         <input
                           type="text"
                           placeholder="Rejection reason…"
@@ -490,7 +490,7 @@ export function Admin() {
                         </div>
                       )}
 
-                      <div className="flex gap-2 pt-1">
+                      <div className="flex flex-col sm:flex-row gap-2 pt-1">
                         <input
                           type="text"
                           placeholder="Rejection reason…"
@@ -531,7 +531,7 @@ export function Admin() {
         {/* Revoke Seal Lookup */}
         {activeTab === 'revoke-lookup' && (
           <div className="space-y-4">
-            <form onSubmit={handleLookup} className="flex gap-2">
+            <form onSubmit={handleLookup} className="flex flex-col sm:flex-row gap-2">
               <input
                 type="text"
                 value={lookupAddress}
@@ -622,7 +622,7 @@ export function Admin() {
                     </span>
                   </div>
 
-                  <div className="px-6 py-4 grid grid-cols-3 gap-4">
+                  <div className="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                     <div>
                       <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Seal ID</p>
                       <p className="font-cormorant text-marble text-base">#{submission.sealId ?? '—'}</p>

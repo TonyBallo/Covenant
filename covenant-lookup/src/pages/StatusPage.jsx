@@ -159,7 +159,7 @@ export function StatusPage({ walletAddress }) {
           <div className="border border-gold/40 bg-tyrian-darker overflow-hidden">
 
             {/* Card header */}
-            <div className="bg-tyrian-dark border-b border-gold/25 px-8 py-6">
+            <div className="bg-tyrian-dark border-b border-gold/25 px-5 py-4 sm:px-8 sm:py-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">
@@ -182,13 +182,13 @@ export function StatusPage({ walletAddress }) {
             </div>
 
             {/* Tier display */}
-            <div className={`px-8 py-6 border-b border-gold/15 flex items-center gap-6 ${sealData.revoked ? 'bg-red-950/20' : ''}`}>
-              <div className={`font-cinzel text-6xl font-bold leading-none ${tierTextClass[TIERS[sealData.tier].color]}`}>
+            <div className={`px-5 py-5 sm:px-8 sm:py-6 border-b border-gold/15 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 ${sealData.revoked ? 'bg-red-950/20' : ''}`}>
+              <div className={`font-cinzel text-5xl sm:text-6xl font-bold leading-none ${tierTextClass[TIERS[sealData.tier].color]}`}>
                 {TIERS[sealData.tier].numeral}
               </div>
               <div>
                 <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Verification Tier</p>
-                <p className={`font-cinzel text-2xl tracking-wide mb-1 ${tierTextClass[TIERS[sealData.tier].color]}`}>
+                <p className={`font-cinzel text-xl sm:text-2xl tracking-wide mb-1 ${tierTextClass[TIERS[sealData.tier].color]}`}>
                   {TIERS[sealData.tier].name}
                 </p>
                 <p className="font-cormorant text-marble-muted italic text-base">
@@ -198,7 +198,7 @@ export function StatusPage({ walletAddress }) {
             </div>
 
             {/* Attributes */}
-            <div className="px-8 py-6 grid grid-cols-2 gap-4">
+            <div className="px-5 py-5 sm:px-8 sm:py-6 grid grid-cols-2 gap-4">
               <div>
                 <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Seal ID</p>
                 <p className="font-mono text-marble font-bold text-lg">#{sealData.sealId}</p>
@@ -236,7 +236,7 @@ export function StatusPage({ walletAddress }) {
             </div>
 
             {/* Wallet */}
-            <div className="px-8 pb-6">
+            <div className="px-5 pb-5 sm:px-8 sm:pb-6">
               <div className="border border-gold/10 bg-tyrian-dark px-5 py-4">
                 <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Wallet Address</p>
                 <p className="font-mono text-marble-dim text-xs break-all">{walletAddress}</p>
@@ -245,7 +245,7 @@ export function StatusPage({ walletAddress }) {
 
             {/* Revoked warning */}
             {sealData.revoked && (
-              <div className="mx-8 mb-6 border-l-4 border-red-800 bg-red-950/30 px-5 py-3">
+              <div className="mx-5 mb-5 sm:mx-8 sm:mb-6 border-l-4 border-red-800 bg-red-950/30 px-5 py-3">
                 <p className="font-cinzel text-red-400 text-xs tracking-widest uppercase mb-1">Verification Revoked</p>
                 <p className="font-cormorant text-red-300 italic text-base">
                   This seal has been revoked and should not be used for protocol access.
@@ -254,7 +254,7 @@ export function StatusPage({ walletAddress }) {
             )}
 
             {/* Footer */}
-            <div className="px-8 pb-8 pt-2 border-t border-gold/15 flex flex-col gap-3">
+            <div className="px-5 pb-6 pt-2 sm:px-8 sm:pb-8 border-t border-gold/15 flex flex-col gap-3">
               <a
                 href={`${ETHERSCAN_BASE}/token/${CONTRACT_ADDRESS}?a=${sealData.sealId}`}
                 target="_blank"

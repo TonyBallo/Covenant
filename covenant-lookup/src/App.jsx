@@ -15,12 +15,14 @@ import { VendorDemo } from './pages/VendorDemo';
 // ============ Shared Navbar ============
 
 function Navbar({ walletAddress, walletConnected, onConnect, onDisconnect }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <header className="bg-tyrian-darker/95 border-b border-gold/20 sticky top-0 z-50 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
 
-          <Link to="/" className="flex items-center gap-4">
+          <Link to="/" className="flex items-center gap-4" onClick={() => setMobileMenuOpen(false)}>
             <div className="w-9 h-9 border border-gold/50 flex items-center justify-center">
               <span className="font-cinzel text-gold font-semibold text-lg leading-none">C</span>
             </div>
@@ -34,6 +36,7 @@ function Navbar({ walletAddress, walletConnected, onConnect, onDisconnect }) {
             </div>
           </Link>
 
+          {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-6">
             <Link
               to="/admin"
@@ -88,7 +91,82 @@ function Navbar({ walletAddress, walletConnected, onConnect, onDisconnect }) {
             </span>
           </div>
 
+          {/* Mobile hamburger */}
+          <button
+            className="md:hidden text-marble-muted hover:text-gold transition-colors text-xl p-1"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? '✕' : '☰'}
+          </button>
+
         </div>
+
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-gold/15 mt-4 pt-4 pb-2 flex flex-col gap-1">
+            <Link
+              to="/admin"
+              onClick={() => setMobileMenuOpen(false)}
+              className="font-cinzel text-marble-muted hover:text-gold text-xs tracking-widest uppercase py-3 transition-colors"
+            >
+              Admin
+            </Link>
+            {walletConnected && (
+              <Link
+                to="/status"
+                onClick={() => setMobileMenuOpen(false)}
+                className="font-cinzel text-marble-muted hover:text-gold text-xs tracking-widest uppercase py-3 transition-colors"
+              >
+                My Status
+              </Link>
+            )}
+            <Link
+              to="/vendor-demo"
+              onClick={() => setMobileMenuOpen(false)}
+              className="font-cinzel text-marble-muted hover:text-gold text-xs tracking-widest uppercase py-3 transition-colors"
+            >
+              Vendor Demo
+            </Link>
+            <Link
+              to="/get-verified"
+              onClick={() => setMobileMenuOpen(false)}
+              className="font-cinzel text-gold text-xs tracking-widest uppercase py-3 transition-colors"
+            >
+              Get Verified
+            </Link>
+            <div className="border-t border-gold/10 mt-2 pt-3 flex flex-col gap-3">
+              {!walletConnected ? (
+                <button
+                  onClick={() => { onConnect(); setMobileMenuOpen(false); }}
+                  className="font-cinzel text-xs tracking-widest uppercase py-3 border border-gold/30 text-marble-muted hover:border-gold/60 hover:text-gold transition-colors w-full"
+                >
+                  Connect Wallet
+                </button>
+              ) : (
+                <div className="flex items-center justify-between bg-gold/10 border border-gold/30 px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-gold rounded-full"></span>
+                    <span className="font-mono text-xs text-marble-dim">
+                      {walletAddress.slice(0, 6)}…{walletAddress.slice(-4)}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => { onDisconnect(); setMobileMenuOpen(false); }}
+                    className="font-cinzel text-marble-muted hover:text-gold text-xs tracking-widest uppercase transition-colors"
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              )}
+              <span className="font-cinzel text-xs tracking-widest text-marble-muted/60 uppercase flex items-center gap-2 pb-1">
+                <span className="w-1.5 h-1.5 bg-gold rounded-full animate-pulse"></span>
+                Arbitrum Sepolia
+              </span>
+            </div>
+          </div>
+        )}
+
       </div>
     </header>
   );
@@ -158,7 +236,7 @@ function HomePage() {
 
   return (
     <div className="min-h-screen">
-      <main className="max-w-4xl mx-auto px-6 py-16">
+      <main className="max-w-4xl mx-auto px-6 py-10 md:py-16">
 
         {/* Hero */}
         <div className="text-center mb-14">
@@ -192,7 +270,7 @@ function HomePage() {
                   <div className="h-6 bg-gold/10 rounded w-1/2"></div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[...Array(4)].map((_, i) => (
                   <div key={i} className="h-16 bg-gold/5 rounded"></div>
                 ))}

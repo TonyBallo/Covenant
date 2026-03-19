@@ -59,7 +59,7 @@ export function SearchBar({ onSearch, loading }) {
         </div>
       </form>
 
-      <div className="mt-4 flex gap-3 justify-center items-center">
+      <div className="mt-4 flex flex-wrap gap-3 justify-center items-center">
         <span className="font-cinzel text-marble-muted text-xs tracking-widest uppercase">Quick test</span>
         {sampleAddresses.map((sample) => (
           <button

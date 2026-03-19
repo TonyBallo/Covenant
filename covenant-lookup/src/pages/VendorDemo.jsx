@@ -11,7 +11,7 @@ function ProtectedDashboard({ walletAddress }) {
 
       {/* Access granted header */}
       <div className="border border-gold/40 bg-tyrian-darker overflow-hidden">
-        <div className="bg-tyrian-dark border-b border-gold/25 px-8 py-5 flex items-center justify-between">
+        <div className="bg-tyrian-dark border-b border-gold/25 px-5 py-4 sm:px-8 sm:py-5 flex items-center justify-between">
           <div>
             <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">
               Protected Protocol
@@ -23,7 +23,7 @@ function ProtectedDashboard({ walletAddress }) {
             <span className="font-cinzel text-gold text-xs tracking-widest uppercase">Verified</span>
           </div>
         </div>
-        <div className="px-8 py-6">
+        <div className="px-5 py-5 sm:px-8 sm:py-6">
           <p className="font-cormorant text-marble text-xl italic mb-2">
             Your Covenant seal has been verified. Welcome to Protected Protocol.
           </p>
@@ -40,13 +40,13 @@ function ProtectedDashboard({ walletAddress }) {
         </div>
 
         {/* Metrics row */}
-        <div className="grid grid-cols-3 gap-px bg-gold/10 border-b border-gold/15">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-gold/10 border-b border-gold/15">
           {[
             { label: 'Total Value Locked', value: '$4,821,300', change: '+2.4%' },
             { label: 'Your Position',      value: '$12,450',   change: '+0.8%' },
             { label: 'Yield (30d)',         value: '6.12%',     change: '+0.3%' },
           ].map(({ label, value, change }) => (
-            <div key={label} className="bg-tyrian-darker px-6 py-5">
+            <div key={label} className="bg-tyrian-darker px-5 py-4 sm:px-6 sm:py-5">
               <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-2">{label}</p>
               <p className="font-cinzel text-marble text-2xl tracking-wide mb-1">{value}</p>
               <p className="font-cormorant text-gold italic text-sm">{change} this week</p>
@@ -83,7 +83,7 @@ function ProtectedDashboard({ walletAddress }) {
         </div>
 
         {/* Mock action buttons */}
-        <div className="px-8 pb-8 flex gap-4">
+        <div className="px-5 pb-6 sm:px-8 sm:pb-8 flex flex-wrap gap-4">
           <button className="font-cinzel text-xs tracking-widest uppercase px-6 py-3 bg-gold text-tyrian-deep hover:bg-gold-dim transition-colors">
             Deposit
           </button>

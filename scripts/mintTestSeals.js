@@ -7,8 +7,8 @@ async function main() {
   console.log("Minting test seals with account:", owner.address);
   console.log("Account balance:", ethers.formatEther(await ethers.provider.getBalance(owner.address)), "ETH\n");
 
-  // Your deployed contract address
-const pactAddress = "0x2E47219B0910dc76233cdAb56aDDaa8d196c030A";
+  // Current deployed Pact contract on Arbitrum Sepolia
+  const pactAddress = "0xFa71D3c2dAbD20A3ceEb3Ef08319CE64548ecbA4";
   const pact = await ethers.getContractAt("Pact", pactAddress);
 
   // Generate 10 deterministic test addresses (same every time for demo consistency)
@@ -43,16 +43,17 @@ const pactAddress = "0x2E47219B0910dc76233cdAb56aDDaa8d196c030A";
         continue;
       }
 
-      // Create signature (includes chain ID to prevent replay attacks)
+      // Create signature (includes jurisdictionCode and chain ID to prevent replay attacks)
       const { chainId } = await ethers.provider.getNetwork();
+      const jurisdictionCode = 0;
       const message = ethers.solidityPackedKeccak256(
-        ["address", "uint8", "uint256"],
-        [address, tier, chainId]
+        ["address", "uint8", "uint8", "uint256"],
+        [address, tier, jurisdictionCode, chainId]
       );
       const signature = await owner.signMessage(ethers.getBytes(message));
 
       // Mint (0 = no expiry)
-      const tx = await pact.mint(address, tier, signature, 0);
+      const tx = await pact.mint(address, tier, jurisdictionCode, signature, 0);
       const receipt = await tx.wait();
 
       console.log(`✅ Minted ${tierNames[tier]} (Tier ${tier}) for ${address}`);

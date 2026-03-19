@@ -57,7 +57,7 @@ export function ResultDisplay({ result }) {
     <div className="mt-10 border border-gold/30 bg-tyrian-darker overflow-hidden">
 
       {/* Header */}
-      <div className="bg-tyrian-dark border-b border-gold/20 px-8 py-5">
+      <div className="bg-tyrian-dark border-b border-gold/20 px-5 py-4 sm:px-8 sm:py-5">
         <div className="flex items-center justify-between">
           <h3 className="font-cinzel text-marble tracking-widest uppercase text-sm">
             Verification Seal
@@ -80,21 +80,21 @@ export function ResultDisplay({ result }) {
         </div>
       </div>
 
-      <div className="p-8">
+      <div className="p-5 sm:p-8">
 
         {/* Tier display */}
-        <div className="flex items-center gap-8 mb-8 pb-8 border-b border-gold/15">
-          <div className={`font-cinzel text-7xl font-bold leading-none ${tierTextClass[tierInfo.color]}`}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8 mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-gold/15">
+          <div className={`font-cinzel text-5xl sm:text-7xl font-bold leading-none ${tierTextClass[tierInfo.color]}`}>
             {tierInfo.numeral}
           </div>
           <div className="flex-1">
             <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Verification Tier</p>
-            <p className={`font-cinzel text-3xl tracking-wide mb-2 ${tierTextClass[tierInfo.color]}`}>
+            <p className={`font-cinzel text-2xl sm:text-3xl tracking-wide mb-2 ${tierTextClass[tierInfo.color]}`}>
               {tierInfo.name}
             </p>
             <p className="font-cormorant text-marble-muted italic text-lg">{tierInfo.description}</p>
           </div>
-          <div className={`border px-5 py-3 text-center ${tierBadgeClass[tierInfo.color]}`}>
+          <div className={`hidden sm:block border px-5 py-3 text-center ${tierBadgeClass[tierInfo.color]}`}>
             <p className="font-cinzel text-xs tracking-widest uppercase mb-1">Tier</p>
             <p className="font-cinzel text-2xl font-bold">{tierInfo.numeral}</p>
           </div>
@@ -122,7 +122,7 @@ export function ResultDisplay({ result }) {
         {/* Wallet address */}
         <div className="border border-gold/10 bg-tyrian-dark px-5 py-4 mb-6">
           <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-2">Wallet Address</p>
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
             <p className="font-mono text-sm text-marble-dim break-all flex-1">{result.address}</p>
             <div className="flex gap-2 shrink-0">
               <button
