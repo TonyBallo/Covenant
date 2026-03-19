@@ -11,6 +11,7 @@ import { VerifyFailed } from './pages/VerifyFailed';
 import { CONTRACT_ADDRESS, CONTRACT_ABI, RPC_URL, ETHERSCAN_BASE } from './utils/contract';
 import { Admin } from './pages/Admin';
 import { VendorDemo } from './pages/VendorDemo';
+import { Docs } from './pages/Docs';
 
 // ============ Shared Navbar ============
 
@@ -252,6 +253,12 @@ function HomePage() {
             Enter any wallet address to inspect its Covenant verification seal.
             All verification data is immutably recorded on-chain — no trust required.
           </p>
+          <Link
+            to="/docs"
+            className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors mt-6 inline-block"
+          >
+            Read the Documentation →
+          </Link>
         </div>
 
         <SearchBar onSearch={handleSearch} loading={loading} />
@@ -327,6 +334,12 @@ function HomePage() {
               </p>
             </div>
             <div className="flex gap-8">
+              <Link
+                to="/docs"
+                className="font-cinzel text-gold/70 hover:text-gold text-xs tracking-widest uppercase transition-colors"
+              >
+                Docs
+              </Link>
               <a
                 href={`${ETHERSCAN_BASE}/address/${CONTRACT_ADDRESS}`}
                 target="_blank"
@@ -407,6 +420,7 @@ function App() {
         <Route path="/verify-failed" element={<VerifyFailed />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/vendor-demo" element={<VendorDemo />} />
+        <Route path="/docs" element={<Docs />} />
       </Routes>
     </BrowserRouter>
   );
