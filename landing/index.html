@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Covenant</title>
+  <meta name="description" content="The next generation of financial identity." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --tyrian-deep:    #0a0006;
+      --tyrian-darker:  #14000c;
+      --tyrian-dark:    #1f0112;
+      --tyrian-mid:     #33011e;
+      --tyrian-rich:    #520230;
+      --tyrian-vivid:   #66023c;
+      --obsidian:       #08070a;
+      --marble:         #f0ece3;
+      --marble-dim:     #c8bfb0;
+      --marble-muted:   #7a6e65;
+      --gold:           #d4af5a;
+      --gold-dim:       #a07c30;
+      --gold-pale:      rgba(212,175,90,0.15);
+      --serif-display:  'Cinzel', 'Trajan Pro', serif;
+      --serif-body:     'Cormorant Garamond', Georgia, serif;
+    }
+
+    html {
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      width: 100%;
+      min-height: 100%;
+      min-height: 100dvh;
+      background: var(--obsidian);
+      color: var(--marble);
+      font-family: var(--serif-body);
+      overflow: hidden;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    /* grain */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 50;
+      opacity: 0.55;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+    }
+
+    .bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: radial-gradient(ellipse 70% 60% at 50% 50%, #1f0112 0%, #14000c 35%, #0a0006 65%, #05000a 100%);
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background: radial-gradient(ellipse 90% 90% at 50% 50%, transparent 40%, rgba(0,0,0,0.75) 100%);
+      pointer-events: none;
+    }
+
+    .crown-line {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, transparent 15%, var(--gold) 40%, var(--gold) 60%, transparent 85%, transparent 100%);
+      opacity: 0;
+      z-index: 10;
+      animation: fadeIn 2s 0.5s ease forwards;
+    }
+
+    .base-line {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, transparent 15%, var(--gold-dim) 40%, var(--gold-dim) 60%, transparent 85%, transparent 100%);
+      opacity: 0;
+      z-index: 10;
+      animation: fadeIn 2s 0.7s ease forwards;
+    }
+
+    .stage {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+      padding-bottom: 5rem;
+    }
+
+    .ornament {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      margin-bottom: 2.8rem;
+      opacity: 0;
+      animation: fadeIn 1.8s 1.0s ease forwards;
+    }
+
+    .orn-line       { width: 60px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold-dim)); }
+    .orn-line.right { background: linear-gradient(90deg, var(--gold-dim), transparent); }
+    .orn-diamond    { width: 5px; height: 5px; background: var(--gold); transform: rotate(45deg); opacity: 0.8; }
+    .orn-dot        { width: 2px; height: 2px; background: var(--gold-dim); border-radius: 50%; }
+
+    .wordmark {
+      font-family: var(--serif-display);
+      font-weight: 400;
+      font-size: min(11vw, 10rem);
+      letter-spacing: min(2vw, 0.28em);
+      text-transform: uppercase;
+      line-height: 1;
+      text-align: center;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      background: linear-gradient(180deg, #f8f4ec 0%, #e8e0d0 40%, #c8bfb0 75%, #a09080 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      opacity: 0;
+      animation: wordmarkReveal 2.2s 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .rule {
+      width: 1px;
+      height: 0;
+      background: linear-gradient(180deg, var(--gold), transparent);
+      margin: 2rem 0;
+      animation: ruleGrow 1s 1.8s ease forwards;
+    }
+
+    .tagline-wrap {
+      text-align: center;
+      opacity: 0;
+      animation: fadeIn 1.4s 2.2s ease forwards;
+    }
+
+    .tagline-static {
+      font-family: var(--serif-body);
+      font-weight: 300;
+      font-style: italic;
+      font-size: clamp(1rem, 3vw, 1.5rem);
+      letter-spacing: 0.06em;
+      color: var(--marble-dim);
+      display: block;
+      margin-bottom: 0.4rem;
+    }
+
+    .tagline-dynamic-wrap {
+      display: block;
+      position: relative;
+      height: clamp(2.4rem, 7vw, 3.2rem);
+      width: 100%;
+    }
+
+    .tagline-word {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      transform: translateX(-50%);
+      white-space: normal;
+      text-align: center;
+      width: 100%;
+      font-family: var(--serif-body);
+      font-weight: 300;
+      font-style: italic;
+      font-size: clamp(1.3rem, 4.2vw, 2.2rem);
+      letter-spacing: 0.08em;
+      background: linear-gradient(135deg, var(--gold-dim) 0%, var(--gold) 45%, #e8cc7a 65%, var(--gold) 80%, var(--gold-dim) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      opacity: 0;
+    }
+
+    .tagline-word.visible {
+      animation: wordIn 0.9s ease forwards;
+    }
+
+    .tagline-word.leaving {
+      animation: wordOut 0.7s ease forwards;
+    }
+
+    /* ── Try Demo button ── */
+    .demo-btn-wrap {
+      margin-top: 2.8rem;
+      opacity: 0;
+      animation: fadeIn 1.4s 3.2s ease forwards;
+    }
+
+    .demo-btn {
+      display: inline-block;
+      font-family: var(--serif-display);
+      font-size: 0.6rem;
+      font-weight: 500;
+      letter-spacing: 0.34em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--gold);
+      border: 1px solid rgba(212, 175, 90, 0.35);
+      padding: 0.8rem 2.4rem;
+      transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .demo-btn:hover {
+      background: var(--gold);
+      color: var(--tyrian-deep);
+      border-color: var(--gold);
+    }
+
+    .seal-mark {
+      position: fixed;
+      bottom: 2.2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      opacity: 0;
+      animation: fadeIn 1.4s 3.4s ease forwards;
+      z-index: 10;
+    }
+
+    .seal-mark svg {
+      width: 26px;
+      height: 26px;
+      opacity: 0.3;
+    }
+
+    .seal-label {
+      font-family: var(--serif-display);
+      font-size: 0.5rem;
+      letter-spacing: 0.38em;
+      color: var(--marble-muted);
+      text-transform: uppercase;
+    }
+
+    .side-left,
+    .side-right {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+      opacity: 0;
+      animation: fadeIn 1.8s 2.8s ease forwards;
+      z-index: 10;
+    }
+
+    .side-left  { left: 2.5rem; }
+    .side-right { right: 2.5rem; }
+
+    .side-tick { width: 1px; height: 18px; background: linear-gradient(180deg, transparent, var(--gold-dim), transparent); }
+    .side-dot  { width: 3px; height: 3px; border-radius: 50%; background: var(--gold-dim); opacity: 0.5; }
+
+    /* ── keyframes ── */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    @keyframes wordmarkReveal {
+      0%   { opacity: 0; letter-spacing: min(4vw, 0.5em); filter: blur(8px); }
+      60%  { filter: blur(0); }
+      100% { opacity: 1; letter-spacing: min(2vw, 0.28em); filter: blur(0); }
+    }
+
+    @keyframes ruleGrow {
+      from { height: 0; opacity: 0; }
+      to   { height: 48px; opacity: 1; }
+    }
+
+    @keyframes wordIn {
+      0%   { opacity: 0; transform: translateX(-50%) translateY(14px); filter: blur(5px); }
+      100% { opacity: 1; transform: translateX(-50%) translateY(0);    filter: blur(0);   }
+    }
+
+    @keyframes wordOut {
+      0%   { opacity: 1; transform: translateX(-50%) translateY(0);     filter: blur(0);   }
+      100% { opacity: 0; transform: translateX(-50%) translateY(-12px); filter: blur(4px); }
+    }
+
+    /* ── Small phones (≤ 390px) ── */
+    @media (max-width: 390px) {
+      .side-left, .side-right { display: none; }
+      .ornament { margin-bottom: 1.4rem; gap: 0.8rem; }
+      .orn-line { width: 36px; }
+      .rule     { margin: 1.2rem 0; }
+      .tagline-static { font-size: 0.95rem; }
+      .seal-mark { bottom: 1.2rem; }
+      .demo-btn-wrap { margin-top: 2rem; }
+      .demo-btn { padding: 0.7rem 1.8rem; }
+    }
+
+    /* ── Standard mobile (≤ 600px) ── */
+    @media (max-width: 600px) {
+      .side-left, .side-right { display: none; }
+      .ornament { margin-bottom: 1.8rem; }
+      .rule     { margin: 1.4rem 0; }
+      .stage    { padding-bottom: 4.5rem; }
+      .seal-mark { bottom: 1.5rem; }
+      .demo-btn-wrap { margin-top: 2.2rem; }
+    }
+
+    /* ── Landscape mobile ── */
+    @media (max-height: 500px) and (orientation: landscape) {
+      .side-left, .side-right { display: none; }
+      .ornament   { margin-bottom: 0.8rem; }
+      .rule       { margin: 0.8rem 0; }
+      .seal-mark  { display: none; }
+      .wordmark   { font-size: clamp(2rem, 8vh, 5rem); }
+      .tagline-static { font-size: clamp(0.8rem, 2vh, 1.2rem); }
+      .tagline-word   { font-size: clamp(1rem, 3vh, 1.8rem); }
+      .tagline-dynamic-wrap { height: clamp(1.8rem, 5vh, 2.5rem); }
+      .demo-btn-wrap { margin-top: 1rem; }
+      .demo-btn { padding: 0.6rem 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg"></div>
+  <div class="vignette"></div>
+  <div class="crown-line"></div>
+  <div class="base-line"></div>
+
+  <div class="side-left" aria-hidden="true">
+    <div class="side-tick"></div>
+    <div class="side-dot"></div>
+    <div class="side-tick"></div>
+    <div class="side-dot"></div>
+    <div class="side-tick"></div>
+  </div>
+
+  <div class="side-right" aria-hidden="true">
+    <div class="side-tick"></div>
+    <div class="side-dot"></div>
+    <div class="side-tick"></div>
+    <div class="side-dot"></div>
+    <div class="side-tick"></div>
+  </div>
+
+  <main class="stage">
+
+    <div class="ornament" aria-hidden="true">
+      <div class="orn-line"></div>
+      <div class="orn-dot"></div>
+      <div class="orn-diamond"></div>
+      <div class="orn-dot"></div>
+      <div class="orn-line right"></div>
+    </div>
+
+    <h1 class="wordmark">Covenant</h1>
+
+    <div class="rule" aria-hidden="true"></div>
+
+    <div class="tagline-wrap">
+      <span class="tagline-static">The next generation of</span>
+      <div class="tagline-dynamic-wrap" aria-live="polite"></div>
+    </div>
+
+    <div class="demo-btn-wrap">
+      <a href="https://covenant-protocol.vercel.app/" class="demo-btn">Try Demo</a>
+    </div>
+
+  </main>
+
+  <div class="seal-mark" aria-hidden="true">
+    <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="12.5" stroke="#d4af5a" stroke-width="0.6" stroke-dasharray="2 3"/>
+      <circle cx="14" cy="14" r="9"    stroke="#d4af5a" stroke-width="0.5" opacity="0.5"/>
+      <polygon points="14,6 20.06,9.75 20.06,17.25 14,21 7.94,17.25 7.94,9.75"
+        fill="none" stroke="#d4af5a" stroke-width="0.5" opacity="0.6"/>
+      <circle cx="14" cy="14" r="2" fill="#d4af5a" opacity="0.7"/>
+    </svg>
+    <span class="seal-label">MMXXVI</span>
+  </div>
+
+  <script>
+    const phrases = [
+      'Stability',
+      'Trust',
+      'Identity',
+      'Authenticity',
+      'Legitimacy',
+      'Protection',
+    ];
+
+    const container = document.querySelector('.tagline-dynamic-wrap');
+    let current  = 0;
+    let activeEl = null;
+
+    function showNext() {
+      if (activeEl) {
+        activeEl.classList.remove('visible');
+        activeEl.classList.add('leaving');
+        const leaving = activeEl;
+        setTimeout(() => leaving.remove(), 700);
+      }
+
+      const el = document.createElement('span');
+      el.className = 'tagline-word';
+      el.textContent = phrases[current];
+      container.appendChild(el);
+
+      requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('visible')));
+
+      activeEl = el;
+      current  = (current + 1) % phrases.length;
+    }
+
+    setTimeout(() => {
+      showNext();
+      setInterval(showNext, 3400);
+    }, 2800);
+  </script>
+
+</body>
+</html>
