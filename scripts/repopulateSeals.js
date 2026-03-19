@@ -67,11 +67,12 @@ async function main() {
   console.log(`  Dry run      : ${isDryRun}`);
   console.log("═══════════════════════════════════════════════════════════\n");
 
-  // Read-only provider pointed at the old contract.
-  // Uses the same RPC as the Hardhat network config but instantiated
-  // separately so we can query historical state without a signer.
+  // Read-only provider for querying the old contract's event history.
+  // Uses the public Arbitrum Sepolia RPC instead of Alchemy — Alchemy's
+  // free tier limits eth_getLogs to a 10-block range, which is too narrow
+  // to scan the full contract history.
   const readProvider = new ethers.JsonRpcProvider(
-    process.env.ARBITRUM_SEPOLIA_RPC_URL || hre.network.config.url
+    "https://sepolia-rollup.arbitrum.io/rpc"
   );
   const oldContract = new ethers.Contract(OLD_ADDRESS, OLD_CONTRACT_ABI, readProvider);
 
