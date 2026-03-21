@@ -1,10 +1,22 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import { supabase } from '../server.js';
 import { createMintSignature } from '../services/signature.js';
 import { mintSeal, getSealId, revokeSeal, getSealInfo } from '../services/blockchain.js';
 import { attestOnPolygon, getPolygonAttestation } from '../services/polygon.js';
 
 const router = express.Router();
+
+// Rate limit all admin routes to 20 requests per 15 minutes per IP.
+// Prevents brute-force attempts against the x-admin-secret header.
+const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { error: 'Too many requests from this IP, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+router.use(adminLimiter);
 
 // Require admin secret on all admin routes
 router.use((req, res, next) => {
