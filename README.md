@@ -16,28 +16,18 @@ Project Covenant provides tiered identity verification for blockchain wallets th
 
 ## Live Demo
 
-**Frontend:** [covenant-protocol.vercel.app](https://covenant-protocol.vercel.app)  
-**Backend API:** https://covenant-production-4cf7.up.railway.app  
-**Contract (Sepolia):** `0x60859A972A9996cf24448323c7b1E49825f092a4`  
-**Etherscan:** [View Contract](https://sepolia.etherscan.io/address/0x60859A972A9996cf24448323c7b1E49825f092a4)
-
-### Test Addresses
-Search any of these on the lookup tool to see live seal data:
-```
-Tier 1 (Bronze): 0x1111111111111111111111111111111111111111
-Tier 2 (Silver): 0x3333333333333333333333333333333333333333
-Tier 3 (Gold):   0x5555555555555555555555555555555555555555
-Tier 4 (Platinum): 0x8888888888888888888888888888888888888888
-Tier 5 (Diamond):  0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-```
+**Frontend:** [covenantprotocol.io/demo](https://www.covenantprotocol.io/demo)
+**Backend API:** https://covenant-production-4cf7.up.railway.app
+**Contract (Arbitrum Sepolia):** `0xFa71D3c2dAbD20A3ceEb3Ef08319CE64548ecbA4`
+**Arbiscan:** [View Contract](https://sepolia.arbiscan.io/address/0xFa71D3c2dAbD20A3ceEb3Ef08319CE64548ecbA4)
 
 ---
 
 ## Current Status
 
-**Version:** 2.0 (MVP Live)
-**Test Coverage:** 41 tests passing, 100% statement coverage, 82% branch coverage  
-**Deployment:** Live on Sepolia testnet  
+**Version:** 2.1
+**Test Coverage:** 41 tests passing, 100% statement coverage, 82% branch coverage
+**Deployment:** Live on Arbitrum Sepolia testnet + Polygon Amoy
 **Next Steps:** Security audit, then mainnet launch
 
 ---
@@ -47,7 +37,7 @@ Tier 5 (Diamond):  0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 ### Stack
 | Layer | Technology | Platform |
 |-------|-----------|----------|
-| Smart Contract | Solidity / Hardhat | Sepolia Testnet |
+| Smart Contract | Solidity / Hardhat | Arbitrum Sepolia + Polygon Amoy |
 | Backend API | Node.js / Express / ethers.js | Railway |
 | Frontend | React / Vite / Tailwind CSS | Vercel |
 | Database | PostgreSQL | Supabase |
@@ -115,41 +105,47 @@ Complete KYC submission workflow with admin panel for approvals and on-chain min
 ```
 Project_Covenant/
 ├── contracts/
-│   └── IdentityPact.sol              # v2 contract (signature-based, time-locked burns)
+│   ├── Pact.sol                      # ERC721 soulbound NFT (Arbitrum Sepolia)
+│   └── PactWitness.sol               # Attestation contract (Polygon Amoy)
 ├── scripts/
-│   ├── deploy.js                     # Deployment script
-│   └── mintTestSeals.js              # Test seal minting script
+│   ├── deploy.js                     # Deploy Pact to Arbitrum Sepolia
+│   ├── deployAttestation.js          # Deploy PactWitness to Polygon Amoy
+│   ├── activateTiers.js              # Enable tier levels on deployed contract
+│   ├── mintTestSeals.js              # Dev script to mint test seals
+│   └── repopulateSeals.js            # Migration script for redeployments
 ├── test/
-│   └── IdentityPact.test.js          # 41 comprehensive tests
-├── backend/                 # Backend API
+│   └── IdentitySBT.test.js           # 41 comprehensive tests
+├── backend/                          # Node.js/Express REST API (Railway)
 │   ├── src/
 │   │   ├── server.js                 # Express server + CORS config
 │   │   ├── routes/
 │   │   │   ├── kyc.js                # KYC submission endpoints
 │   │   │   └── admin.js              # Admin approval + minting endpoints
 │   │   └── services/
-│   │       ├── signature.js          # Cryptographic signature generation
-│   │       └── blockchain.js         # On-chain minting interactions
+│   │       ├── signature.js          # ECDSA signature generation
+│   │       ├── blockchain.js         # Arbitrum Sepolia interactions
+│   │       └── polygon.js            # Polygon Amoy attestation
 │   └── package.json
-├── frontend/                  # Frontend Application
+├── frontend/                         # React 19 + Vite 7 (Vercel)
 │   ├── src/
-│   │   ├── App.jsx                   # Main app with routing
+│   │   ├── App.jsx                   # Router, navbar, wallet connection
 │   │   ├── pages/
-│   │   │   ├── GetVerified.jsx       # KYC submission form
-│   │   │   └── Admin.jsx             # Admin panel (password protected)
+│   │   │   ├── Landing.jsx           # Marketing landing page (/)
+│   │   │   ├── ApplyForm.jsx         # KYC submission form
+│   │   │   ├── Admin.jsx             # Admin panel (server-auth)
+│   │   │   ├── Docs.jsx              # Tier documentation + seal images
+│   │   │   ├── StatusPage.jsx        # User's own verification status
+│   │   │   ├── TierSelect.jsx        # Tier picker
+│   │   │   └── VendorDemo.jsx        # Vendor integration demo
 │   │   ├── components/
 │   │   │   ├── SearchBar.jsx         # Address lookup input
 │   │   │   └── ResultDisplay.jsx     # Seal result visualization
 │   │   └── utils/
 │   │       ├── api.js                # Backend API helper functions
-│   │       ├── contract.js           # Contract ABI + config
-│   │       └── constants.js          # Tier definitions
+│   │       ├── contract.js           # Contract ABI + ethers.js read calls
+│   │       └── constants.js          # Tier definitions, formatters
 │   └── package.json
-├── docs/
-│   ├── ROADMAP.md
-│   ├── CHANGELOG.md
-│   ├── V2_SUMMARY.md
-│   └── SESSION_SUMMARY.md           # Full technical handoff document
+├── deployments.json                  # Canonical deployed contract addresses
 ├── hardhat.config.js
 ├── package.json
 └── README.md
@@ -174,16 +170,16 @@ npx hardhat test
 # Run with coverage
 npx hardhat coverage
 
-# Deploy to Sepolia
-npx hardhat run scripts/deploy.js --network sepolia
+# Deploy to Arbitrum Sepolia
+npx hardhat run scripts/deploy.js --network arbitrumSepolia
 
 # Open Hardhat console
-npx hardhat console --network sepolia
+npx hardhat console --network arbitrumSepolia
 ```
 
 ### Backend API
 ```bash
-cd covenant-backend
+cd backend
 
 # Install dependencies
 npm install
@@ -197,7 +193,7 @@ npm run dev
 
 ### Frontend
 ```bash
-cd covenant-lookup
+cd frontend
 
 # Install dependencies
 npm install
@@ -218,9 +214,12 @@ npm run dev
 SUPABASE_URL=your_supabase_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_KEY=your_supabase_service_key
-SEPOLIA_RPC_URL=your_alchemy_or_infura_url
-CONTRACT_ADDRESS=0x60859A972A9996cf24448323c7b1E49825f092a4
+ARBITRUM_SEPOLIA_RPC_URL=your_alchemy_arbitrum_sepolia_url
+CONTRACT_ADDRESS=0xFa71D3c2dAbD20A3ceEb3Ef08319CE64548ecbA4
 OWNER_PRIVATE_KEY=your_deployer_wallet_private_key
+POLYGON_RPC_URL=your_polygon_amoy_rpc_url
+POLYGON_ATTESTATION_ADDRESS=0x3F214e98C967e49f451c670654fA7D0580da3730
+ADMIN_SECRET=your_admin_panel_password
 PORT=3001
 NODE_ENV=development
 ```
@@ -236,31 +235,44 @@ VITE_API_URL=http://localhost:3001
 
 ### KYC Endpoints
 ```
-POST /api/kyc/submit         # Submit KYC application
-GET  /api/kyc/status/:address  # Check verification status
+POST /api/kyc/submit                    # Submit KYC application (rate-limited: 3/15min)
+GET  /api/kyc/verify/:token             # Email verification magic link
+GET  /api/kyc/status/:address           # Check KYC submission status
+GET  /api/kyc/cross-chain-status/:address  # Cross-chain attestation status
 ```
 
-### Admin Endpoints (Protected)
+### Admin Endpoints (Protected — requires `x-admin-secret` header)
 ```
-GET  /api/admin/pending        # List pending submissions
-POST /api/admin/approve/:id    # Approve and generate signature
-POST /api/admin/mint           # Mint seal on-chain
-POST /api/admin/revoke         # Revoke an existing seal
-GET  /api/admin/ready-to-mint  # List approved, unminted submissions
+GET  /api/admin/pending              # List pending submissions
+GET  /api/admin/ready-to-mint        # List approved, unminted submissions
+GET  /api/admin/revoked              # List revoked submissions
+GET  /api/admin/seal/:address        # On-chain seal lookup
+GET  /api/admin/polygon-status/:address  # Polygon attestation status
+POST /api/admin/approve/:id          # Approve and generate signature
+POST /api/admin/reject/:id           # Reject with reason
+POST /api/admin/mint                 # Mint seal on Arbitrum Sepolia
+POST /api/admin/attest/:id           # Attest seal on Polygon Amoy
+POST /api/admin/revoke               # Revoke an existing seal
 ```
 
 ### Health Check
 ```
-GET  /health                   # Server status
+GET  /health                         # Server status
 ```
 
 ---
 
 ## Smart Contract Integration
 
+### Simplest Integration — `isValid()`
+```solidity
+// Returns true only if seal is active, unrevoked, unexpired, and at or above minTier
+bool ok = pact.isValid(userAddress, IPact.Tier.I);
+```
+
 ### Check Verification Status
 ```javascript
-const [verified, tier, revoked, burnPending, burnTime] = 
+const [verified, tier, revoked, burnPending, burnTime] =
     await pact.getVerificationStatus(userAddress);
 
 console.log(`Verified: ${verified}`);
@@ -271,12 +283,14 @@ console.log(`Burn Pending: ${burnPending}`);
 
 ### Solidity Integration
 ```solidity
-interface IIdentityPact {
-    function getVerificationStatus(address user) 
-        external view 
+interface IPact {
+    enum Tier { NONE, I, II, III, IV, V }
+    function isValid(address user, Tier minTier) external view returns (bool);
+    function getVerificationStatus(address user)
+        external view
         returns (
-            bool isVerified, 
-            Tier tier, 
+            bool isVerified,
+            Tier tier,
             bool isRevoked,
             bool burnPending,
             uint256 burnExecutableAt
@@ -284,14 +298,11 @@ interface IIdentityPact {
 }
 
 contract YourProtocol {
-    IIdentityPact public pact;
-    
-    function requireVerification(address user, uint8 minimumTier) internal view {
-        (bool verified, uint8 tier, bool revoked, bool burnPending,) = 
-            pact.getVerificationStatus(user);
-            
-        require(verified && !revoked && !burnPending, "Invalid verification");
-        require(tier >= minimumTier, "Insufficient tier");
+    IPact public pact;
+
+    modifier requiresVerification(IPact.Tier minTier) {
+        require(pact.isValid(msg.sender, minTier), "Insufficient verification");
+        _;
     }
 }
 ```
@@ -303,14 +314,15 @@ contract YourProtocol {
 ### Signature Verification
 ```javascript
 // Off-chain: Covenant signs verification
+// Includes jurisdictionCode + chainId to prevent cross-chain/jurisdiction replay
 const message = ethers.solidityPackedKeccak256(
-    ["address", "uint8"],
-    [userAddress, tier]
+    ["address", "uint8", "uint8", "uint256"],
+    [userAddress, tier, jurisdictionCode, chainId]
 );
 const signature = await covenantKey.signMessage(ethers.getBytes(message));
 
-// On-chain: Contract verifies signature
-await pact.mint(userAddress, tier, signature);
+// On-chain: Contract verifies signature before minting
+await pact.mint(userAddress, tier, signature, expiresAt, jurisdictionCode);
 ```
 
 ### Time-Locked Burns
@@ -350,15 +362,21 @@ await pact.executeBurn(sealId);    // Execute after 90 days
 - ✅ Backend API with KYC workflow
 - ✅ Admin panel with approval + minting
 - ✅ Public lookup frontend
-- ✅ Deployed to Sepolia testnet
+- ✅ Deployed to Arbitrum Sepolia + Polygon Amoy
 
-### v2.1 - Security Audit & Hardening 🔨 (NEXT - Q2 2026)
-- [ ] External security audit (Trail of Bits / OpenZeppelin)
-- [ ] User dashboard (check own KYC status)
-- [ ] Email notifications
-- [ ] Wallet-based admin authentication
-- [ ] Rate limiting + API hardening
-- [ ] Multi-chain deployment (Polygon, Arbitrum, Base)
+### v2.1 - Landing, Docs & Security ✅ (COMPLETE)
+- ✅ Marketing landing page at `/`
+- ✅ Docs page with tier breakdown + seal images
+- ✅ Server-side admin authentication (`ADMIN_SECRET`)
+- ✅ Cross-chain attestation on Polygon Amoy (PactWitness)
+- ✅ jurisdictionCode in signature scheme
+- ✅ Custom domain (covenantprotocol.io)
+
+### v2.2 - Audit & SDK 🔨 (NEXT)
+- [ ] External security audit
+- [ ] JavaScript/TypeScript SDK for vendor integrations
+- [ ] Integration documentation
+- [ ] Mainnet deployment (Arbitrum, Polygon, Base)
 
 ### v3.0 - Decentralization 🔮 (2027)
 - Multi-sig verification (3-of-5 verifiers)
@@ -415,5 +433,5 @@ Security audit scheduled for Q2 2026 before mainnet deployment.
 
 ---
 
-*Last Updated: February 2026*  
-*Version: 2.0 - MVP Live*
+*Last Updated: March 2026*
+*Version: 2.1*
