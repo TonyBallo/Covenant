@@ -16,6 +16,8 @@ app.use(cors({
   origin: [
     'http://localhost:5173',
     'http://localhost:5174',
+    'https://covenantprotocol.io',
+    'https://www.covenantprotocol.io',
     'https://covenant-sigma.vercel.app',
     'https://covenant-lookup.vercel.app',
     /\.vercel\.app$/  // Allow all Vercel preview deployments
