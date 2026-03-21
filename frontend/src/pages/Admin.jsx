@@ -26,7 +26,7 @@ export function Admin() {
   const [success, setSuccess] = useState(null);
 
   // CHANGE THIS PASSWORD!
-  const ADMIN_PASSWORD = 'covenant-demo-2026';
+  const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_SECRET;
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -244,9 +244,6 @@ export function Admin() {
             </button>
           </form>
 
-          <p className="font-cormorant text-marble-muted/40 italic text-sm text-center mt-6">
-            Demo: covenant-demo-2026
-          </p>
         </div>
       </div>
     );
