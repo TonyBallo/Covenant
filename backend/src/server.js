@@ -15,10 +15,12 @@ const PORT = process.env.PORT || 3001;
 app.use(cors({
   origin: [
     'http://localhost:5173',
+    'http://localhost:5174',
     'https://covenant-sigma.vercel.app',
     'https://covenant-lookup.vercel.app',
     /\.vercel\.app$/  // Allow all Vercel preview deployments
   ],
+  allowedHeaders: ['Content-Type', 'x-admin-secret'],
   credentials: true
 }));
 app.use(express.json());
