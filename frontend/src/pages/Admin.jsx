@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getPendingSubmissions, approveKYC, mintSeal, getReadyToMint, rejectKYC, attestPolygon, checkPolygonStatus, revokeSeal, getRevokedSeals, lookupSeal } from '../utils/api';
+import { getPendingSubmissions, approveKYC, mintSeal, getReadyToMint, rejectKYC, attestPolygon, checkPolygonStatus, revokeSeal, getRevokedSeals, lookupSeal, setAdminSecret } from '../utils/api';
 import { TIERS } from '../utils/constants';
 
 export function Admin() {
@@ -25,22 +25,25 @@ export function Admin() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
-  // CHANGE THIS PASSWORD!
-  const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_SECRET;
-
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
+    setAuthError(false);
+    try {
+      setAdminSecret(password);
+      await getPendingSubmissions(); // validates the secret against the backend
       setAuthenticated(true);
-      setAuthError(false);
-      localStorage.setItem('admin-auth', 'true');
-    } else {
+      sessionStorage.setItem('admin-secret', password);
+    } catch {
+      setAdminSecret('');
       setAuthError(true);
     }
   };
 
   useEffect(() => {
-    if (localStorage.getItem('admin-auth') === 'true') {
+    const stored = sessionStorage.getItem('admin-secret');
+    if (stored) {
+      setAdminSecret(stored);
+      setPassword(stored);
       setAuthenticated(true);
     }
   }, []);
@@ -192,7 +195,9 @@ export function Admin() {
 
   const handleLogout = () => {
     setAuthenticated(false);
-    localStorage.removeItem('admin-auth');
+    setPassword('');
+    setAdminSecret('');
+    sessionStorage.removeItem('admin-secret');
   };
 
   const tierBadgeClass = {

@@ -2,11 +2,15 @@
 // Update this if the Railway deployment URL changes.
 const API_BASE_URL = 'https://covenant-production-4cf7.up.railway.app';
 
+// Set by Admin.jsx on successful login. Never stored in the bundle.
+let _adminSecret = '';
+export function setAdminSecret(secret) { _adminSecret = secret; }
+
 // Sent as a header on every admin request. Verified server-side against ADMIN_SECRET.
-const ADMIN_HEADERS = {
+const ADMIN_HEADERS = () => ({
   'Content-Type': 'application/json',
-  'x-admin-secret': import.meta.env.VITE_ADMIN_SECRET,
-};
+  'x-admin-secret': _adminSecret,
+});
 /**
  * Submit KYC application
  */
@@ -55,7 +59,7 @@ export async function checkKYCStatus(address) {
  * Get pending KYC submissions (admin only)
  */
 export async function getPendingSubmissions() {
-  const response = await fetch(`${API_BASE_URL}/api/admin/pending`, { headers: ADMIN_HEADERS });
+  const response = await fetch(`${API_BASE_URL}/api/admin/pending`, { headers: ADMIN_HEADERS() });
   
   if (!response.ok) {
     throw new Error('Failed to get pending submissions');
@@ -70,7 +74,7 @@ export async function getPendingSubmissions() {
 export async function approveKYC(submissionId) {
   const response = await fetch(`${API_BASE_URL}/api/admin/approve/${submissionId}`, {
     method: 'POST',
-    headers: ADMIN_HEADERS,
+    headers: ADMIN_HEADERS(),
   });
   
   if (!response.ok) {
@@ -87,7 +91,7 @@ export async function approveKYC(submissionId) {
 export async function mintSeal(data) {
   const response = await fetch(`${API_BASE_URL}/api/admin/mint`, {
     method: 'POST',
-    headers: ADMIN_HEADERS,
+    headers: ADMIN_HEADERS(),
     body: JSON.stringify(data)
   });
   
@@ -105,7 +109,7 @@ export async function mintSeal(data) {
 export async function rejectKYC(submissionId, reason) {
   const response = await fetch(`${API_BASE_URL}/api/admin/reject/${submissionId}`, {
     method: 'POST',
-    headers: ADMIN_HEADERS,
+    headers: ADMIN_HEADERS(),
     body: JSON.stringify({ reason })
   });
 
@@ -123,7 +127,7 @@ export async function rejectKYC(submissionId, reason) {
 export async function attestPolygon(submissionId) {
   const response = await fetch(`${API_BASE_URL}/api/admin/attest/${submissionId}`, {
     method: 'POST',
-    headers: ADMIN_HEADERS,
+    headers: ADMIN_HEADERS(),
   });
 
   if (!response.ok) {
@@ -138,7 +142,7 @@ export async function attestPolygon(submissionId) {
  * Check Polygon attestation status (admin only)
  */
 export async function checkPolygonStatus(address) {
-  const response = await fetch(`${API_BASE_URL}/api/admin/polygon-status/${address}`, { headers: ADMIN_HEADERS });
+  const response = await fetch(`${API_BASE_URL}/api/admin/polygon-status/${address}`, { headers: ADMIN_HEADERS() });
   
   if (!response.ok) {
     throw new Error('Failed to check Polygon status');
@@ -151,7 +155,7 @@ export async function checkPolygonStatus(address) {
  * Look up a seal by wallet address (admin only)
  */
 export async function lookupSeal(address) {
-  const response = await fetch(`${API_BASE_URL}/api/admin/seal/${address}`, { headers: ADMIN_HEADERS });
+  const response = await fetch(`${API_BASE_URL}/api/admin/seal/${address}`, { headers: ADMIN_HEADERS() });
 
   if (!response.ok) {
     const error = await response.json();
@@ -167,7 +171,7 @@ export async function lookupSeal(address) {
 export async function revokeSeal({ sealId, walletAddress, reason }) {
   const response = await fetch(`${API_BASE_URL}/api/admin/revoke`, {
     method: 'POST',
-    headers: ADMIN_HEADERS,
+    headers: ADMIN_HEADERS(),
     body: JSON.stringify({ sealId, walletAddress, reason })
   });
 
@@ -183,7 +187,7 @@ export async function revokeSeal({ sealId, walletAddress, reason }) {
  * Get all revoked submissions (admin only)
  */
 export async function getRevokedSeals() {
-  const response = await fetch(`${API_BASE_URL}/api/admin/revoked`, { headers: ADMIN_HEADERS });
+  const response = await fetch(`${API_BASE_URL}/api/admin/revoked`, { headers: ADMIN_HEADERS() });
 
   if (!response.ok) {
     throw new Error('Failed to get revoked seals');
@@ -196,7 +200,7 @@ export async function getRevokedSeals() {
  * Get ready-to-mint submissions (admin only)
  */
 export async function getReadyToMint() {
-  const response = await fetch(`${API_BASE_URL}/api/admin/ready-to-mint`, { headers: ADMIN_HEADERS });
+  const response = await fetch(`${API_BASE_URL}/api/admin/ready-to-mint`, { headers: ADMIN_HEADERS() });
   
   if (!response.ok) {
     throw new Error('Failed to get ready-to-mint');
