@@ -1,26 +1,22 @@
-# TODO - Next Steps
+# TODO
 
-## Immediate (This Week)
-- [ ] Finish understanding v1 contract completely
-- [ ] Write protocol outreach messages
-- [ ] Create pitch deck
-- [ ] Publish to GitHub/Twitter/LinkedIn
+## Immediate
+- [ ] Delete unused files: `frontend/src/pages/GetVerified.jsx`, `frontend/src/assets/react.svg`, `ignition/modules/Lock.js`, `landing/` directory, `stealth/` directory
+- [ ] Tiers IV and V seal images (currently "Coming Soon" placeholders in Docs page)
 
-## Short-term (Next Month)
-- [ ] Have 20 protocol conversations
-- [ ] Get 3-5 pilot agreements
-- [ ] Design v2 contract architecture
-- [ ] Write comprehensive tests for v2
+## Short-term
+- [ ] External security audit before any mainnet deployment
+- [ ] JavaScript/TypeScript SDK for vendor protocol integrations
+- [ ] Integration documentation (how vendors call `isValid()` on-chain)
+- [ ] Move frontend contract address (`utils/contract.js`) to env var instead of hardcoded
 
-## Medium-term (Q2 2026)
-- [ ] Implement v2 features
-- [ ] Deploy v2 to testnet
-- [ ] Protocol integration testing
-- [ ] Security audit
-- [ ] Legal review
+## Medium-term (Q2–Q3 2026)
+- [ ] Mainnet deployment (Arbitrum, Polygon, Base)
+- [ ] Protocol partnership outreach and pilot agreements
+- [ ] Bug bounty program
 
-## Long-term (Rest of 2026)
-- [ ] Mainnet deployment
-- [ ] First 10 protocol integrations
-- [ ] Revenue milestone: $50k ARR
-- [ ] Hire technical co-founder
+## Long-term
+- [ ] Multi-sig verification support
+- [ ] DAO governance for protocol decisions
+- [ ] Decentralized verifier network
+- [ ] Cross-chain messaging (CCIP or LayerZero)

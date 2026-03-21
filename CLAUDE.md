@@ -1,6 +1,6 @@
 # CLAUDE.md — Project Covenant
 
-Persistent context for Claude Code sessions. Updated 2026-03-19.
+Persistent context for Claude Code sessions. Updated 2026-03-21.
 
 ---
 
@@ -27,11 +27,12 @@ Project_Covenant/
 │   ├── src/
 │   │   ├── App.jsx                      # Router, navbar, wallet connection, homepage search
 │   │   ├── pages/
+│   │   │   ├── Landing.jsx              # Marketing landing page at "/" (no navbar; scroll-locked)
 │   │   │   ├── ApplyForm.jsx            # KYC submission form (Tier I / Bronze only)
-│   │   │   ├── Admin.jsx                # Admin panel (password-protected; Pending, Ready-to-Mint, Revoke Seal, Revoked Seals tabs)
+│   │   │   ├── Admin.jsx                # Admin panel (server-auth; Pending, Ready-to-Mint, Revoke Seal, Revoked Seals tabs)
+│   │   │   ├── Docs.jsx                 # Documentation page with tier info and seal images
 │   │   │   ├── StatusPage.jsx           # Logged-in user's own verification status (always checks on-chain)
 │   │   │   ├── TierSelect.jsx           # Tier picker (only Tier I currently active)
-│   │   │   ├── GetVerified.jsx          # Entry point for verification flow
 │   │   │   ├── VendorDemo.jsx           # Vendor integration demo — gates a mock DeFi dashboard behind isValid(address, 2)
 │   │   │   ├── VerifySuccess.jsx        # Post email-verification success screen
 │   │   │   └── VerifyFailed.jsx         # Post email-verification failure screen
@@ -64,8 +65,8 @@ Project_Covenant/
 ├── CHANGELOG.md
 ├── ROADMAP.md
 ├── TODO.md
-├── v2.SUMMARY.md
-└── v2_changes.md
+├── V2_SUMMARY.md
+└── V2_CHANGES.md
 ```
 
 ---
@@ -138,6 +139,7 @@ CONTRACT_ADDRESS
 OWNER_PRIVATE_KEY
 POLYGON_RPC_URL
 POLYGON_ATTESTATION_ADDRESS
+ADMIN_SECRET
 PORT
 NODE_ENV
 ```
@@ -166,7 +168,7 @@ VITE_API_URL
 | Field | Value |
 |---|---|
 | Contract | PactWitness |
-| Address | `0xbbb4288A3a28dBC5f0770a6a078943977e7AaAD0` |
+| Address | `0x3F214e98C967e49f451c670654fA7D0580da3730` |
 | RPC | https://rpc-amoy.polygon.technology/ |
 | Explorer | https://amoy.polygonscan.com |
 
@@ -185,14 +187,14 @@ User fills ApplyForm
 User clicks email link
   → GET /api/kyc/verify/:token
     → Supabase: email_verified = true
-    → Redirect to /verify-success or /verify-failed
+    → Redirect to /demo/verify-success or /demo/verify-failed
 
 Admin views /api/admin/pending
   → Returns submissions where status='pending' AND email_verified=true
 
 Admin approves submission
   → POST /api/admin/approve/:id
-    → signature.js: ECDSA sign keccak256(address + tier + chainId) with OWNER_PRIVATE_KEY
+    → signature.js: ECDSA sign keccak256(address + tier + jurisdictionCode + chainId) with OWNER_PRIVATE_KEY
     → Supabase: status='approved', signature stored
 
 Admin mints seal
@@ -212,9 +214,10 @@ Admin revokes seal
 
 ### Frontend → Backend
 - All calls go through `frontend/src/utils/api.js`
-- `API_BASE_URL` from `VITE_API_URL` env var (Railway production URL)
+- `API_BASE_URL` hardcoded to Railway production URL (not from env)
 - Plain `fetch()` with JSON — no SDK, no axios
-- Admin endpoints have no server-side auth (password checked client-side only)
+- Admin endpoints require `x-admin-secret` header, validated server-side against `ADMIN_SECRET` env var
+- Admin secret is set at login time via `setAdminSecret()` module function — never in the JS bundle
 
 ### Frontend → Smart Contract (Read-Only)
 - `frontend/src/utils/contract.js` creates a `JsonRpcProvider` pointed at Arbitrum Sepolia (Alchemy)
@@ -258,6 +261,7 @@ struct SealData {
   uint256 expiresAt;       // 0 = no expiry
   bool revoked;
   string revocationReason;
+  uint8 jurisdictionCode;  // ISO 3166-1 numeric, 0 = global
 }
 
 struct BurnRequest {
@@ -267,7 +271,7 @@ struct BurnRequest {
 ```
 
 ### Key Functions
-- `mint(address, Tier, bytes signature, uint256 expiresAt)` — onlyOwner; validates ECDSA signature
+- `mint(address, Tier, bytes signature, uint256 expiresAt, uint8 jurisdictionCode)` — onlyOwner; validates ECDSA signature
 - `revoke(uint256 sealId, string reason)` — onlyOwner
 - `upgradeTier(uint256 sealId, Tier newTier, bytes newSignature)` — onlyOwner
 - `isValid(address, Tier minTier) view returns (bool)` — returns true only if seal is active, unrevoked, unexpired, and at or above minTier; primary integration point for vendor protocols
@@ -281,7 +285,7 @@ struct BurnRequest {
 - **Soulbound:** transfer/safeTransfer overridden to revert
 
 ### Signature Scheme
-`keccak256(abi.encodePacked(address, uint8 tier, uint256 chainId))` — chainId is included to prevent cross-chain replay attacks. Arbitrum Sepolia = 421614, Polygon Amoy = 80002.
+`keccak256(abi.encodePacked(address, uint8 tier, uint8 jurisdictionCode, uint256 chainId))` — jurisdictionCode (ISO 3166-1 numeric, 0 = global) and chainId are included to prevent cross-chain replay attacks and jurisdiction spoofing. Arbitrum Sepolia = 421614, Polygon Amoy = 80002.
 
 ### Security
 - `ReentrancyGuard` on all state-changing functions
@@ -314,7 +318,7 @@ struct BurnRequest {
 | POST | `/api/admin/revoke` | Revoke seal on-chain + set Supabase status to 'revoked' |
 | POST | `/api/admin/attest/:id` | Attest seal on Polygon Amoy |
 
-> No server-side auth on admin routes — password is checked client-side only (`covenant-demo-2026`). Production requires server-side auth.
+> Admin routes require `x-admin-secret` header validated server-side against `ADMIN_SECRET` env var (Railway). Invalid or missing secret returns 401.
 
 ### Health
 | Method | Path |
@@ -371,11 +375,11 @@ npx hardhat run scripts/repopulateSeals.js --network arbitrumSepolia -- --dry-ru
 npx hardhat run scripts/repopulateSeals.js --network arbitrumSepolia
 
 # Backend
-cd covenant-backend
+cd backend
 npm run dev          # nodemon on port 3001
 
 # Frontend
-cd covenant-lookup
+cd frontend
 npm run dev          # vite on port 5173
 npm run build
 ```
@@ -384,7 +388,6 @@ npm run build
 
 ## Known Issues / Security Notes
 
-1. **Admin auth is client-side only** — password `'covenant-demo-2026'` hardcoded in `Admin.jsx`. Production requires server-side auth.
-2. **No auth on admin API routes** — any request to `/api/admin/*` succeeds if the correct body is sent.
-3. **Testnet only** — not audited, not ready for mainnet or real personal data.
-4. **Frontend contract address is hardcoded** in `utils/contract.js` (not in env).
+1. **Admin auth is server-side** — `x-admin-secret` header checked against `ADMIN_SECRET` env var in Railway. Login is validated via a real API call; password never stored in the bundle.
+2. **Testnet only** — not audited, not ready for mainnet or real personal data.
+3. **Frontend contract address is hardcoded** in `utils/contract.js` (not in env).

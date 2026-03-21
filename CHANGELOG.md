@@ -220,20 +220,67 @@ First working implementation deployed to Sepolia testnet.
 
 ---
 
+## [2.1.0] - 2026-03-21
+
+### Added
+
+#### Landing Page & Route Structure
+- New marketing landing page at `/` (`Landing.jsx` + `Landing.css`) — full-screen, scroll-locked, animated word cycling
+- Demo app moved to `/demo` prefix — landing and demo now share the same domain
+- `DemoLayout` wrapper component in `App.jsx` provides navbar + `<Outlet />` for all `/demo/*` routes
+- "Try Demo" button on landing page navigates to `/demo` without full page reload
+
+#### Documentation Page
+- `/demo/docs` page (`Docs.jsx`) with full tier breakdown, seal images, and integration code examples
+- Tier seal images (`public/tiers/tier-1.png` through `tier-3.png`) integrated directly into tier cards
+- Tiers IV and V display "Coming Soon" placeholders
+- Tier rank labels (e.g., "Tier I — Bronze") added to each card
+
+#### Admin Security
+- Server-side admin authentication — `x-admin-secret` header validated against `ADMIN_SECRET` env var (Railway)
+- Admin login now validated via real API call; 401 response shown as "Invalid password"
+- Admin secret stored in module-level singleton (`setAdminSecret()`), never embedded in the JS bundle
+- Admin session persisted in `sessionStorage` (cleared on tab close, more secure than `localStorage`)
+- Removed hardcoded password and login hint text from `Admin.jsx`
+
+#### Multi-Chain Signature Scheme
+- Signature now binds to `jurisdictionCode` (ISO 3166-1 numeric, 0 = global) in addition to `chainId`
+- Prevents cross-jurisdiction signature replay
+- `SealData` struct updated with `jurisdictionCode` field
+- Both `Pact.sol` and `PactWitness.sol` reconstruct the same hash for `ecrecover`
+
+### Changed
+
+#### Repository Structure
+- `covenant-backend/` renamed to `backend/`
+- `covenant-lookup/` renamed to `frontend/`
+- `v2.SUMMARY.md` renamed to `V2_SUMMARY.md`; `v2_changes.md` renamed to `V2_CHANGES.md`
+
+#### CORS & Backend
+- Added `x-admin-secret` to CORS `allowedHeaders`
+- Added `https://covenantprotocol.io` and `https://www.covenantprotocol.io` as explicit CORS origins (custom domain — not matched by `.vercel.app` regex)
+- Added `http://localhost:5174` to CORS origins for updated dev server port
+
+#### Frontend Routes
+- All demo routes prefixed with `/demo` (`/demo/status`, `/demo/admin`, `/demo/docs`, etc.)
+- Email verification redirects updated to `/demo/verify-success` and `/demo/verify-failed`
+- Navbar logo links to `/demo` instead of `/`
+
+### Fixed
+- Admin panel login failing in production due to CORS preflight blocking `x-admin-secret` header
+- Admin panel login failing on `www.covenantprotocol.io` (custom domain excluded from `.vercel.app` regex)
+
+---
+
 ## [Unreleased]
 
-### Planned for v2.1
-- External security audit
-- Multi-chain testnet deployment
-- JavaScript/TypeScript SDK
-- Integration documentation
-- Bug bounty program
-
 ### Planned for v2.2
+- External security audit
+- JavaScript/TypeScript SDK
+- Integration documentation for vendor protocols
+- Bug bounty program
 - Mainnet deployment (Ethereum, Polygon, Arbitrum, Base)
-- Public launch
 - Protocol partnerships
-- Marketing campaign
 
 ### Planned for v3.0
 - Multi-sig verification
@@ -245,7 +292,8 @@ First working implementation deployed to Sepolia testnet.
 
 ## Version History
 
-- **v2.0.0** (Current) - Production security hardening, breaking changes
+- **v2.1.0** (Current) - Landing page, docs, admin security, route restructure, repo cleanup
+- **v2.0.0** - Production security hardening, breaking changes
 - **v1.0.0** - Initial proof of concept
 
 ---
@@ -357,4 +405,4 @@ if (burnPending) {
 
 ---
 
-*Last Updated: February 2026*
+*Last Updated: March 2026*
