@@ -130,6 +130,7 @@ const TIERS_DOC = [
     proves: "One real person controls this wallet. Bronze is Sybil resistance and bot prevention — the foundation of any trusted ecosystem. It is not a character reference, but it is the first step in building one.",
     usedFor: 'Governance platforms, airdrops, community access tools, any application that needs to know a real human is behind a wallet.',
     anchor: 'Arbitrum',
+    image: '/tiers/tier-1.png',
   },
   {
     numeral: 'II',
@@ -143,6 +144,7 @@ const TIERS_DOC = [
     proves: 'A real, named person with a verifiable real-world identity stands behind this wallet. Silver confirms legal identity against government-issued documentation and is designed to align with basic KYC expectations in many FATF-member jurisdictions.',
     usedFor: 'Light-compliance DeFi, DAO treasuries, Web3 payroll platforms, smaller exchanges, any application requiring confirmed identity.',
     anchor: 'Arbitrum',
+    image: '/tiers/tier-2.png',
   },
   {
     numeral: 'III',
@@ -156,6 +158,7 @@ const TIERS_DOC = [
     proves: 'Enhanced due diligence complete. Liveness confirmed, PEP and sanctions screening passed, source of funds declared. Gold is designed to support enhanced due diligence requirements under frameworks such as EU MiCA and comparable G20 regimes.',
     usedFor: 'MiCA-exposed protocols, EU and UK regulated lending platforms, institutional DeFi gateways, any application requiring enhanced due diligence.',
     anchor: 'Arbitrum',
+    image: '/tiers/tier-3.png',
   },
   {
     numeral: 'IV',
@@ -169,6 +172,7 @@ const TIERS_DOC = [
     proves: "Legally verified accredited or sophisticated investor status in the member's jurisdiction. Platinum is structured to align with accredited investor criteria under frameworks such as SEC Rule 501, FCA, and MAS rules. It proves not just who you are, but what you are legally permitted to do.",
     usedFor: 'RWA tokenization platforms, security token offerings, institutional DeFi, private credit, any application gating access by investor qualification.',
     anchor: 'Ethereum',
+    image: null,
   },
   {
     numeral: 'V',
@@ -182,6 +186,7 @@ const TIERS_DOC = [
     proves: 'Legal entity verified, beneficial ownership transparent, AML program documented. Diamond is institutional-grade counterparty verification — the standard required by the most sophisticated participants in global finance.',
     usedFor: 'Corporate treasuries, institutional funds, market makers, non-individual counterparties, any context requiring entity-level due diligence.',
     anchor: 'Ethereum',
+    image: null,
   },
 ];
 
@@ -454,8 +459,21 @@ export function Docs() {
             </Prose>
 
             <div className="space-y-4 mt-8">
-              {TIERS_DOC.map(({ numeral, name, status, tagline, borderClass, headerClass, numeralClass, statusClass, proves, usedFor, anchor }) => (
+              {TIERS_DOC.map(({ numeral, name, status, tagline, borderClass, headerClass, numeralClass, statusClass, proves, usedFor, anchor, image }) => (
                 <div key={numeral} className={`border ${borderClass} bg-tyrian-darker overflow-hidden`}>
+                  {/* Seal image */}
+                  {image ? (
+                    <img
+                      src={image}
+                      alt={`Tier ${numeral} — ${name} seal`}
+                      className="w-full h-auto block border-b border-gold/10"
+                    />
+                  ) : (
+                    <div className={`w-full aspect-video border-b border-gold/10 bg-tyrian-dark flex flex-col items-center justify-center gap-2`}>
+                      <span className={`font-cinzel font-bold text-4xl leading-none ${numeralClass}`}>{numeral}</span>
+                      <span className="font-cinzel text-marble-muted/30 text-xs tracking-widest uppercase">Coming Soon</span>
+                    </div>
+                  )}
                   <div className={`${headerClass} border-b border-gold/10 px-6 py-4 flex items-start justify-between gap-4`}>
                     <div className="flex items-center gap-4">
                       <span className={`font-cinzel font-bold text-2xl leading-none ${numeralClass}`}>
