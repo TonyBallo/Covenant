@@ -22,7 +22,7 @@ export function StatusPage({ walletAddress }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!walletAddress) navigate('/');
+    if (!walletAddress) navigate('/demo');
   }, [walletAddress, navigate]);
 
   useEffect(() => {
@@ -78,7 +78,7 @@ export function StatusPage({ walletAddress }) {
       <div className="max-w-lg mx-auto">
 
         <div className="text-center mb-10">
-          <Link to="/" className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors mb-6 inline-block">
+          <Link to="/demo" className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors mb-6 inline-block">
             ← Return
           </Link>
           <h1 className="font-cinzel text-marble text-4xl tracking-wide mb-2">My Status</h1>
@@ -103,7 +103,7 @@ export function StatusPage({ walletAddress }) {
               You haven't submitted a verification application yet.
             </p>
             <Link
-              to="/get-verified"
+              to="/demo/get-verified"
               className="font-cinzel text-xs tracking-widest uppercase px-6 py-3 bg-gold text-tyrian-deep hover:bg-gold-dim transition-colors"
             >
               Apply for Verification
@@ -146,7 +146,7 @@ export function StatusPage({ walletAddress }) {
               </div>
             )}
             <Link
-              to="/get-verified"
+              to="/demo/get-verified"
               className="font-cinzel text-xs tracking-widest uppercase px-6 py-3 bg-gold text-tyrian-deep hover:bg-gold-dim transition-colors"
             >
               Apply Again

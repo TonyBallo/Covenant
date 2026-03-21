@@ -121,7 +121,7 @@ Project_Covenant/
 │   └── mintTestSeals.js              # Test seal minting script
 ├── test/
 │   └── IdentityPact.test.js          # 41 comprehensive tests
-├── covenant-backend/                 # Backend API
+├── backend/                 # Backend API
 │   ├── src/
 │   │   ├── server.js                 # Express server + CORS config
 │   │   ├── routes/
@@ -131,7 +131,7 @@ Project_Covenant/
 │   │       ├── signature.js          # Cryptographic signature generation
 │   │       └── blockchain.js         # On-chain minting interactions
 │   └── package.json
-├── covenant-lookup/                  # Frontend Application
+├── frontend/                  # Frontend Application
 │   ├── src/
 │   │   ├── App.jsx                   # Main app with routing
 │   │   ├── pages/
@@ -213,7 +213,7 @@ npm run dev
 
 ## Environment Variables
 
-### Backend (`covenant-backend/.env`)
+### Backend (`backend/.env`)
 ```
 SUPABASE_URL=your_supabase_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
@@ -225,7 +225,7 @@ PORT=3001
 NODE_ENV=development
 ```
 
-### Frontend (`covenant-lookup/.env.local`)
+### Frontend (`frontend/.env.local`)
 ```
 VITE_API_URL=http://localhost:3001
 ```

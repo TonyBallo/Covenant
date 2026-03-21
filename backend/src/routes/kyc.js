@@ -163,19 +163,19 @@ router.get('/verify/:token', async (req, res) => {
       .single();
 
     if (fetchError || !submission) {
-      return res.redirect(`${FRONTEND_URL}/verify-failed?reason=invalid`);
+      return res.redirect(`${FRONTEND_URL}/demo/verify-failed?reason=invalid`);
     }
 
     // Check if already verified
     if (submission.email_verified) {
-      return res.redirect(`${FRONTEND_URL}/verify-success?already=true`);
+      return res.redirect(`${FRONTEND_URL}/demo/verify-success?already=true`);
     }
 
     // Check if expired
     const now = new Date();
     const expiresAt = new Date(submission.verification_expires_at);
     if (now > expiresAt) {
-      return res.redirect(`${FRONTEND_URL}/verify-failed?reason=expired`);
+      return res.redirect(`${FRONTEND_URL}/demo/verify-failed?reason=expired`);
     }
 
     // Mark as verified
@@ -192,11 +192,11 @@ router.get('/verify/:token', async (req, res) => {
     console.log(`✅ Email verified for ${submission.wallet_address}`);
 
     // Redirect to success page
-    res.redirect(`${FRONTEND_URL}/verify-success`);
+    res.redirect(`${FRONTEND_URL}/demo/verify-success`);
 
   } catch (error) {
     console.error('Verification error:', error);
-    res.redirect(`${FRONTEND_URL}/verify-failed?reason=error`);
+    res.redirect(`${FRONTEND_URL}/demo/verify-failed?reason=error`);
   }
 });
 

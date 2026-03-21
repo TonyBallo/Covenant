@@ -11,7 +11,7 @@ Project_Covenant/
 ├── contracts/
 │   ├── Pact.sol                         # Main ERC721 soulbound NFT contract (ERC721 name "Covenant Pact" / symbol "PACT")
 │   └── PactWitness.sol                  # Polygon Amoy attestation contract
-├── covenant-backend/                    # Node.js/Express REST API
+├── backend/                    # Node.js/Express REST API
 │   ├── src/
 │   │   ├── server.js                    # Express app setup, CORS, Supabase init, hourly cleanup job
 │   │   ├── routes/
@@ -23,7 +23,7 @@ Project_Covenant/
 │   │       └── signature.js             # ECDSA signature creation/verification for mint authorization
 │   ├── package.json
 │   └── .env                             # Backend secrets (Supabase, RPC, private key, PORT)
-├── covenant-lookup/                     # React 19 + Vite 7 frontend
+├── frontend/                     # React 19 + Vite 7 frontend
 │   ├── src/
 │   │   ├── App.jsx                      # Router, navbar, wallet connection, homepage search
 │   │   ├── pages/
@@ -81,7 +81,7 @@ Project_Covenant/
 | solidity-coverage | ^0.8.17 |
 | Solidity | 0.8.28 |
 
-### Backend (`covenant-backend/`)
+### Backend (`backend/`)
 | Package | Version |
 |---|---|
 | express | ^4.18.2 |
@@ -94,7 +94,7 @@ Project_Covenant/
 | nodemon (dev) | ^3.0.2 |
 | Node.js ESM | `"type": "module"` |
 
-### Frontend (`covenant-lookup/`)
+### Frontend (`frontend/`)
 | Package | Version |
 |---|---|
 | react | ^19.2.0 |
@@ -127,7 +127,7 @@ MIGRATE_FROM_BLOCK        # optional: deployment block of old contract, speeds u
 INCLUDE_REVOKED           # optional: "true" to re-mint and re-revoke revoked seals
 ```
 
-### `covenant-backend/.env`
+### `backend/.env`
 ```
 SUPABASE_URL
 SUPABASE_ANON_KEY
@@ -142,7 +142,7 @@ PORT
 NODE_ENV
 ```
 
-### `covenant-lookup/.env.local`
+### `frontend/.env.local`
 ```
 VITE_API_URL
 ```
@@ -211,19 +211,19 @@ Admin revokes seal
 ```
 
 ### Frontend → Backend
-- All calls go through `covenant-lookup/src/utils/api.js`
+- All calls go through `frontend/src/utils/api.js`
 - `API_BASE_URL` from `VITE_API_URL` env var (Railway production URL)
 - Plain `fetch()` with JSON — no SDK, no axios
 - Admin endpoints have no server-side auth (password checked client-side only)
 
 ### Frontend → Smart Contract (Read-Only)
-- `covenant-lookup/src/utils/contract.js` creates a `JsonRpcProvider` pointed at Arbitrum Sepolia (Alchemy)
+- `frontend/src/utils/contract.js` creates a `JsonRpcProvider` pointed at Arbitrum Sepolia (Alchemy)
 - ABI exposes 4 view functions: `getVerificationStatus`, `addressToSealId`, `sealData`, `isValid`
 - Used in `App.jsx` (homepage lookup), `ResultDisplay.jsx` (cross-chain badges), `StatusPage.jsx`, and `VendorDemo.jsx`
 - Wallet connection uses `ethers.BrowserProvider(window.ethereum)` — MetaMask required
 
 ### Backend → Smart Contract
-- `covenant-backend/src/services/blockchain.js` uses `ethers.JsonRpcProvider` (`ARBITRUM_SEPOLIA_RPC_URL`)
+- `backend/src/services/blockchain.js` uses `ethers.JsonRpcProvider` (`ARBITRUM_SEPOLIA_RPC_URL`)
 - Signed transactions via `new ethers.Wallet(OWNER_PRIVATE_KEY, provider)`
 - Gas limits hardcoded: 300,000 for mint, 200,000 for revoke
 - Exports: `mintSeal`, `revokeSeal`, `getSealId`, `hasSeal`, `getSealInfo`

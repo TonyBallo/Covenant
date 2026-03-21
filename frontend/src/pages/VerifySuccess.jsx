@@ -23,13 +23,13 @@ export function VerifySuccess() {
 
         <div className="flex flex-col gap-3">
           <Link
-            to="/status"
+            to="/demo/status"
             className="font-cinzel text-xs tracking-widest uppercase px-6 py-3 bg-gold text-tyrian-deep hover:bg-gold-dim transition-colors"
           >
             Check Application Status
           </Link>
           <Link
-            to="/"
+            to="/demo"
             className="font-cinzel text-xs tracking-widest uppercase px-6 py-3 border border-gold/30 text-gold/70 hover:border-gold/60 hover:text-gold transition-colors"
           >
             Return Home

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, Outlet } from 'react-router-dom';
 import { useState } from 'react';
 import { ethers } from 'ethers';
 import { SearchBar } from './components/SearchBar';
@@ -12,6 +12,7 @@ import { CONTRACT_ADDRESS, CONTRACT_ABI, RPC_URL, ETHERSCAN_BASE } from './utils
 import { Admin } from './pages/Admin';
 import { VendorDemo } from './pages/VendorDemo';
 import { Docs } from './pages/Docs';
+import { Landing } from './pages/Landing';
 
 // ============ Shared Navbar ============
 
@@ -23,7 +24,7 @@ function Navbar({ walletAddress, walletConnected, onConnect, onDisconnect }) {
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
 
-          <Link to="/" className="flex items-center gap-4" onClick={() => setMobileMenuOpen(false)}>
+          <Link to="/demo" className="flex items-center gap-4" onClick={() => setMobileMenuOpen(false)}>
             <div className="w-9 h-9 border border-gold/50 flex items-center justify-center">
               <span className="font-cinzel text-gold font-semibold text-lg leading-none">C</span>
             </div>
@@ -40,27 +41,27 @@ function Navbar({ walletAddress, walletConnected, onConnect, onDisconnect }) {
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-6">
             <Link
-              to="/admin"
+              to="/demo/admin"
               className="font-cinzel text-marble-muted hover:text-gold text-xs tracking-widest uppercase transition-colors"
             >
               Admin
             </Link>
             {walletConnected && (
               <Link
-                to="/status"
+                to="/demo/status"
                 className="font-cinzel text-marble-muted hover:text-gold text-xs tracking-widest uppercase transition-colors"
               >
                 My Status
               </Link>
             )}
             <Link
-              to="/vendor-demo"
+              to="/demo/vendor-demo"
               className="font-cinzel text-marble-muted hover:text-gold text-xs tracking-widest uppercase transition-colors"
             >
               Vendor Demo
             </Link>
             <Link
-              to="/get-verified"
+              to="/demo/get-verified"
               className="font-cinzel text-xs tracking-widest uppercase px-5 py-2 border border-gold/60 text-gold hover:bg-gold/10 transition-colors"
             >
               Get Verified
@@ -107,7 +108,7 @@ function Navbar({ walletAddress, walletConnected, onConnect, onDisconnect }) {
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-gold/15 mt-4 pt-4 pb-2 flex flex-col gap-1">
             <Link
-              to="/admin"
+              to="/demo/admin"
               onClick={() => setMobileMenuOpen(false)}
               className="font-cinzel text-marble-muted hover:text-gold text-xs tracking-widest uppercase py-3 transition-colors"
             >
@@ -115,7 +116,7 @@ function Navbar({ walletAddress, walletConnected, onConnect, onDisconnect }) {
             </Link>
             {walletConnected && (
               <Link
-                to="/status"
+                to="/demo/status"
                 onClick={() => setMobileMenuOpen(false)}
                 className="font-cinzel text-marble-muted hover:text-gold text-xs tracking-widest uppercase py-3 transition-colors"
               >
@@ -123,14 +124,14 @@ function Navbar({ walletAddress, walletConnected, onConnect, onDisconnect }) {
               </Link>
             )}
             <Link
-              to="/vendor-demo"
+              to="/demo/vendor-demo"
               onClick={() => setMobileMenuOpen(false)}
               className="font-cinzel text-marble-muted hover:text-gold text-xs tracking-widest uppercase py-3 transition-colors"
             >
               Vendor Demo
             </Link>
             <Link
-              to="/get-verified"
+              to="/demo/get-verified"
               onClick={() => setMobileMenuOpen(false)}
               className="font-cinzel text-gold text-xs tracking-widest uppercase py-3 transition-colors"
             >
@@ -254,7 +255,7 @@ function HomePage() {
             All verification data is immutably recorded on-chain — no trust required.
           </p>
           <Link
-            to="/docs"
+            to="/demo/docs"
             className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors mt-6 inline-block"
           >
             Read the Documentation →
@@ -335,7 +336,7 @@ function HomePage() {
             </div>
             <div className="flex gap-8">
               <Link
-                to="/docs"
+                to="/demo/docs"
                 className="font-cinzel text-gold/70 hover:text-gold text-xs tracking-widest uppercase transition-colors"
               >
                 Docs
@@ -361,6 +362,22 @@ function HomePage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+// ============ Demo Layout (Navbar + page outlet) ============
+
+function DemoLayout({ walletAddress, walletConnected, onConnect, onDisconnect }) {
+  return (
+    <>
+      <Navbar
+        walletAddress={walletAddress}
+        walletConnected={walletConnected}
+        onConnect={onConnect}
+        onDisconnect={onDisconnect}
+      />
+      <Outlet />
+    </>
   );
 }
 
@@ -405,22 +422,26 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Navbar
-        walletAddress={walletAddress}
-        walletConnected={walletConnected}
-        onConnect={handleConnect}
-        onDisconnect={handleDisconnect}
-      />
       <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/get-verified" element={<TierSelect />} />
-        <Route path="/get-verified/apply" element={<ApplyForm walletAddress={walletAddress} walletConnected={walletConnected} />} />
-        <Route path="/status" element={<StatusPage walletAddress={walletAddress} />} />
-        <Route path="/verify-success" element={<VerifySuccess />} />
-        <Route path="/verify-failed" element={<VerifyFailed />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/vendor-demo" element={<VendorDemo />} />
-        <Route path="/docs" element={<Docs />} />
+        <Route path="/" element={<Landing />} />
+        <Route element={
+          <DemoLayout
+            walletAddress={walletAddress}
+            walletConnected={walletConnected}
+            onConnect={handleConnect}
+            onDisconnect={handleDisconnect}
+          />
+        }>
+          <Route path="/demo" element={<HomePage />} />
+          <Route path="/demo/get-verified" element={<TierSelect />} />
+          <Route path="/demo/get-verified/apply" element={<ApplyForm walletAddress={walletAddress} walletConnected={walletConnected} />} />
+          <Route path="/demo/status" element={<StatusPage walletAddress={walletAddress} />} />
+          <Route path="/demo/verify-success" element={<VerifySuccess />} />
+          <Route path="/demo/verify-failed" element={<VerifyFailed />} />
+          <Route path="/demo/admin" element={<Admin />} />
+          <Route path="/demo/vendor-demo" element={<VendorDemo />} />
+          <Route path="/demo/docs" element={<Docs />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

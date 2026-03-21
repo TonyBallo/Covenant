@@ -15,7 +15,7 @@ export function TierSelect() {
       <div className="max-w-2xl mx-auto">
 
         <div className="text-center mb-12">
-          <Link to="/" className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors mb-6 inline-block">
+          <Link to="/demo" className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors mb-6 inline-block">
             ← Return
           </Link>
           <h1 className="font-cinzel text-marble text-4xl tracking-wide mb-3">Get Verified</h1>
@@ -57,7 +57,7 @@ export function TierSelect() {
                   </div>
                   {styles.available ? (
                     <Link
-                      to="/get-verified/apply"
+                      to="/demo/get-verified/apply"
                       className="font-cinzel text-xs tracking-widest uppercase px-5 py-2 bg-gold text-tyrian-deep hover:bg-gold-dim transition-colors shrink-0"
                     >
                       Apply

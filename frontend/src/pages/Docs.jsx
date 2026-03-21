@@ -263,7 +263,7 @@ export function Docs() {
           {/* Page header */}
           <div className="mb-14">
             <Link
-              to="/"
+              to="/demo"
               className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors mb-6 inline-block"
             >
               ← Return

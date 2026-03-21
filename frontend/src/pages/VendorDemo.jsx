@@ -122,7 +122,7 @@ function AccessRestricted() {
           Obtain a Covenant verification seal to unlock access.
         </p>
         <Link
-          to="/get-verified"
+          to="/demo/get-verified"
           className="font-cinzel text-xs tracking-widest uppercase px-8 py-3 bg-gold text-tyrian-deep hover:bg-gold-dim transition-colors"
         >
           Get Verified

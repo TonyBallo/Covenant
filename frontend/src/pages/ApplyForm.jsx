@@ -48,7 +48,7 @@ export function ApplyForm({ walletAddress, walletConnected }) {
             The link expires in 15 minutes. Check your spam folder if needed.
           </p>
           <Link
-            to="/"
+            to="/demo"
             className="font-cinzel text-xs tracking-widest uppercase text-gold/70 hover:text-gold transition-colors"
           >
             Return Home
@@ -63,7 +63,7 @@ export function ApplyForm({ walletAddress, walletConnected }) {
       <div className="max-w-xl mx-auto">
 
         <div className="text-center mb-10">
-          <Link to="/get-verified" className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors mb-6 inline-block">
+          <Link to="/demo/get-verified" className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors mb-6 inline-block">
             ← Back to Tiers
           </Link>
           <div className="inline-flex items-center gap-2 border border-gold/40 text-gold bg-gold/10 px-5 py-1.5 font-cinzel text-xs tracking-widest uppercase mb-5">
