@@ -45,6 +45,7 @@ contract Pact is ERC721, Ownable, ReentrancyGuard {
     mapping(address => uint256) public addressToSealId;      // wallet => sealId (0 if no seal)
     mapping(uint256 => BurnRequest) public burnRequests;     // sealId => pending burn request
     mapping(Tier => bool) public tierActive;                 // gates which tiers can be minted; set by owner
+    mapping(uint8 => string) public tierMetadataURI;         // tier number => IPFS metadata URI
     uint256 public constant BURN_DELAY = 90 days;            // Time-lock before a requested burn can be executed
 
     // Events
@@ -65,6 +66,22 @@ contract Pact is ERC721, Ownable, ReentrancyGuard {
      */
     function setTierActive(Tier tier, bool active) external onlyOwner {
         tierActive[tier] = active;
+    }
+
+    /**
+     * @dev Set the IPFS metadata URI for a given tier (1–5)
+     */
+    function setTierMetadataURI(uint8 tier, string calldata uri) external onlyOwner {
+        tierMetadataURI[tier] = uri;
+    }
+
+    /**
+     * @dev Returns the metadata URI for the seal's tier.
+     * Returns an empty string if no URI has been set for that tier.
+     */
+    function tokenURI(uint256 sealId) public view override returns (string memory) {
+        require(_ownerOf(sealId) != address(0), "Seal does not exist");
+        return tierMetadataURI[uint8(sealData[sealId].tier)];
     }
 
     /**
@@ -259,6 +276,22 @@ contract Pact is ERC721, Ownable, ReentrancyGuard {
 
     function safeTransferFrom(address, address, uint256, bytes memory) public pure override {
         revert("Soulbound: Transfer not allowed");
+    }
+
+    /**
+     * @dev Owner-callable burn — removes a seal immediately without the 90-day delay.
+     * Intended for contract migrations so stale seals aren't left in wallets.
+     */
+    function adminBurn(uint256 sealId) external onlyOwner nonReentrant {
+        address sealOwner = _ownerOf(sealId);
+        require(sealOwner != address(0), "Seal does not exist");
+
+        delete addressToSealId[sealOwner];
+        delete sealData[sealId];
+        delete burnRequests[sealId];
+        _burn(sealId);
+
+        emit SealBurned(sealId, sealOwner);
     }
 
     /**

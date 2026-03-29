@@ -35,8 +35,10 @@ const { ethers } = require("hardhat");
 const OLD_CONTRACT_ABI = [
   "event SealMinted(address indexed to, uint256 indexed sealId, uint8 tier)",
   "event SealRevoked(uint256 indexed sealId, address indexed owner, string reason)",
-  "function sealData(uint256 sealId) view returns (uint8 tier, bytes covenantSignature, uint256 mintedAt, uint256 expiresAt, bool revoked, string revocationReason)",
+  "event SealUpgraded(uint256 indexed sealId, uint8 oldTier, uint8 newTier)",
+  "function sealData(uint256 sealId) view returns (uint8 tier, bytes covenantSignature, uint256 mintedAt, uint256 expiresAt, bool revoked, string revocationReason, uint8 jurisdictionCode)",
   "function addressToSealId(address user) view returns (uint256)",
+  "function adminBurn(uint256 sealId)",
 ];
 
 async function main() {
@@ -75,6 +77,9 @@ async function main() {
     "https://sepolia-rollup.arbitrum.io/rpc"
   );
   const oldContract = new ethers.Contract(OLD_ADDRESS, OLD_CONTRACT_ABI, readProvider);
+  // Writable instance of the old contract — used to call adminBurn during migration.
+  // Falls back gracefully if the old contract predates adminBurn.
+  const oldContractWrite = new ethers.Contract(OLD_ADDRESS, OLD_CONTRACT_ABI, owner);
 
   // New contract — needs a signer (owner) for write calls.
   const newContract = await ethers.getContractAt("Pact", NEW_ADDRESS, owner);
@@ -89,16 +94,18 @@ async function main() {
   }
 
   // ─── Step 1: Read all events from the old contract ────────────────────────
-  console.log("📖 Reading SealMinted events from old contract…");
-  const mintFilter   = oldContract.filters.SealMinted();
-  const revokeFilter = oldContract.filters.SealRevoked();
+  console.log("📖 Reading SealMinted / SealRevoked / SealUpgraded events from old contract…");
+  const mintFilter    = oldContract.filters.SealMinted();
+  const revokeFilter  = oldContract.filters.SealRevoked();
+  const upgradeFilter = oldContract.filters.SealUpgraded();
 
-  const [mintEvents, revokeEvents] = await Promise.all([
-    oldContract.queryFilter(mintFilter,   FROM_BLOCK, "latest"),
-    oldContract.queryFilter(revokeFilter, FROM_BLOCK, "latest"),
+  const [mintEvents, revokeEvents, upgradeEvents] = await Promise.all([
+    oldContract.queryFilter(mintFilter,    FROM_BLOCK, "latest"),
+    oldContract.queryFilter(revokeFilter,  FROM_BLOCK, "latest"),
+    oldContract.queryFilter(upgradeFilter, FROM_BLOCK, "latest"),
   ]);
 
-  console.log(`   Found ${mintEvents.length} mint event(s) and ${revokeEvents.length} revoke event(s)\n`);
+  console.log(`   Found ${mintEvents.length} mint event(s), ${revokeEvents.length} revoke event(s), ${upgradeEvents.length} upgrade event(s)\n`);
 
   if (mintEvents.length === 0) {
     console.log("Nothing to migrate. Exiting.");
@@ -113,10 +120,16 @@ async function main() {
   }
 
   // ─── Step 2: Collect unique tiers and activate them on the new contract ───
-  const tiersNeeded = new Set();
+  // Build a final tier map: sealId → current tier (applying any upgrades on top of mints).
+  const finalTierBySealId = new Map();
   for (const ev of mintEvents) {
-    tiersNeeded.add(Number(ev.args.tier));
+    finalTierBySealId.set(ev.args.sealId.toString(), Number(ev.args.tier));
   }
+  for (const ev of upgradeEvents) {
+    finalTierBySealId.set(ev.args.sealId.toString(), Number(ev.args.newTier));
+  }
+
+  const tiersNeeded = new Set(finalTierBySealId.values());
 
   console.log(`🔓 Activating tiers on new contract: [${[...tiersNeeded].join(", ")}]`);
   for (const tier of tiersNeeded) {
@@ -143,11 +156,11 @@ async function main() {
   console.log(`⛓️  Migrating ${mintEvents.length} seal(s)…\n`);
 
   for (let i = 0; i < mintEvents.length; i++) {
-    const ev      = mintEvents[i];
-    const to      = ev.args.to;
-    const sealId  = ev.args.sealId.toString();
-    const tierNum = Number(ev.args.tier);
-    const label   = `[${i + 1}/${mintEvents.length}] ${tierNames[tierNum] || `Tier ${tierNum}`} — ${to}`;
+    const ev           = mintEvents[i];
+    const to           = ev.args.to;
+    const sealId       = ev.args.sealId.toString();
+    const mintedTierNum = Number(ev.args.tier); // original tier at mint time (for display)
+    const label        = `[${i + 1}/${mintEvents.length}] ${tierNames[mintedTierNum] || `Tier ${mintedTierNum}`} — ${to}`;
 
     const isRevoked = revokedMap.has(sealId);
 
@@ -169,13 +182,18 @@ async function main() {
         continue;
       }
 
-      // Fetch original seal data so we can preserve expiresAt.
-      const data = await oldContract.sealData(sealId);
-      const expiresAt = Number(data.expiresAt);
+      // Fetch current seal data to preserve expiresAt, jurisdictionCode, and current tier.
+      const data             = await oldContract.sealData(sealId);
+      const expiresAt        = Number(data.expiresAt);
+      const jurisdictionCode = Number(data.jurisdictionCode);
+      // Use current tier from sealData — reflects any tier upgrades applied after mint.
+      const tierNum          = Number(data.tier);
+
+      if (tierNum !== mintedTierNum) {
+        console.log(`       Tier upgraded since mint: ${mintedTierNum} → ${tierNum}`);
+      }
 
       // Generate a fresh signature for the new contract / chain.
-      // Jurisdiction defaults to 0 (global) — the old contract didn't track it.
-      const jurisdictionCode = 0;
       const messageHash = ethers.solidityPackedKeccak256(
         ["address", "uint8", "uint8", "uint256"],
         [to, tierNum, jurisdictionCode, chainId]
@@ -183,7 +201,8 @@ async function main() {
       const signature = await owner.signMessage(ethers.getBytes(messageHash));
 
       if (isDryRun) {
-        console.log(`   ✅ [dry-run] Would mint ${label}`);
+        console.log(`   ✅ [dry-run] Would mint ${label} (tier ${tierNum}, jurisdiction ${jurisdictionCode})`);
+        console.log(`       Would adminBurn seal #${sealId} on old contract first`);
         if (expiresAt > 0) {
           console.log(`       expiresAt: ${new Date(expiresAt * 1000).toISOString()}`);
         }
@@ -193,6 +212,15 @@ async function main() {
         minted++;
         if (isRevoked) revoked++;
         continue;
+      }
+
+      // Burn the old seal before minting the new one so the wallet doesn't hold both.
+      try {
+        const burnTx = await oldContractWrite.adminBurn(sealId, { gasLimit: 100000 });
+        await burnTx.wait();
+        console.log(`       🔥 Burned seal #${sealId} on old contract`);
+      } catch {
+        console.log(`       ⚠️  adminBurn not available on old contract — old seal will remain`);
       }
 
       // Mint on the new contract.

@@ -1,0 +1,19 @@
+{
+  "name": "Covenant Seal — Bronze",
+  "description": "Tier I Bronze identity seal. Issued by Covenant Protocol. Proves one real person controls this wallet.",
+  "image": "ipfs://QmYJns2vsAgLtMCkT6VWfZnkMzBFq6swfmizJyzoPhWHUv",
+  "attributes": [
+    {
+      "trait_type": "Tier",
+      "value": "Bronze"
+    },
+    {
+      "trait_type": "Tier Level",
+      "value": 1
+    },
+    {
+      "trait_type": "Anchor Chain",
+      "value": "Arbitrum"
+    }
+  ]
+}

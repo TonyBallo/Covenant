@@ -1,0 +1,20 @@
+const { ethers } = require("hardhat");
+
+async function main() {
+  const address = "0xBfCA5341f3c370743d4A64Df7c732113A4f83187";
+  const pact = await ethers.getContractAt("Pact", address);
+
+  const uris = [
+    { tier: 1, uri: "ipfs://QmUAwZnyXUE2aEUhS8ALJpNDfwTbZPjhQinq6b1yx6yHor" },
+    { tier: 2, uri: "ipfs://QmPeBrCXVVrkNnCv5EvmJjXCGmZWBxUprR2uthoFpAsWTr" },
+    { tier: 3, uri: "ipfs://QmZ74ehuHBRxU3B9KYx1TpiW2jePDAwMbgNvpH1b6BRz8X" },
+  ];
+
+  for (const { tier, uri } of uris) {
+    const tx = await pact.setTierMetadataURI(tier, uri);
+    await tx.wait();
+    console.log(`✅ Tier ${tier} metadata URI set`);
+  }
+}
+
+main().catch((err) => { console.error(err); process.exitCode = 1; });

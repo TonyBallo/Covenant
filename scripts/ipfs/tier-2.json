@@ -1,0 +1,19 @@
+{
+  "name": "Covenant Seal — Silver",
+  "description": "Tier II Silver identity seal. Issued by Covenant Protocol. Proves a real, named person with verifiable identity controls this wallet.",
+  "image": "ipfs://QmP5ZoUaNVzFHJbWiLjDjxysRP6RYFpKSTTp7Jpp8dpkdz",
+  "attributes": [
+    {
+      "trait_type": "Tier",
+      "value": "Silver"
+    },
+    {
+      "trait_type": "Tier Level",
+      "value": 2
+    },
+    {
+      "trait_type": "Anchor Chain",
+      "value": "Arbitrum"
+    }
+  ]
+}

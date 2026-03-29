@@ -13,6 +13,7 @@ import { Admin } from './pages/Admin';
 import { VendorDemo } from './pages/VendorDemo';
 import { Docs } from './pages/Docs';
 import { Landing } from './pages/Landing';
+import { MintCeremony } from './pages/MintCeremony';
 
 // ============ Shared Navbar ============
 
@@ -424,6 +425,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/demo/mint-ceremony" element={<MintCeremony />} />
         <Route element={
           <DemoLayout
             walletAddress={walletAddress}

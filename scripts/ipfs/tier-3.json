@@ -1,0 +1,19 @@
+{
+  "name": "Covenant Seal — Gold",
+  "description": "Tier III Gold identity seal. Issued by Covenant Protocol. Enhanced due diligence complete — liveness confirmed, PEP and sanctions screening passed.",
+  "image": "ipfs://Qme6QiNeCyqUivjuLHsawbHEL4AwWyLCdbDFLWrH2qfrCE",
+  "attributes": [
+    {
+      "trait_type": "Tier",
+      "value": "Gold"
+    },
+    {
+      "trait_type": "Tier Level",
+      "value": 3
+    },
+    {
+      "trait_type": "Anchor Chain",
+      "value": "Arbitrum"
+    }
+  ]
+}

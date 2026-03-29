@@ -20,10 +20,40 @@ export function StatusPage({ walletAddress }) {
   const [chainStatus, setChainStatus] = useState({ ethereum: false, polygon: false });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sealAdded, setSealAdded] = useState(false);
+
+  const addToWallet = async () => {
+    if (!window.ethereum) return;
+    try {
+      await window.ethereum.request({
+        method: 'wallet_watchAsset',
+        params: {
+          type: 'ERC721',
+          options: {
+            address: CONTRACT_ADDRESS,
+            tokenId: sealData.sealId.toString(),
+          },
+        },
+      });
+      setSealAdded(true);
+    } catch {
+      // User rejected — ignore
+    }
+  };
 
   useEffect(() => {
     if (!walletAddress) navigate('/demo');
   }, [walletAddress, navigate]);
+
+  // Redirect to ceremony on first visit after minting (once per seal per session)
+  useEffect(() => {
+    if (!sealData?.verified) return;
+    const key = `mintCeremony_${sealData.sealId}`;
+    if (!sessionStorage.getItem(key)) {
+      sessionStorage.setItem(key, 'shown');
+      navigate('/demo/mint-ceremony', { state: { tier: sealData.tier, sealId: sealData.sealId } });
+    }
+  }, [sealData, navigate]);
 
   useEffect(() => {
     if (!walletAddress) return;
@@ -181,6 +211,22 @@ export function StatusPage({ walletAddress }) {
               </div>
             </div>
 
+            {/* Seal image */}
+            {sealData.tier <= 3 ? (
+              <img
+                src={`/tiers/tier-${sealData.tier}.png`}
+                alt={`Tier ${TIERS[sealData.tier].numeral} — ${TIERS[sealData.tier].name} seal`}
+                className="w-full h-auto block border-b border-gold/10"
+              />
+            ) : (
+              <div className="w-full aspect-video border-b border-gold/10 bg-tyrian-dark flex flex-col items-center justify-center gap-2">
+                <span className={`font-cinzel font-bold text-4xl leading-none ${tierTextClass[TIERS[sealData.tier].color]}`}>
+                  {TIERS[sealData.tier].numeral}
+                </span>
+                <span className="font-cinzel text-marble-muted/30 text-xs tracking-widest uppercase">Coming Soon</span>
+              </div>
+            )}
+
             {/* Tier display */}
             <div className={`px-5 py-5 sm:px-8 sm:py-6 border-b border-gold/15 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 ${sealData.revoked ? 'bg-red-950/20' : ''}`}>
               <div className={`font-cinzel text-5xl sm:text-6xl font-bold leading-none ${tierTextClass[TIERS[sealData.tier].color]}`}>
@@ -190,9 +236,6 @@ export function StatusPage({ walletAddress }) {
                 <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Verification Tier</p>
                 <p className={`font-cinzel text-xl sm:text-2xl tracking-wide mb-1 ${tierTextClass[TIERS[sealData.tier].color]}`}>
                   {TIERS[sealData.tier].name}
-                </p>
-                <p className="font-cormorant text-marble-muted italic text-base">
-                  {TIERS[sealData.tier].description}
                 </p>
               </div>
             </div>
@@ -274,13 +317,18 @@ export function StatusPage({ walletAddress }) {
                   View Wallet →
                 </a>
               </div>
-              <div className="border border-gold/10 bg-tyrian-dark p-3 text-center">
-                <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Add to MetaMask Manually</p>
-                <p className="font-mono text-marble-muted/60 text-xs">
-                  Contract: {CONTRACT_ADDRESS.slice(0, 10)}…{CONTRACT_ADDRESS.slice(-8)}
+              {sealAdded ? (
+                <p className="font-cinzel text-gold text-xs tracking-widest uppercase text-center py-2">
+                  Seal added to wallet ✓
                 </p>
-                <p className="font-mono text-marble-muted/60 text-xs">Token ID: {sealData.sealId}</p>
-              </div>
+              ) : (
+                <button
+                  onClick={addToWallet}
+                  className="w-full font-cinzel text-xs tracking-widest uppercase py-3 px-4 border border-gold/30 text-marble-muted hover:border-gold/60 hover:text-gold transition-colors text-center"
+                >
+                  Add Seal to Wallet
+                </button>
+              )}
             </div>
 
           </div>
