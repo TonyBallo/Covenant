@@ -37,7 +37,7 @@ const router = express.Router();
 // Prevents brute-force attempts against the x-admin-secret header.
 const adminLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: 300,
   message: { error: 'Too many requests from this IP, please try again later' },
   standardHeaders: true,
   legacyHeaders: false,
