@@ -84,9 +84,17 @@ export function ResultDisplay({ result }) {
 
         {/* Tier display */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8 mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-gold/15">
-          <div className={`font-cinzel text-5xl sm:text-7xl font-bold leading-none ${tierTextClass[tierInfo.color]}`}>
-            {tierInfo.numeral}
-          </div>
+          {result.tier >= 1 && result.tier <= 3 ? (
+            <img
+              src={`/tiers/tier-${result.tier}.png`}
+              alt={`Tier ${result.tier} seal`}
+              className="w-24 h-24 object-contain shrink-0"
+            />
+          ) : (
+            <div className={`font-cinzel text-5xl sm:text-7xl font-bold leading-none shrink-0 ${tierTextClass[tierInfo.color]}`}>
+              {tierInfo.numeral}
+            </div>
+          )}
           <div className="flex-1">
             <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Verification Tier</p>
             <p className={`font-cinzel text-2xl sm:text-3xl tracking-wide mb-2 ${tierTextClass[tierInfo.color]}`}>
