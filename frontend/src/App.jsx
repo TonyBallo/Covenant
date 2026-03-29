@@ -14,6 +14,7 @@ import { VendorDemo } from './pages/VendorDemo';
 import { Docs } from './pages/Docs';
 import { Landing } from './pages/Landing';
 import { MintCeremony } from './pages/MintCeremony';
+import { About } from './pages/About';
 
 // ============ Shared Navbar ============
 
@@ -25,7 +26,7 @@ function Navbar({ walletAddress, walletConnected, onConnect, onDisconnect }) {
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
 
-          <Link to="/demo" className="flex items-center gap-4" onClick={() => setMobileMenuOpen(false)}>
+          <Link to="/" className="flex items-center gap-4" onClick={() => setMobileMenuOpen(false)}>
             <div className="w-9 h-9 border border-gold/50 flex items-center justify-center">
               <span className="font-cinzel text-gold font-semibold text-lg leading-none">C</span>
             </div>
@@ -41,6 +42,12 @@ function Navbar({ walletAddress, walletConnected, onConnect, onDisconnect }) {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-6">
+            <Link
+              to="/demo"
+              className="font-cinzel text-marble-muted hover:text-gold text-xs tracking-widest uppercase transition-colors"
+            >
+              Lookup
+            </Link>
             <Link
               to="/demo/admin"
               className="font-cinzel text-marble-muted hover:text-gold text-xs tracking-widest uppercase transition-colors"
@@ -108,6 +115,13 @@ function Navbar({ walletAddress, walletConnected, onConnect, onDisconnect }) {
         {/* Mobile menu */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-gold/15 mt-4 pt-4 pb-2 flex flex-col gap-1">
+            <Link
+              to="/demo"
+              onClick={() => setMobileMenuOpen(false)}
+              className="font-cinzel text-marble-muted hover:text-gold text-xs tracking-widest uppercase py-3 transition-colors"
+            >
+              Lookup
+            </Link>
             <Link
               to="/demo/admin"
               onClick={() => setMobileMenuOpen(false)}
@@ -337,6 +351,12 @@ function HomePage() {
             </div>
             <div className="flex gap-8">
               <Link
+                to="/about"
+                className="font-cinzel text-gold/70 hover:text-gold text-xs tracking-widest uppercase transition-colors"
+              >
+                About
+              </Link>
+              <Link
                 to="/demo/docs"
                 className="font-cinzel text-gold/70 hover:text-gold text-xs tracking-widest uppercase transition-colors"
               >
@@ -425,6 +445,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/about" element={<About />} />
         <Route path="/demo/mint-ceremony" element={<MintCeremony />} />
         <Route element={
           <DemoLayout

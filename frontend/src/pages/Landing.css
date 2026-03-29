@@ -144,6 +144,10 @@
   margin-top: 2.8rem;
   opacity: 0;
   animation: landingFadeIn 1.4s 3.2s ease forwards;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .landing-demo-btn {
@@ -167,6 +171,7 @@
   color: #0a0006;
   border-color: #d4af5a;
 }
+
 
 .landing-seal-mark {
   position: fixed;
