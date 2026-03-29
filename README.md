@@ -18,14 +18,14 @@ Project Covenant provides tiered identity verification for blockchain wallets th
 
 **Frontend:** [covenantprotocol.io/demo](https://www.covenantprotocol.io/demo)
 **Backend API:** https://covenant-production-4cf7.up.railway.app
-**Contract (Arbitrum Sepolia):** `0xFa71D3c2dAbD20A3ceEb3Ef08319CE64548ecbA4`
-**Arbiscan:** [View Contract](https://sepolia.arbiscan.io/address/0xFa71D3c2dAbD20A3ceEb3Ef08319CE64548ecbA4)
+**Contract (Arbitrum Sepolia):** `0xBfCA5341f3c370743d4A64Df7c732113A4f83187`
+**Arbiscan:** [View Contract](https://sepolia.arbiscan.io/address/0xBfCA5341f3c370743d4A64Df7c732113A4f83187)
 
 ---
 
 ## Current Status
 
-**Version:** 2.1
+**Version:** 2.2
 **Test Coverage:** 41 tests passing, 100% statement coverage, 82% branch coverage
 **Deployment:** Live on Arbitrum Sepolia testnet + Polygon Amoy
 **Next Steps:** Security audit, then mainnet launch
@@ -112,7 +112,10 @@ Project_Covenant/
 │   ├── deployAttestation.js          # Deploy PactWitness to Polygon Amoy
 │   ├── activateTiers.js              # Enable tier levels on deployed contract
 │   ├── mintTestSeals.js              # Dev script to mint test seals
-│   └── repopulateSeals.js            # Migration script for redeployments
+│   ├── repopulateSeals.js            # Migration script for redeployments
+│   ├── uploadToIPFS.js               # Upload tier images + metadata to Pinata
+│   ├── setMetadataURIs.js            # Set on-chain tier metadata URIs
+│   └── ipfs/                         # IPFS metadata JSON for tiers 1–3
 ├── test/
 │   └── IdentitySBT.test.js           # 41 comprehensive tests
 ├── backend/                          # Node.js/Express REST API (Railway)
@@ -134,6 +137,7 @@ Project_Covenant/
 │   │   │   ├── ApplyForm.jsx         # KYC submission form
 │   │   │   ├── Admin.jsx             # Admin panel (server-auth)
 │   │   │   ├── Docs.jsx              # Tier documentation + seal images
+│   │   │   ├── MintCeremony.jsx      # Full-screen post-mint ceremony
 │   │   │   ├── StatusPage.jsx        # User's own verification status
 │   │   │   ├── TierSelect.jsx        # Tier picker
 │   │   │   └── VendorDemo.jsx        # Vendor integration demo
@@ -215,7 +219,7 @@ SUPABASE_URL=your_supabase_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_KEY=your_supabase_service_key
 ARBITRUM_SEPOLIA_RPC_URL=your_alchemy_arbitrum_sepolia_url
-CONTRACT_ADDRESS=0xFa71D3c2dAbD20A3ceEb3Ef08319CE64548ecbA4
+CONTRACT_ADDRESS=0xBfCA5341f3c370743d4A64Df7c732113A4f83187
 OWNER_PRIVATE_KEY=your_deployer_wallet_private_key
 POLYGON_RPC_URL=your_polygon_amoy_rpc_url
 POLYGON_ATTESTATION_ADDRESS=0x3F214e98C967e49f451c670654fA7D0580da3730
@@ -372,7 +376,16 @@ await pact.executeBurn(sealId);    // Execute after 90 days
 - ✅ jurisdictionCode in signature scheme
 - ✅ Custom domain (covenantprotocol.io)
 
-### v2.2 - Audit & SDK 🔨 (NEXT)
+### v2.2 - NFT Metadata, Mint UX & Polish ✅ (COMPLETE)
+- ✅ ERC721 `tokenURI` support — tier metadata pinned to IPFS via Pinata
+- ✅ `adminBurn()` on Pact for clean contract migrations
+- ✅ Contract redeployed to `0xBfCA5341f3c370743d4A64Df7c732113A4f83187`, seals migrated
+- ✅ Mint ceremony page (`MintCeremony.jsx`) with `wallet_watchAsset` NFT import
+- ✅ Mint confirmation email via Resend
+- ✅ Seal images in StatusPage, ResultDisplay, and public lookup
+- ✅ All 5 tier quick-test buttons on homepage lookup
+
+### v2.3 - Audit & SDK 🔨 (NEXT)
 - [ ] External security audit
 - [ ] JavaScript/TypeScript SDK for vendor integrations
 - [ ] Integration documentation

@@ -272,9 +272,48 @@ First working implementation deployed to Sepolia testnet.
 
 ---
 
+## [2.2.0] - 2026-03-28
+
+### Added
+
+#### NFT Metadata (ERC721 tokenURI)
+- `mapping(uint8 => string) public tierMetadataURI` — per-tier IPFS metadata URI storage
+- `setTierMetadataURI(uint8 tier, string uri) external onlyOwner` — admin setter
+- `tokenURI(uint256 sealId) public view override` — returns tier metadata URI for any seal
+- Tier 1–3 metadata pinned to IPFS via Pinata; images and JSON hosted at stable CIDs
+
+#### Contract Migration Tooling
+- `adminBurn(uint256 sealId) external onlyOwner nonReentrant` — immediate burn for owner-initiated migrations; cleans up `addressToSealId`, `sealData`, `burnRequests`, emits `SealBurned`
+- `scripts/uploadToIPFS.js` — uploads tier PNG images then patches and uploads metadata JSON to Pinata using Node 22 native `fetch`/`FormData`
+- `scripts/setMetadataURIs.js` — calls `setTierMetadataURI` on a deployed contract for all active tiers
+
+#### Contract Redeployment
+- New Pact contract deployed: `0xBfCA5341f3c370743d4A64Df7c732113A4f83187` (Mar-28-2026)
+- 13 existing seals migrated from old contract via `repopulateSeals.js`; tier and jurisdictionCode preserved per-seal
+- Tier metadata URIs set on-chain post-migration
+
+#### Mint Ceremony UX
+- `MintCeremony.jsx` — full-screen page shown once immediately after a seal is minted; fires `wallet_watchAsset` (ERC721) to prompt MetaMask NFT import; deduplicates via `sessionStorage`
+- Route registered outside `DemoLayout` so it renders without the navbar
+
+#### Mint Confirmation Email
+- Resend integration in `backend/src/routes/admin.js` — dark-themed HTML email sent after successful mint containing tier badge, seal ID, issued/expiry dates, "View Your Seal" and Arbiscan links
+- Fire-and-forget; never blocks the mint response
+
+#### Seal Images in UI
+- `StatusPage.jsx` — tier PNG shown full-width above seal details; `wallet_watchAsset` "Add Seal to Wallet" button; auto-redirects to ceremony on first post-mint visit
+- `ResultDisplay.jsx` — redesigned to match StatusPage card layout; full-width seal image, tier row, attribute grid; coming-soon placeholder for tiers 4–5
+- All 5 tier quick-test buttons on homepage lookup (`SearchBar.jsx`)
+
+### Fixed
+- Admin panel 429 errors — rate limit raised from 20 to 300 requests per 15 minutes (each panel load fires 3+ parallel requests plus per-submission Polygon status checks)
+- `Docs.jsx` hardcoded old contract address updated to new deployment
+
+---
+
 ## [Unreleased]
 
-### Planned for v2.2
+### Planned for v2.3
 - External security audit
 - JavaScript/TypeScript SDK
 - Integration documentation for vendor protocols
@@ -292,7 +331,8 @@ First working implementation deployed to Sepolia testnet.
 
 ## Version History
 
-- **v2.1.0** (Current) - Landing page, docs, admin security, route restructure, repo cleanup
+- **v2.2.0** (Current) - NFT metadata, mint ceremony, contract redeployment, seal images in UI
+- **v2.1.0** - Landing page, docs, admin security, route restructure, repo cleanup
 - **v2.0.0** - Production security hardening, breaking changes
 - **v1.0.0** - Initial proof of concept
 

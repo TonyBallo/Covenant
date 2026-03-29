@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
-const PACT_ADDRESS    = '0xFa71D3c2dAbD20A3ceEb3Ef08319CE64548ecbA4';
+const PACT_ADDRESS    = '0xBfCA5341f3c370743d4A64Df7c732113A4f83187';
 const WITNESS_ADDRESS = '0x3F214e98C967e49f451c670654fA7D0580da3730';
 
 const TOC = [

@@ -2,7 +2,8 @@
 
 ## Immediate
 - [ ] Delete unused files: `frontend/src/pages/GetVerified.jsx`, `frontend/src/assets/react.svg`, `ignition/modules/Lock.js`, `landing/` directory, `stealth/` directory
-- [ ] Tiers IV and V seal images (currently "Coming Soon" placeholders in Docs page)
+- [ ] Tiers IV and V seal images (currently "Coming Soon" placeholders in Docs, StatusPage, ResultDisplay)
+- [ ] Update `activateTiers.js` to point at new contract address `0xBfCA5341f3c370743d4A64Df7c732113A4f83187`
 
 ## Short-term
 - [ ] External security audit before any mainnet deployment

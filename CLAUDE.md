@@ -1,6 +1,6 @@
 # CLAUDE.md — Project Covenant
 
-Persistent context for Claude Code sessions. Updated 2026-03-21.
+Persistent context for Claude Code sessions. Updated 2026-03-28.
 
 ---
 
@@ -31,14 +31,15 @@ Project_Covenant/
 │   │   │   ├── ApplyForm.jsx            # KYC submission form (Tier I / Bronze only)
 │   │   │   ├── Admin.jsx                # Admin panel (server-auth; Pending, Ready-to-Mint, Revoke Seal, Revoked Seals tabs)
 │   │   │   ├── Docs.jsx                 # Documentation page with tier info and seal images
-│   │   │   ├── StatusPage.jsx           # Logged-in user's own verification status (always checks on-chain)
+│   │   │   ├── MintCeremony.jsx         # Full-screen post-mint ceremony (wallet_watchAsset, shown once per seal via sessionStorage)
+│   │   │   ├── StatusPage.jsx           # Logged-in user's own verification status (always checks on-chain; shows seal image + Add to Wallet)
 │   │   │   ├── TierSelect.jsx           # Tier picker (only Tier I currently active)
 │   │   │   ├── VendorDemo.jsx           # Vendor integration demo — gates a mock DeFi dashboard behind isValid(address, 2)
 │   │   │   ├── VerifySuccess.jsx        # Post email-verification success screen
 │   │   │   └── VerifyFailed.jsx         # Post email-verification failure screen
 │   │   ├── components/
-│   │   │   ├── SearchBar.jsx            # Address input for public seal lookup
-│   │   │   └── ResultDisplay.jsx        # Seal visualization with cross-chain badges
+│   │   │   ├── SearchBar.jsx            # Address input for public seal lookup; 5 tier quick-test buttons
+│   │   │   └── ResultDisplay.jsx        # Seal visualization — full-width seal image, tier row, attribute grid (matches StatusPage layout)
 │   │   └── utils/
 │   │       ├── api.js                   # All fetch calls to backend (API_BASE_URL from env)
 │   │       ├── contract.js              # ABI + contract address + ethers.js read calls (Arbitrum Sepolia)
@@ -54,7 +55,10 @@ Project_Covenant/
 │   ├── deployAttestation.js             # Hardhat deploy for PactWitness (Polygon Amoy)
 │   ├── activateTiers.js                 # One-off script to enable tier levels on a deployed Pact contract
 │   ├── mintTestSeals.js                 # Dev script to mint test seals
-│   └── repopulateSeals.js               # Migration script — re-mints all seals from an old contract onto a new one
+│   ├── repopulateSeals.js               # Migration script — re-mints all seals from an old contract onto a new one
+│   ├── uploadToIPFS.js                  # Uploads tier PNG images + metadata JSON to Pinata; patches image CIDs in-place
+│   ├── setMetadataURIs.js               # Calls setTierMetadataURI on a deployed Pact contract for tiers 1–3
+│   └── ipfs/                            # IPFS metadata JSON (tier-1.json, tier-2.json, tier-3.json)
 ├── test/
 │   └── IdentitySBT.test.js              # 41 tests, 100% statement/function/line coverage
 ├── hardhat.config.js                    # Solidity 0.8.28, arbitrumSepolia + amoy networks, Arbiscan
@@ -140,6 +144,8 @@ OWNER_PRIVATE_KEY
 POLYGON_RPC_URL
 POLYGON_ATTESTATION_ADDRESS
 ADMIN_SECRET
+RESEND_API_KEY
+FRONTEND_URL
 PORT
 NODE_ENV
 ```
@@ -157,8 +163,9 @@ VITE_API_URL
 | Field | Value |
 |---|---|
 | Contract | Pact |
-| Address | `0xFa71D3c2dAbD20A3ceEb3Ef08319CE64548ecbA4` |
+| Address | `0xBfCA5341f3c370743d4A64Df7c732113A4f83187` |
 | Deployer | `0xaDff4AF90C4f354eF21B6225fAEE61FbED1E642b` |
+| Deployed | Mar-28-2026 |
 | RPC | Alchemy Arbitrum Sepolia |
 | Explorer | https://sepolia.arbiscan.io |
 | ERC721 Name | "Covenant Pact" |
@@ -274,10 +281,13 @@ struct BurnRequest {
 - `mint(address, Tier, bytes signature, uint256 expiresAt, uint8 jurisdictionCode)` — onlyOwner; validates ECDSA signature
 - `revoke(uint256 sealId, string reason)` — onlyOwner
 - `upgradeTier(uint256 sealId, Tier newTier, bytes newSignature)` — onlyOwner
+- `adminBurn(uint256 sealId)` — onlyOwner; immediate burn for contract migrations; skips 90-day delay; cleans up all mappings
 - `isValid(address, Tier minTier) view returns (bool)` — returns true only if seal is active, unrevoked, unexpired, and at or above minTier; primary integration point for vendor protocols
 - `isExpired(address) view returns (bool)`
 - `getVerificationStatus(address)` — returns (verified, tier, revoked, burnPending, burnExecutableAt)
 - `setTierActive(Tier, bool)` — onlyOwner; gates which tiers can be minted
+- `setTierMetadataURI(uint8 tier, string uri)` — onlyOwner; sets IPFS metadata URI for a tier
+- `tokenURI(uint256 sealId) view returns (string)` — ERC721 metadata; returns tierMetadataURI for the seal's tier
 
 ### Key Constants
 - **Burn delay:** 90 days (time-locked, user-initiated)
@@ -318,7 +328,7 @@ struct BurnRequest {
 | POST | `/api/admin/revoke` | Revoke seal on-chain + set Supabase status to 'revoked' |
 | POST | `/api/admin/attest/:id` | Attest seal on Polygon Amoy |
 
-> Admin routes require `x-admin-secret` header validated server-side against `ADMIN_SECRET` env var (Railway). Invalid or missing secret returns 401.
+> Admin routes require `x-admin-secret` header validated server-side against `ADMIN_SECRET` env var (Railway). Invalid or missing secret returns 401. Rate limited to 300 req/15min per IP.
 
 ### Health
 | Method | Path |
@@ -371,8 +381,11 @@ npx hardhat run scripts/deployAttestation.js --network amoy
 npx hardhat run scripts/activateTiers.js --network arbitrumSepolia
 
 # Contract migration (after redeploying — set OLD/NEW_CONTRACT_ADDRESS in .env first)
-npx hardhat run scripts/repopulateSeals.js --network arbitrumSepolia -- --dry-run
 npx hardhat run scripts/repopulateSeals.js --network arbitrumSepolia
+
+# IPFS metadata (run after redeployment to pin images + JSON and set URIs on-chain)
+node scripts/uploadToIPFS.js
+npx hardhat run scripts/setMetadataURIs.js --network arbitrumSepolia
 
 # Backend
 cd backend
@@ -391,3 +404,5 @@ npm run build
 1. **Admin auth is server-side** — `x-admin-secret` header checked against `ADMIN_SECRET` env var in Railway. Login is validated via a real API call; password never stored in the bundle.
 2. **Testnet only** — not audited, not ready for mainnet or real personal data.
 3. **Frontend contract address is hardcoded** in `utils/contract.js` (not in env).
+4. **Mint confirmation email** — sent via Resend after successful mint; uses `RESEND_API_KEY` + `FRONTEND_URL` env vars. Fire-and-forget; never blocks the mint response.
+5. **`activateTiers.js` points at old contract** — update `pactAddress` before running on the current deployment.
