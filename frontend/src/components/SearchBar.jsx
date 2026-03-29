@@ -15,9 +15,11 @@ export function SearchBar({ onSearch, loading }) {
   };
 
   const sampleAddresses = [
-    { label: 'Try Bronze', value: '0x1111111111111111111111111111111111111111' },
-    { label: 'Try Gold',   value: '0x5555555555555555555555555555555555555555' },
-    { label: 'Try Diamond', value: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' },
+    { label: 'Try Bronze',   value: '0x1111111111111111111111111111111111111111' },
+    { label: 'Try Silver',   value: '0x3333333333333333333333333333333333333333' },
+    { label: 'Try Gold',     value: '0x5555555555555555555555555555555555555555' },
+    { label: 'Try Platinum', value: '0x8888888888888888888888888888888888888888' },
+    { label: 'Try Diamond',  value: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' },
   ];
 
   return (
