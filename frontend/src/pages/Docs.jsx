@@ -621,6 +621,26 @@ function sealData(uint256 sealId) public view returns (
     uint8   jurisdictionCode
 )`}</CodeBlock>
 
+            <Label>Seal Image — tokenURI()</Label>
+            <Prose>
+              Returns the IPFS metadata URI for a seal. The metadata follows the ERC721 JSON standard
+              and includes the tier name, description, and a hosted seal image. Use this to display
+              a member's seal visually in your application UI — for example, showing their tier badge
+              on a profile or dashboard.
+            </Prose>
+            <CodeBlock>{`function tokenURI(uint256 sealId) public view returns (string memory)
+
+// Example: fetch and display a member's seal image
+const sealId = await pact.addressToSealId(walletAddress);
+const metadataURI = await pact.tokenURI(sealId);
+
+// metadataURI is an IPFS URI — resolve it via any gateway:
+const url = metadataURI.replace('ipfs://', 'https://ipfs.io/ipfs/');
+const metadata = await fetch(url).then(r => r.json());
+
+console.log(metadata.name);   // e.g. "Covenant Seal — Bronze"
+console.log(metadata.image);  // IPFS URI for the tier seal image`}</CodeBlock>
+
             {/* Contract Addresses */}
             <SubHeading id="contract-addresses">Contract Addresses</SubHeading>
 
