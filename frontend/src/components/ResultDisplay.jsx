@@ -12,13 +12,6 @@ const tierTextClass = {
   purple: 'text-purple-300',
 };
 
-const tierBadgeClass = {
-  orange: 'bg-tyrian-mid border-gold text-gold',
-  gray:   'bg-tyrian-dark border-marble-muted text-marble-dim',
-  yellow: 'bg-tyrian-mid border-gold text-gold',
-  blue:   'bg-tyrian-dark border-blue-700 text-blue-300',
-  purple: 'bg-tyrian-dark border-purple-700 text-purple-300',
-};
 
 export function ResultDisplay({ result }) {
   const [chainStatus, setChainStatus] = useState({ ethereum: true, polygon: false });
@@ -80,55 +73,62 @@ export function ResultDisplay({ result }) {
         </div>
       </div>
 
-      <div className="p-5 sm:p-8">
-
-        {/* Tier display */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8 mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-gold/15">
-          {result.tier >= 1 && result.tier <= 3 ? (
-            <img
-              src={`/tiers/tier-${result.tier}.png`}
-              alt={`Tier ${result.tier} seal`}
-              className="w-24 h-24 object-contain shrink-0"
-            />
-          ) : (
-            <div className={`font-cinzel text-5xl sm:text-7xl font-bold leading-none shrink-0 ${tierTextClass[tierInfo.color]}`}>
-              {tierInfo.numeral}
-            </div>
-          )}
-          <div className="flex-1">
-            <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Verification Tier</p>
-            <p className={`font-cinzel text-2xl sm:text-3xl tracking-wide mb-2 ${tierTextClass[tierInfo.color]}`}>
-              {tierInfo.name}
-            </p>
-            <p className="font-cormorant text-marble-muted italic text-lg">{tierInfo.description}</p>
-          </div>
-          <div className={`hidden sm:block border px-5 py-3 text-center ${tierBadgeClass[tierInfo.color]}`}>
-            <p className="font-cinzel text-xs tracking-widest uppercase mb-1">Tier</p>
-            <p className="font-cinzel text-2xl font-bold">{tierInfo.numeral}</p>
-          </div>
+      {/* Seal image — full width, no padding */}
+      {result.tier >= 1 && result.tier <= 3 ? (
+        <img
+          src={`/tiers/tier-${result.tier}.png`}
+          alt={`Tier ${result.tier} seal`}
+          className="w-full h-auto block border-b border-gold/10"
+        />
+      ) : (
+        <div className="w-full aspect-video border-b border-gold/10 bg-tyrian-dark flex flex-col items-center justify-center gap-2">
+          <span className={`font-cinzel font-bold text-4xl leading-none ${tierTextClass[tierInfo.color]}`}>
+            {tierInfo.numeral}
+          </span>
+          <span className="font-cinzel text-marble-muted/30 text-xs tracking-widest uppercase">Coming Soon</span>
         </div>
+      )}
 
-        {/* Data grid */}
-        <div className="grid grid-cols-2 gap-4 mb-8">
-          {[
-            { label: 'Seal ID',     value: `#${result.sealId}`, mono: true },
-            { label: 'Issued',      value: mintDate },
-            { label: 'Status',      value: result.revoked ? 'Revoked' : 'Active',
-              valueClass: result.revoked ? 'text-red-400' : 'text-gold' },
-            { label: 'Burn Status', value: result.burnPending ? 'Pending' : 'None',
-              valueClass: result.burnPending ? 'text-gold/70' : 'text-marble-muted' },
-          ].map(({ label, value, mono, valueClass }) => (
-            <div key={label} className="border border-gold/10 bg-tyrian-dark px-5 py-4">
-              <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">{label}</p>
-              <p className={`text-lg font-semibold ${mono ? 'font-mono' : 'font-cormorant'} ${valueClass || 'text-marble'}`}>
-                {value}
-              </p>
-            </div>
-          ))}
+      {/* Tier row */}
+      <div className={`px-5 py-5 sm:px-8 sm:py-6 border-b border-gold/15 flex items-center gap-4 sm:gap-6 ${result.revoked ? 'bg-red-950/20' : ''}`}>
+        <div className={`font-cinzel text-5xl sm:text-6xl font-bold leading-none ${tierTextClass[tierInfo.color]}`}>
+          {tierInfo.numeral}
         </div>
+        <div>
+          <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Verification Tier</p>
+          <p className={`font-cinzel text-xl sm:text-2xl tracking-wide ${tierTextClass[tierInfo.color]}`}>
+            {tierInfo.name}
+          </p>
+        </div>
+      </div>
 
-        {/* Wallet address */}
-        <div className="border border-gold/10 bg-tyrian-dark px-5 py-4 mb-6">
+      {/* Data grid */}
+      <div className="px-5 py-5 sm:px-8 sm:py-6 grid grid-cols-2 gap-4">
+        <div>
+          <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Seal ID</p>
+          <p className="font-mono text-marble font-bold text-lg">#{result.sealId}</p>
+        </div>
+        <div>
+          <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Issued</p>
+          <p className="font-cormorant text-marble text-lg">{mintDate}</p>
+        </div>
+        <div>
+          <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Status</p>
+          <p className={`font-cormorant text-lg font-semibold ${result.revoked ? 'text-red-400' : 'text-gold'}`}>
+            {result.revoked ? 'Revoked' : 'Active'}
+          </p>
+        </div>
+        <div>
+          <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Burn Status</p>
+          <p className={`font-cormorant text-lg font-semibold ${result.burnPending ? 'text-gold/70' : 'text-marble-muted'}`}>
+            {result.burnPending ? 'Pending' : 'None'}
+          </p>
+        </div>
+      </div>
+
+      {/* Wallet address */}
+      <div className="px-5 pb-5 sm:px-8 sm:pb-6">
+        <div className="border border-gold/10 bg-tyrian-dark px-5 py-4">
           <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-2">Wallet Address</p>
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
             <p className="font-mono text-sm text-marble-dim break-all flex-1">{result.address}</p>
@@ -150,48 +150,48 @@ export function ResultDisplay({ result }) {
             </div>
           </div>
         </div>
-
-        {/* Warnings */}
-        {result.revoked && (
-          <div className="border-l-4 border-red-800 bg-red-950/30 px-6 py-4 mb-4">
-            <p className="font-cinzel text-red-400 text-xs tracking-widest uppercase mb-1">Verification Revoked</p>
-            <p className="font-cormorant text-red-300 italic text-lg">
-              This seal has been revoked and should not be trusted for protocol access.
-            </p>
-          </div>
-        )}
-
-        {result.burnPending && (
-          <div className="border-l-4 border-gold/50 bg-gold/5 px-6 py-4 mb-4">
-            <p className="font-cinzel text-gold text-xs tracking-widest uppercase mb-1">Burn Pending</p>
-            <p className="font-cormorant text-gold/70 italic text-lg">
-              The owner has requested deletion of this seal. After the 90-day delay, it will be permanently removed.
-            </p>
-          </div>
-        )}
-
-        {/* Footer links */}
-        <div className="pt-6 border-t border-gold/10 flex gap-6 justify-center">
-          <a
-            href={`${ETHERSCAN_BASE}/address/${CONTRACT_ADDRESS}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors"
-          >
-            View Contract
-          </a>
-          <span className="text-gold/20">•</span>
-          <a
-            href={`${ETHERSCAN_BASE}/address/${result.address}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors"
-          >
-            View Address
-          </a>
-        </div>
-
       </div>
+
+      {/* Warnings */}
+      {result.revoked && (
+        <div className="mx-5 mb-5 sm:mx-8 sm:mb-6 border-l-4 border-red-800 bg-red-950/30 px-5 py-3">
+          <p className="font-cinzel text-red-400 text-xs tracking-widest uppercase mb-1">Verification Revoked</p>
+          <p className="font-cormorant text-red-300 italic text-base">
+            This seal has been revoked and should not be trusted for protocol access.
+          </p>
+        </div>
+      )}
+
+      {result.burnPending && (
+        <div className="mx-5 mb-5 sm:mx-8 sm:mb-6 border-l-4 border-gold/50 bg-gold/5 px-5 py-3">
+          <p className="font-cinzel text-gold text-xs tracking-widest uppercase mb-1">Burn Pending</p>
+          <p className="font-cormorant text-gold/70 italic text-base">
+            The owner has requested deletion of this seal. After the 90-day delay, it will be permanently removed.
+          </p>
+        </div>
+      )}
+
+      {/* Footer links */}
+      <div className="px-5 pb-6 sm:px-8 sm:pb-8 pt-2 border-t border-gold/10 flex gap-6 justify-center">
+        <a
+          href={`${ETHERSCAN_BASE}/address/${CONTRACT_ADDRESS}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors"
+        >
+          View Contract
+        </a>
+        <span className="text-gold/20">•</span>
+        <a
+          href={`${ETHERSCAN_BASE}/address/${result.address}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors"
+        >
+          View Address
+        </a>
+      </div>
+
     </div>
   );
 }
