@@ -74,7 +74,7 @@ export function ResultDisplay({ result }) {
       </div>
 
       {/* Seal image — full width, no padding */}
-      {result.tier >= 1 && result.tier <= 3 ? (
+      {result.tier >= 1 && result.tier <= 4 ? (
         <img
           src={`/tiers/tier-${result.tier}.png`}
           alt={`Tier ${result.tier} seal`}

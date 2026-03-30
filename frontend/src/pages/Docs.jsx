@@ -172,7 +172,7 @@ const TIERS_DOC = [
     proves: "Legally verified accredited or sophisticated investor status in the member's jurisdiction. Platinum is structured to align with accredited investor criteria under frameworks such as SEC Rule 501, FCA, and MAS rules. It proves not just who you are, but what you are legally permitted to do.",
     usedFor: 'RWA tokenization platforms, security token offerings, institutional DeFi, private credit, any application gating access by investor qualification.',
     anchor: 'Ethereum',
-    image: null,
+    image: '/tiers/tier-4.png',
   },
   {
     numeral: 'V',

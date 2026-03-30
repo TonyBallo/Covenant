@@ -212,7 +212,7 @@ export function StatusPage({ walletAddress }) {
             </div>
 
             {/* Seal image */}
-            {sealData.tier <= 3 ? (
+            {sealData.tier <= 4 ? (
               <img
                 src={`/tiers/tier-${sealData.tier}.png`}
                 alt={`Tier ${TIERS[sealData.tier].numeral} — ${TIERS[sealData.tier].name} seal`}
