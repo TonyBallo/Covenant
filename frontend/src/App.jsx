@@ -35,7 +35,7 @@ function Navbar({ walletAddress, walletConnected, onConnect, onDisconnect }) {
                 Covenant
               </h1>
               <p className="font-cormorant text-marble-muted italic text-xs tracking-wider leading-tight">
-                Web3 Identity Verification
+                Web3 Trust Protocol
               </p>
             </div>
           </Link>
@@ -72,7 +72,7 @@ function Navbar({ walletAddress, walletConnected, onConnect, onDisconnect }) {
               to="/demo/get-verified"
               className="font-cinzel text-xs tracking-widest uppercase px-5 py-2 border border-gold/60 text-gold hover:bg-gold/10 transition-colors"
             >
-              Get Verified
+              Get Your Seal
             </Link>
             {!walletConnected ? (
               <button
@@ -150,7 +150,7 @@ function Navbar({ walletAddress, walletConnected, onConnect, onDisconnect }) {
               onClick={() => setMobileMenuOpen(false)}
               className="font-cinzel text-gold text-xs tracking-widest uppercase py-3 transition-colors"
             >
-              Get Verified
+              Get Your Seal
             </Link>
             <div className="border-t border-gold/10 mt-2 pt-3 flex flex-col gap-3">
               {!walletConnected ? (
@@ -263,11 +263,11 @@ function HomePage() {
             <div className="h-px w-16 bg-gradient-to-l from-transparent to-gold-dim"></div>
           </div>
           <h2 className="font-cinzel text-marble text-4xl md:text-5xl tracking-wide mb-6">
-            Verify an Identity
+            Verify Trust
           </h2>
           <p className="font-cormorant text-marble-dim text-xl italic max-w-2xl mx-auto leading-relaxed">
-            Enter any wallet address to inspect its Covenant verification seal.
-            All verification data is immutably recorded on-chain — no trust required.
+            Enter any wallet address to inspect its Covenant trust seal.
+            All trust data is immutably recorded on-chain and readable by anyone.
           </p>
           <Link
             to="/demo/docs"
@@ -322,8 +322,8 @@ function HomePage() {
           <div className="mt-16 grid md:grid-cols-3 gap-6">
             {[
               { label: 'Private', body: 'All personal data is stored securely off-chain.' },
-              { label: 'Transparent', body: 'Anyone can verify authenticity — no trust required.' },
-              { label: 'Instant', body: 'Real-time verification status read directly from the chain.' },
+              { label: 'Transparent', body: 'Anyone can verify trust — no intermediary required.' },
+              { label: 'Instant', body: 'Real-time trust status read directly from the chain.' },
             ].map(({ label, body }) => (
               <div
                 key={label}

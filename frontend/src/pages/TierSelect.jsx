@@ -18,9 +18,9 @@ export function TierSelect() {
           <Link to="/demo" className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors mb-6 inline-block">
             ← Return
           </Link>
-          <h1 className="font-cinzel text-marble text-4xl tracking-wide mb-3">Get Verified</h1>
+          <h1 className="font-cinzel text-marble text-4xl tracking-wide mb-3">Build Your Trust</h1>
           <p className="font-cormorant text-marble-muted italic text-xl">
-            Select the verification tier that matches your needs
+            Select the trust tier that matches your needs
           </p>
         </div>
 

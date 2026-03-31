@@ -30,10 +30,10 @@ export function ResultDisplay({ result }) {
       <div className="mt-10 border border-gold/20 bg-tyrian-darker p-10 text-center">
         <div className="w-px h-12 bg-gradient-to-b from-transparent via-gold/40 to-transparent mx-auto mb-6"></div>
         <h3 className="font-cinzel text-marble text-xl tracking-wide mb-3">
-          No Verification Found
+          No Trust Seal Found
         </h3>
         <p className="font-cormorant text-marble-muted italic text-lg mb-6">
-          This address does not hold a Covenant verification seal.
+          This address does not hold a Covenant trust seal.
         </p>
         <div className="border border-gold/10 bg-tyrian-dark px-6 py-3 max-w-lg mx-auto">
           <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Searched Address</p>
@@ -53,7 +53,7 @@ export function ResultDisplay({ result }) {
       <div className="bg-tyrian-dark border-b border-gold/20 px-5 py-4 sm:px-8 sm:py-5">
         <div className="flex items-center justify-between">
           <h3 className="font-cinzel text-marble tracking-widest uppercase text-sm">
-            Verification Seal
+            Trust Seal
           </h3>
           <div className="flex items-center gap-3">
             <span className={`font-cinzel text-xs tracking-widest uppercase px-3 py-1 border ${
@@ -95,7 +95,7 @@ export function ResultDisplay({ result }) {
           {tierInfo.numeral}
         </div>
         <div>
-          <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Verification Tier</p>
+          <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Trust Tier</p>
           <p className={`font-cinzel text-xl sm:text-2xl tracking-wide ${tierTextClass[tierInfo.color]}`}>
             {tierInfo.name}
           </p>
@@ -155,7 +155,7 @@ export function ResultDisplay({ result }) {
       {/* Warnings */}
       {result.revoked && (
         <div className="mx-5 mb-5 sm:mx-8 sm:mb-6 border-l-4 border-red-800 bg-red-950/30 px-5 py-3">
-          <p className="font-cinzel text-red-400 text-xs tracking-widest uppercase mb-1">Verification Revoked</p>
+          <p className="font-cinzel text-red-400 text-xs tracking-widest uppercase mb-1">Trust Seal Revoked</p>
           <p className="font-cormorant text-red-300 italic text-base">
             This seal has been revoked and should not be trusted for protocol access.
           </p>

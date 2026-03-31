@@ -289,7 +289,7 @@ export function StatusPage({ walletAddress }) {
             {/* Revoked warning */}
             {sealData.revoked && (
               <div className="mx-5 mb-5 sm:mx-8 sm:mb-6 border-l-4 border-red-800 bg-red-950/30 px-5 py-3">
-                <p className="font-cinzel text-red-400 text-xs tracking-widest uppercase mb-1">Verification Revoked</p>
+                <p className="font-cinzel text-red-400 text-xs tracking-widest uppercase mb-1">Trust Seal Revoked</p>
                 <p className="font-cormorant text-red-300 italic text-base">
                   This seal has been revoked and should not be used for protocol access.
                 </p>
