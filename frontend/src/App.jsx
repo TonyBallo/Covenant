@@ -1,5 +1,5 @@
-import { BrowserRouter, Routes, Route, Link, Outlet } from 'react-router-dom';
-import { useState } from 'react';
+import { BrowserRouter, Routes, Route, Link, Outlet, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { SearchBar } from './components/SearchBar';
 import { ResultDisplay } from './components/ResultDisplay';
@@ -15,6 +15,12 @@ import { Docs } from './pages/Docs';
 import { Landing } from './pages/Landing';
 import { MintCeremony } from './pages/MintCeremony';
 import { About } from './pages/About';
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
 
 // ============ Shared Navbar ============
 
@@ -35,7 +41,7 @@ function Navbar({ walletAddress, walletConnected, onConnect, onDisconnect }) {
                 Covenant
               </h1>
               <p className="font-cormorant text-marble-muted italic text-xs tracking-wider leading-tight">
-                Web3 Trust Protocol
+                Trust Network
               </p>
             </div>
           </Link>
@@ -263,11 +269,10 @@ function HomePage() {
             <div className="h-px w-16 bg-gradient-to-l from-transparent to-gold-dim"></div>
           </div>
           <h2 className="font-cinzel text-marble text-4xl md:text-5xl tracking-wide mb-6">
-            Verify Trust
+            Member Lookup
           </h2>
           <p className="font-cormorant text-marble-dim text-xl italic max-w-2xl mx-auto leading-relaxed">
-            Enter any wallet address to inspect its Covenant trust seal.
-            All trust data is immutably recorded on-chain and readable by anyone.
+            Enter any wallet address to confirm whether the entity behind it is a trusted member of the Covenant network.
           </p>
           <Link
             to="/demo/docs"
@@ -323,7 +328,7 @@ function HomePage() {
             {[
               { label: 'Private', body: 'All personal data is stored securely off-chain.' },
               { label: 'Transparent', body: 'Anyone can verify trust — no intermediary required.' },
-              { label: 'Instant', body: 'Real-time trust status read directly from the chain.' },
+              { label: 'Instant', body: 'Real-time membership status read directly from the chain.' },
             ].map(({ label, body }) => (
               <div
                 key={label}
@@ -338,51 +343,58 @@ function HomePage() {
         )}
       </main>
 
-      <footer className="border-t border-gold/15 mt-16">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div>
-              <p className="font-cormorant text-marble-muted italic text-sm">
-                Stored on Arbitrum Sepolia
-              </p>
-              <p className="font-cormorant text-marble-muted/60 italic text-xs mt-0.5">
-                Proof of Concept — not for production use
-              </p>
-            </div>
-            <div className="flex gap-8">
-              <Link
-                to="/about"
-                className="font-cinzel text-gold/70 hover:text-gold text-xs tracking-widest uppercase transition-colors"
-              >
-                About
-              </Link>
-              <Link
-                to="/demo/docs"
-                className="font-cinzel text-gold/70 hover:text-gold text-xs tracking-widest uppercase transition-colors"
-              >
-                Docs
-              </Link>
-              <a
-                href={`${ETHERSCAN_BASE}/address/${CONTRACT_ADDRESS}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-cinzel text-gold/70 hover:text-gold text-xs tracking-widest uppercase transition-colors"
-              >
-                View Contract
-              </a>
-              <a
-                href="https://github.com/TonyBallo/Covenant"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-cinzel text-gold/70 hover:text-gold text-xs tracking-widest uppercase transition-colors"
-              >
-                GitHub
-              </a>
-            </div>
+    </div>
+  );
+}
+
+// ============ Demo Footer ============
+
+function DemoFooter() {
+  return (
+    <footer className="border-t border-gold/15 mt-16">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          <div>
+            <p className="font-cormorant text-marble-muted italic text-sm">
+              Stored on Arbitrum Sepolia
+            </p>
+            <p className="font-cormorant text-marble-muted/60 italic text-xs mt-0.5">
+              Proof of Concept — not for production use
+            </p>
+          </div>
+          <div className="flex gap-8">
+            <Link
+              to="/about"
+              className="font-cinzel text-gold/70 hover:text-gold text-xs tracking-widest uppercase transition-colors"
+            >
+              About
+            </Link>
+            <Link
+              to="/demo/docs"
+              className="font-cinzel text-gold/70 hover:text-gold text-xs tracking-widest uppercase transition-colors"
+            >
+              Docs
+            </Link>
+            <a
+              href={`${ETHERSCAN_BASE}/address/${CONTRACT_ADDRESS}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-cinzel text-gold/70 hover:text-gold text-xs tracking-widest uppercase transition-colors"
+            >
+              View Contract
+            </a>
+            <a
+              href="https://github.com/TonyBallo/Covenant"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-cinzel text-gold/70 hover:text-gold text-xs tracking-widest uppercase transition-colors"
+            >
+              GitHub
+            </a>
           </div>
         </div>
-      </footer>
-    </div>
+      </div>
+    </footer>
   );
 }
 
@@ -398,6 +410,7 @@ function DemoLayout({ walletAddress, walletConnected, onConnect, onDisconnect })
         onDisconnect={onDisconnect}
       />
       <Outlet />
+      <DemoFooter />
     </>
   );
 }
@@ -443,6 +456,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/about" element={<About />} />

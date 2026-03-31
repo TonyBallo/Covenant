@@ -3,6 +3,14 @@ import { ETHERSCAN_BASE, CONTRACT_ADDRESS } from '../utils/contract';
 import { getCrossChainStatus } from '../utils/api';
 import { useState, useEffect } from 'react';
 
+const TIER_BLURB = {
+  1: 'This wallet belongs to a verified unique human. Trusted for governance, airdrops, and community access.',
+  2: 'This wallet is linked to a confirmed legal identity. Trusted for light-compliance DeFi, DAO interactions, and identity-gated applications.',
+  3: 'This wallet has passed enhanced due diligence including liveness, sanctions screening, and source of funds review. Trusted for regulated DeFi and MiCA-exposed platforms.',
+  4: 'This wallet belongs to a verified, sophisticated investor. Trusted for RWA platforms, security token offerings, and investor-gated participation.',
+  5: 'This wallet is linked to a verified legal entity with transparent ownership and a certified AML program. Trusted for institutional counterparty and corporate treasury interactions.',
+};
+
 // Dark-theme tier color maps (keyed by TIERS[n].color string)
 const tierTextClass = {
   orange: 'text-gold',
@@ -15,6 +23,13 @@ const tierTextClass = {
 
 export function ResultDisplay({ result }) {
   const [chainStatus, setChainStatus] = useState({ ethereum: true, polygon: false });
+  const [copied, setCopied] = useState(false);
+
+  const copyAddress = () => {
+    navigator.clipboard.writeText(result.address);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   useEffect(() => {
     if (result.verified) {
@@ -33,7 +48,7 @@ export function ResultDisplay({ result }) {
           No Trust Seal Found
         </h3>
         <p className="font-cormorant text-marble-muted italic text-lg mb-6">
-          This address does not hold a Covenant trust seal.
+          This wallet has not completed Covenant verification. No trust standing has been established.
         </p>
         <div className="border border-gold/10 bg-tyrian-dark px-6 py-3 max-w-lg mx-auto">
           <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Searched Address</p>
@@ -50,12 +65,22 @@ export function ResultDisplay({ result }) {
     <div className="mt-10 border border-gold/30 bg-tyrian-darker overflow-hidden">
 
       {/* Header */}
-      <div className="bg-tyrian-dark border-b border-gold/20 px-5 py-4 sm:px-8 sm:py-5">
+      <div className="bg-tyrian-dark border-b border-gold/20 px-5 py-4 sm:px-8 sm:py-5 relative">
         <div className="flex items-center justify-between">
-          <h3 className="font-cinzel text-marble tracking-widest uppercase text-sm">
-            Trust Seal
-          </h3>
-          <div className="flex items-center gap-3">
+          <div className="flex-1 text-center">
+            <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Trust Seal</p>
+            <button
+              onClick={copyAddress}
+              className="font-mono text-sm text-marble hover:text-gold transition-colors"
+              title="Click to copy full address"
+            >
+              {result.address.slice(0, 6)}…{result.address.slice(-4)}
+            </button>
+            {copied && (
+              <p className="font-cinzel text-gold/70 text-xs tracking-widest uppercase mt-1">Copied ✓</p>
+            )}
+          </div>
+          <div className="flex items-center gap-3 absolute right-5 sm:right-8">
             <span className={`font-cinzel text-xs tracking-widest uppercase px-3 py-1 border ${
               result.revoked
                 ? 'border-red-800/60 text-red-400 bg-red-950/30'
@@ -100,6 +125,19 @@ export function ResultDisplay({ result }) {
             {tierInfo.name}
           </p>
         </div>
+      </div>
+
+      {/* Tier blurb */}
+      <div className="px-5 pt-5 sm:px-8 sm:pt-6">
+        {result.revoked ? (
+          <p className="font-cormorant text-red-300/80 italic text-lg leading-relaxed">
+            This wallet's Covenant seal has been revoked. Trust standing is no longer valid. Do not rely on this wallet for compliance-sensitive interactions.
+          </p>
+        ) : (
+          <p className="font-cormorant text-marble-muted italic text-lg leading-relaxed">
+            {TIER_BLURB[result.tier]}
+          </p>
+        )}
       </div>
 
       {/* Data grid */}

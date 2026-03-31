@@ -63,8 +63,7 @@ export function About() {
         <div className="max-w-3xl mx-auto">
           <Ornament />
           <h1 className="font-cinzel text-marble text-4xl md:text-5xl lg:text-6xl tracking-wide leading-tight mb-8">
-            Trust doesn't happen by accident.
-            <br className="hidden sm:block" /> It gets built.
+            Trust made simple.
           </h1>
           <div className="w-px h-8 bg-gradient-to-b from-gold/40 to-transparent mx-auto mb-8" />
           <p className="font-cormorant text-marble-muted italic text-xl md:text-2xl leading-relaxed">
@@ -93,21 +92,28 @@ export function About() {
             {/* Body */}
             <div className="space-y-5 font-cormorant text-marble-dim text-xl leading-relaxed">
               <p>
-                The financial system asks people to prove who they are constantly — to every platform,
-                every service, every application that handles real money. The same documents. The same
-                information. Over and over, with no memory of what came before.
+                Problem 1 — Every financial app, every DeFi protocol, every platform that handles
+                real money asks you to prove who you are. Every single time. The same documents. The
+                same information. Over and over, with no memory of what came before. By the time
+                you've done it enough times, your Social Security number feels like a password.
               </p>
               <p>
-                On the other side of that equation are the businesses holding that data. Not because
-                they want to — but because compliance demands it. And when something goes wrong, they
-                pay for it twice. First when the breach happens. Then when the regulators arrive.
+                Problem 2 — Modern approaches to anonymity can bring unnecessary complexity to
+                everyday transactions. The average person shouldn't have to understand blockchain
+                tracing and analysis to be able to trust a transaction.
               </p>
               <p>
-                Covenant was built because both of these problems have the same root cause: there is
-                no shared layer of trust in digital finance. Every participant builds their own, in
-                isolation, at enormous cost to everyone involved.
+                On the other side of that equation are the platforms and services burdened with heavy
+                compliance requirements, forced to hold sensitive user identity data they never
+                wanted. When something goes wrong they pay for it twice — first from the attack, then
+                from the regulatory penalties that follow.
               </p>
-              <p className="text-marble font-semibold not-italic">That's the problem we're solving.</p>
+              <p>
+                Covenant was built because all of these problems share the same root cause: there is
+                no shared layer of simplified trust in digital finance. Every participant builds their
+                own, in isolation, at enormous cost to everyone involved.
+              </p>
+              <p className="text-marble font-semibold not-italic">These are the problems we're solving.</p>
             </div>
           </div>
         </div>

@@ -20,6 +20,7 @@ export function SearchBar({ onSearch, loading }) {
     { label: 'Try Gold',     value: '0x5555555555555555555555555555555555555555' },
     { label: 'Try Platinum', value: '0x8888888888888888888888888888888888888888' },
     { label: 'Try Diamond',  value: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' },
+    { label: 'Try Revoked',  value: '0x2222222222222222222222222222222222222222' },
   ];
 
   return (
@@ -66,7 +67,7 @@ export function SearchBar({ onSearch, loading }) {
         {sampleAddresses.map((sample) => (
           <button
             key={sample.value}
-            onClick={() => setInput(sample.value)}
+            onClick={() => { setInput(sample.value); onSearch(sample.value); }}
             className="font-cinzel text-xs tracking-wide text-marble-muted border border-gold/20 px-3 py-1 hover:border-gold/50 hover:text-gold transition-colors disabled:opacity-40"
             disabled={loading}
           >

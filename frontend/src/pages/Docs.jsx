@@ -127,8 +127,10 @@ const TIERS_DOC = [
     headerClass: 'bg-gold/5',
     numeralClass: 'text-gold',
     statusClass: 'text-gold/50',
-    proves: "One real person controls this wallet. Bronze is Sybil resistance and bot prevention — the foundation of any trusted ecosystem. It is not a character reference, but it is the first step in building one.",
+    proves: "One real person controls this wallet. Bronze provides basic Sybil resistance and bot prevention — the foundation of any trusted ecosystem. It acts as the ground floor for trust.",
+    requirements: 'Email address, wallet address, IP geolocation (country-level only), timestamp.',
     usedFor: 'Governance platforms, airdrops, community access tools, any application that needs to know a real human is behind a wallet.',
+    userUsedFor: 'You can reasonably expect this wallet to be controlled by a real, unique individual. Suitable for low-stakes peer-to-peer interactions where basic human verification is sufficient. Not a character reference — but a meaningful starting point.',
     anchor: 'Arbitrum',
     image: '/tiers/tier-1.png',
   },
@@ -142,7 +144,9 @@ const TIERS_DOC = [
     numeralClass: 'text-marble-dim',
     statusClass: 'text-marble-muted/50',
     proves: 'A real, named person with a verifiable real-world identity stands behind this wallet. Silver confirms legal identity against government-issued documentation and is designed to align with basic KYC expectations in many FATF-member jurisdictions.',
+    requirements: 'Bronze, plus full legal name, date of birth, nationality, government ID number, country of residence.',
     usedFor: 'Light-compliance DeFi, DAO treasuries, Web3 payroll platforms, smaller exchanges, any application requiring confirmed identity.',
+    userUsedFor: 'You can reasonably expect this wallet to be linked to a verified real-world identity. Suitable for peer-to-peer transactions where knowing the person is who they claim to be matters. A meaningful trust signal for financial interactions that carry moderate risk.',
     anchor: 'Arbitrum',
     image: '/tiers/tier-2.png',
   },
@@ -156,7 +160,9 @@ const TIERS_DOC = [
     numeralClass: 'text-gold/60',
     statusClass: 'text-gold/40',
     proves: 'Enhanced due diligence complete. Liveness confirmed, PEP and sanctions screening passed, source of funds declared. Gold is designed to support enhanced due diligence requirements under frameworks such as EU MiCA and comparable G20 regimes.',
+    requirements: 'Silver, plus government ID document scan, biometric liveness check, PEP and sanctions screening, source of funds declaration.',
     usedFor: 'MiCA-exposed protocols, EU and UK regulated lending platforms, institutional DeFi gateways, any application requiring enhanced due diligence.',
+    userUsedFor: 'You can reasonably expect this wallet to belong to a thoroughly vetted individual with clean regulatory standing and declared source of funds. Suitable for higher-value peer-to-peer transactions where financial background and sanctions status are material to the interaction.',
     anchor: 'Arbitrum',
     image: '/tiers/tier-3.png',
   },
@@ -170,7 +176,9 @@ const TIERS_DOC = [
     numeralClass: 'text-blue-400/70',
     statusClass: 'text-blue-400/40',
     proves: "Legally verified accredited or sophisticated investor status in the member's jurisdiction. Platinum is structured to align with accredited investor criteria under frameworks such as SEC Rule 501, FCA, and MAS rules. It proves not just who you are, but what you are legally permitted to do.",
+    requirements: 'Gold, plus accredited or sophisticated investor proof, net worth or income verification, professional certifications where applicable, jurisdiction of tax residency.',
     usedFor: 'RWA tokenization platforms, security token offerings, institutional DeFi, private credit, any application gating access by investor qualification.',
+    userUsedFor: 'You can reasonably expect this wallet to belong to a legally qualified investor in their jurisdiction. Suitable for peer-to-peer transactions involving investment instruments, private placements, or any context where counterparty qualification is a legal or commercial requirement.',
     anchor: 'Ethereum',
     image: '/tiers/tier-4.png',
   },
@@ -184,7 +192,9 @@ const TIERS_DOC = [
     numeralClass: 'text-purple-400/70',
     statusClass: 'text-purple-400/40',
     proves: 'Legal entity verified, beneficial ownership transparent, AML program documented. Diamond is institutional-grade counterparty verification — the standard required by the most sophisticated participants in global finance.',
+    requirements: 'Platinum, plus entity legal name, jurisdiction of incorporation, beneficial ownership structure (UBOs >25%), corporate registration documents, AML program documentation, authorized signatory verification, LEI number.',
     usedFor: 'Corporate treasuries, institutional funds, market makers, non-individual counterparties, any context requiring entity-level due diligence.',
+    userUsedFor: 'You can reasonably expect this wallet to represent a verified legal entity with transparent ownership and a certified AML program in place. Suitable for institutional peer-to-peer and business-to-business transactions where entity legitimacy and regulatory standing are non-negotiable.',
     anchor: 'Ethereum',
     image: null,
   },
@@ -287,43 +297,48 @@ export function Docs() {
             <SectionDivider id="what-is-covenant">What is Covenant?</SectionDivider>
 
             <Prose>
-              Covenant is a membership protocol for verified digital identity. It exists because the
-              way people prove who they are online is broken — repeated, fragmented, and increasingly
-              meaningless. We built Covenant to fix that.
+              Covenant is a membership protocol for simplified trust. It exists because the way people
+              prove who they are online is broken and overcomplicated. We built Covenant to fix that.
             </Prose>
             <Prose>
               When you join Covenant, you enter into a pact. You verify your identity once, at
-              whatever level you choose, and we issue you a seal — a permanent, portable reputation
-              credential that proves your verified standing across every application and protocol that
-              recognizes it. Your information stays with us. What travels is your reputation.
+              whatever level you choose, and we issue you a seal — a permanent, portable credential
+              whose value is determined by the trust you place in us, and the trust we place in you.
+              Your information stays with us. What travels is your reputation.
             </Prose>
 
             {/* The Problem */}
-            <SubHeading id="the-problem">The Problem We Solve</SubHeading>
+            <SubHeading id="the-problem">The Problems We Solve</SubHeading>
 
             <Label>For People</Label>
             <Prose>
-              Every financial app, every DeFi protocol, every platform that handles real money asks
-              you to prove who you are. Every single time. You upload the same documents, enter the
-              same information, wait for the same verification — over and over, on every platform you
-              use. By the time you've done it enough times, your Social Security number feels like a
-              password. That's not a user problem. That's a system problem.
+              Problem 1 — Every financial app, every DeFi protocol, every platform that handles real
+              money asks you to prove who you are. Every single time. You upload the same documents,
+              enter the same information, wait for the same verification — over and over, on every
+              platform you use. By the time you've done it enough times, your Social Security number
+              feels like a password.
             </Prose>
             <Prose>
-              Covenant solves it. Verify once. Your reputation travels everywhere.
+              Problem 2 — Modern approaches to anonymity can bring unnecessary complexity to everyday
+              transactions. The average person shouldn't have to understand blockchain tracing and
+              analysis to be able to trust a transaction.
+            </Prose>
+            <Prose>
+              Covenant solves both. Verify once. Your reputation travels everywhere.
             </Prose>
 
             <Label>For Businesses</Label>
             <Prose>
-              Financial platforms and protocols don't hold your identity data because they want to.
-              They hold it because compliance requires it. And when they get breached — which happens —
-              they face the consequences twice: first from the attack, then from the regulatory
-              penalties that follow. They're punished for holding data nobody wanted them to have.
+              Platforms and services are burdened with heavy compliance requirements, forcing them to
+              hold sensitive user identity data they never wanted. And when they get breached — which
+              happens — they face the consequences twice: first from the attack, then from the
+              regulatory penalties that follow. They're punished for holding data nobody wanted them
+              to have.
             </Prose>
             <Prose>
-              Covenant removes that burden. Businesses that integrate Covenant access a verified member
-              pool without ever touching the underlying identity data themselves. The compliance
-              coverage is built in. The liability is gone.
+              Covenant removes that burden. Businesses that integrate Covenant access a network of
+              trusted users without ever touching the underlying identity data themselves. The
+              compliance coverage is built in. The liability is gone.
             </Prose>
 
             {/* Core Concepts */}
@@ -331,27 +346,27 @@ export function Docs() {
 
             <Label>The Pact</Label>
             <Prose>
-              Joining Covenant is not signing up for a service. It is entering into a pact — a mutual
-              agreement built on trust. You share your information with us, we protect it and verify
-              it, and we give you something back: a recognized standing in the digital world that
-              reflects your commitment to being trustworthy. A pact with Covenant is an agreement to
-              remain trustworthy. The seal reflects that standing.
+              Joining Covenant is not signing up for a service. It is entering into a society built
+              on trust. You share your information with us, we protect it and verify it, and we give
+              you something back: a recognized standing in the digital world that reflects your
+              commitment to being trustworthy. A pact with Covenant is an agreement to remain
+              trustworthy. The seal reflects that standing.
             </Prose>
 
             <Label>The Seal</Label>
             <Prose>
               Your Covenant seal is a Soulbound Token — a non-transferable digital credential
               permanently bound to your wallet. It cannot be sold, lent, or transferred. It was earned
-              by you, and it belongs to you. The seal is both the compliance proof and the reputation
-              signal. It tells any application that accepts it exactly who you are and how much they
-              can trust you — without revealing your underlying identity data.
+              by you, and it belongs to you. The seal serves as both the compliance proof and the
+              trust signal. It tells any application that accepts it exactly who you are and the
+              strength of your reputation, while still preserving your anonymity.
             </Prose>
 
             <Label>The Reputation</Label>
             <Prose>
               Your seal travels with you. Every protocol, every application, every platform that
               integrates Covenant can instantly recognize your verified standing without asking you to
-              prove it again. You did the work once. Covenant does the rest for you.
+              prove it again. You do the work once. Covenant speaks for you.
             </Prose>
           </section>
 
@@ -428,7 +443,7 @@ export function Docs() {
 
             <Label>What You Get</Label>
             <Bullet items={[
-              "Access to a growing pool of verified members whose identity has been confirmed to your required standard",
+              "Access to a growing network of trusted users whose identity has been confirmed to your required standard",
               "Compliance coverage without building or maintaining your own KYC infrastructure",
               "Seals that reflect current standing — revocation and expiry are handled automatically",
               "Cross-chain composability — Covenant attestations are readable on Arbitrum and Polygon",
@@ -436,8 +451,8 @@ export function Docs() {
 
             <Label>The Compliance Shield</Label>
             <Prose>
-              When you integrate Covenant, you are not buying a tool. You are accessing a verified
-              member pool with compliance coverage built in. Covenant acts as the KYC provider of
+              When you integrate Covenant, you are not buying a tool. You are accessing a network of
+              trusted users with compliance coverage built in. Covenant acts as the KYC provider of
               record. You access the proof. We hold the data. The liability that comes with holding
               sensitive identity information never enters your environment.
             </Prose>
@@ -448,9 +463,9 @@ export function Docs() {
             <SectionDivider id="membership-tiers">Membership Tiers</SectionDivider>
 
             <Prose>
-              Covenant offers five verification tiers. Each tier makes a specific, honest claim about
-              what has been verified and to what standard. Your tier is not just a compliance level —
-              it is your recognized standing in the ecosystem.
+              Covenant offers five trust tiers. Each tier makes a specific, honest claim about what
+              has been verified and to what standard. Your tier is not just a compliance level — it
+              is your recognized standing in the ecosystem.
             </Prose>
             <Prose>
               Tiers I through III are anchored on Arbitrum. Tiers IV and V are anchored on Ethereum
@@ -459,7 +474,7 @@ export function Docs() {
             </Prose>
 
             <div className="space-y-4 mt-8">
-              {TIERS_DOC.map(({ numeral, name, status, tagline, borderClass, headerClass, numeralClass, statusClass, proves, usedFor, anchor, image }) => (
+              {TIERS_DOC.map(({ numeral, name, status, tagline, borderClass, headerClass, numeralClass, statusClass, proves, requirements, usedFor, userUsedFor, anchor, image }) => (
                 <div key={numeral} className={`border ${borderClass} bg-tyrian-darker overflow-hidden`}>
                   {/* Seal image */}
                   {image ? (
@@ -501,9 +516,21 @@ export function Docs() {
                       </p>
                       <p className="font-cormorant text-marble-muted text-base leading-relaxed">
                         <span className="font-cinzel text-xs tracking-wide not-italic text-marble-dim">
+                          Requirements:{' '}
+                        </span>
+                        {requirements}
+                      </p>
+                      <p className="font-cormorant text-marble-muted text-base leading-relaxed">
+                        <span className="font-cinzel text-xs tracking-wide not-italic text-marble-dim">
                           Used for:{' '}
                         </span>
                         {usedFor}
+                      </p>
+                      <p className="font-cormorant text-marble-muted text-base leading-relaxed">
+                        <span className="font-cinzel text-xs tracking-wide not-italic text-marble-dim">
+                          As a counterparty:{' '}
+                        </span>
+                        {userUsedFor}
                       </p>
                     </div>
                   </div>
@@ -723,7 +750,7 @@ console.log(metadata.image);  // IPFS URI for the tier seal image`}</CodeBlock>
               <table className="w-full border border-gold/20 text-sm">
                 <thead>
                   <tr className="bg-tyrian-dark border-b border-gold/20">
-                    {['Tier', 'Name', 'What It Proves', 'minTier'].map(h => (
+                    {['Tier', 'Name', 'What It Proves'].map(h => (
                       <th
                         key={h}
                         className="font-cinzel text-xs tracking-widest uppercase text-marble-muted text-left px-4 py-3 whitespace-nowrap"
@@ -735,12 +762,12 @@ console.log(metadata.image);  // IPFS URI for the tier seal image`}</CodeBlock>
                 </thead>
                 <tbody>
                   {[
-                    { tier: 'I',   name: 'Bronze',   proves: 'Real human, Sybil resistant',        min: '1' },
-                    { tier: 'II',  name: 'Silver',   proves: 'Real legal identity confirmed',       min: '2' },
-                    { tier: 'III', name: 'Gold',     proves: 'Enhanced due diligence complete',     min: '3' },
-                    { tier: 'IV',  name: 'Platinum', proves: 'Accredited/sophisticated investor',   min: '4' },
-                    { tier: 'V',   name: 'Diamond',  proves: 'Entity verified, AML certified',      min: '5' },
-                  ].map(({ tier, name, proves, min }, i) => (
+                    { tier: 'I',   name: 'Bronze',   proves: 'One real person controls this wallet. Basic Sybil resistance and bot prevention.' },
+                    { tier: 'II',  name: 'Silver',   proves: 'A verified real-world legal identity stands behind this wallet.' },
+                    { tier: 'III', name: 'Gold',     proves: 'Enhanced due diligence complete — liveness confirmed, sanctions clean, source of funds declared.' },
+                    { tier: 'IV',  name: 'Platinum', proves: 'Legally verified accredited or sophisticated investor status in the member\'s jurisdiction.' },
+                    { tier: 'V',   name: 'Diamond',  proves: 'Legal entity verified, beneficial ownership transparent, AML program documented.' },
+                  ].map(({ tier, name, proves }, i) => (
                     <tr
                       key={tier}
                       className={`border-b border-gold/10 ${i % 2 === 0 ? 'bg-tyrian-darker' : 'bg-tyrian-dark/40'}`}
@@ -748,7 +775,7 @@ console.log(metadata.image);  // IPFS URI for the tier seal image`}</CodeBlock>
                       <td className="font-cinzel text-gold px-4 py-3">{tier}</td>
                       <td className="font-cormorant text-marble italic px-4 py-3 whitespace-nowrap">{name}</td>
                       <td className="font-cormorant text-marble-muted italic px-4 py-3">{proves}</td>
-                      <td className="font-mono text-marble-dim px-4 py-3">{min}</td>
+
                     </tr>
                   ))}
                 </tbody>
