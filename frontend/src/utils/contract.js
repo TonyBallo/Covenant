@@ -11,7 +11,7 @@ export const CONTRACT_ABI = [
 ];
 
 // Alchemy RPC endpoint for Arbitrum Sepolia — used for all read-only contract calls
-export const RPC_URL = 'https://arb-sepolia.g.alchemy.com/v2/6CV3VlE4QBCn1lt4BGsSf';
+export const RPC_URL = `https://arb-sepolia.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY_KEY}`;
 // Chain ID for Arbitrum Sepolia
 export const CHAIN_ID = 421614;
 // Block explorer base URL (Arbiscan — Arbitrum's Etherscan equivalent)
