@@ -99,19 +99,12 @@ export function ResultDisplay({ result }) {
       </div>
 
       {/* Seal image — full width, no padding */}
-      {result.tier >= 1 && result.tier <= 4 ? (
+      {result.tier >= 1 && (
         <img
           src={`/tiers/tier-${result.tier}.png`}
           alt={`Tier ${result.tier} seal`}
           className="w-full h-auto block border-b border-gold/10"
         />
-      ) : (
-        <div className="w-full aspect-video border-b border-gold/10 bg-tyrian-dark flex flex-col items-center justify-center gap-2">
-          <span className={`font-cinzel font-bold text-4xl leading-none ${tierTextClass[tierInfo.color]}`}>
-            {tierInfo.numeral}
-          </span>
-          <span className="font-cinzel text-marble-muted/30 text-xs tracking-widest uppercase">Coming Soon</span>
-        </div>
       )}
 
       {/* Tier row */}

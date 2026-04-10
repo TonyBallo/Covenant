@@ -212,20 +212,11 @@ export function StatusPage({ walletAddress }) {
             </div>
 
             {/* Seal image */}
-            {sealData.tier <= 4 ? (
-              <img
-                src={`/tiers/tier-${sealData.tier}.png`}
-                alt={`Tier ${TIERS[sealData.tier].numeral} — ${TIERS[sealData.tier].name} seal`}
-                className="w-full h-auto block border-b border-gold/10"
-              />
-            ) : (
-              <div className="w-full aspect-video border-b border-gold/10 bg-tyrian-dark flex flex-col items-center justify-center gap-2">
-                <span className={`font-cinzel font-bold text-4xl leading-none ${tierTextClass[TIERS[sealData.tier].color]}`}>
-                  {TIERS[sealData.tier].numeral}
-                </span>
-                <span className="font-cinzel text-marble-muted/30 text-xs tracking-widest uppercase">Coming Soon</span>
-              </div>
-            )}
+            <img
+              src={`/tiers/tier-${sealData.tier}.png`}
+              alt={`Tier ${TIERS[sealData.tier].numeral} — ${TIERS[sealData.tier].name} seal`}
+              className="w-full h-auto block border-b border-gold/10"
+            />
 
             {/* Tier display */}
             <div className={`px-5 py-5 sm:px-8 sm:py-6 border-b border-gold/15 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 ${sealData.revoked ? 'bg-red-950/20' : ''}`}>

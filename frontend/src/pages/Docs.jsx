@@ -196,7 +196,7 @@ const TIERS_DOC = [
     usedFor: 'Corporate treasuries, institutional funds, market makers, non-individual counterparties, any context requiring entity-level due diligence.',
     userUsedFor: 'You can reasonably expect this wallet to represent a verified legal entity with transparent ownership and a certified AML program in place. Suitable for institutional peer-to-peer and business-to-business transactions where entity legitimacy and regulatory standing are non-negotiable.',
     anchor: 'Ethereum',
-    image: null,
+    image: '/tiers/tier-5.png',
   },
 ];
 
