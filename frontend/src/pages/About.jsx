@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 const PRINCIPLES = [
   {
     title: 'Compliance without compromise.',
-    body: 'Covenant is verification infrastructure, not surveillance infrastructure. We verify who you are — we don\'t watch what you do. Your data stays with us. Your reputation travels everywhere.',
+    body: 'Covenant is a trust network, not surveillance infrastructure. We verify who you are — we don\'t watch what you do. Your data stays with us. Your reputation travels everywhere.',
   },
   {
     title: 'Status without stakes isn\'t status.',
@@ -11,7 +11,7 @@ const PRINCIPLES = [
   },
   {
     title: 'Built for the long game.',
-    body: 'Every significant compliance moat in financial services was built through operational history, not clever code. We\'re building Covenant to be the infrastructure that institutional DeFi runs on — and that takes time, trust, and discipline to get right.',
+    body: 'Every significant compliance moat in online services was built through operational history, not clever code. We\'re building Covenant to be the infrastructure that modern institutions rely on — and that takes time, trust, and discipline to get right.',
   },
 ];
 
@@ -83,34 +83,33 @@ export function About() {
             {/* Pull quote */}
             <blockquote className="border-l-4 border-gold/50 pl-8">
               <p className="font-cormorant italic text-gold text-2xl md:text-3xl leading-relaxed">
-                "By the time most people have interacted with enough financial services, their Social
-                Security number feels like a password. That's not a user problem. That's a design
-                failure."
+                "By the time most people have interacted with enough online services, their personal information
+                becomes a password. That's not a user problem. That's a design failure."
               </p>
             </blockquote>
 
             {/* Body */}
             <div className="space-y-5 font-cormorant text-marble-dim text-xl leading-relaxed">
               <p>
-                Problem 1 — Every financial app, every DeFi protocol, every platform that handles
-                real money asks you to prove who you are. Every single time. The same documents. The
+                Problem 1 — Every application you interact with online
+                asks you to prove who you are. Every single time. The same documents. The
                 same information. Over and over, with no memory of what came before. By the time
-                you've done it enough times, your Social Security number feels like a password.
+                you've done it enough times, your identity becomes scattered, waiting to be picked up by criminals and abused by the platforms you trusted with it.
               </p>
               <p>
                 Problem 2 — Modern approaches to anonymity can bring unnecessary complexity to
                 everyday transactions. The average person shouldn't have to understand blockchain
-                tracing and analysis to be able to trust a transaction.
+                tracing and analysis to be able to safely interact online.
               </p>
               <p>
-                On the other side of that equation are the platforms and services burdened with heavy
-                compliance requirements, forced to hold sensitive user identity data they never
-                wanted. When something goes wrong they pay for it twice — first from the attack, then
-                from the regulatory penalties that follow.
+                Problem 3 — Platforms and services are burdened with heavy
+                compliance requirements, forced to hold toxic data they never
+                wanted in the first place. When something goes wrong they pay for it twice — first from the attack, then
+                from the regulatory penalties that follow. This results in a world where the people who build the most innovative products are the least able to protect their users, and the people who have the most to lose from a breach are the least able to avoid it.
               </p>
               <p>
                 Covenant was built because all of these problems share the same root cause: there is
-                no shared layer of simplified trust in digital finance. Every participant builds their
+                no shared layer of simplified trust in the digital world. Every participant builds their
                 own, in isolation, at enormous cost to everyone involved.
               </p>
               <p className="text-marble font-semibold not-italic">These are the problems we're solving.</p>
@@ -134,7 +133,7 @@ export function About() {
               tells the world who you are — without requiring you to prove it again every time.
             </p>
             <p>
-              That's what Covenant is building. The identity layer that digital finance has been
+              That's what Covenant is building. The identity layer that the digital world has been
               missing. A standard that makes trust portable, compliance composable, and verification
               something worth pursuing rather than something to endure.
             </p>
@@ -178,23 +177,23 @@ export function About() {
             <div className="space-y-5 font-cormorant text-marble-dim text-xl leading-relaxed">
               <p>
                 My background is in federal cybersecurity — specifically in critical systems protection
-                and data security. I spent years operating in environments where compliance isn't
+                and data security. I've spent years operating in environments where security isn't
                 optional and the cost of getting it wrong is real and immediate.
               </p>
               <p>
                 In that work I encountered something that stayed with me: the human cost of systems
-                that don't make trust visible. People who trusted the wrong counterparty because they
-                had no reliable way to know better. Businesses that held sensitive data they never
-                wanted, and paid for it when things went wrong.
+                that don't make trust visible. People who got scammed because they
+                had no reliable way to know better. Businesses facing insurmountable losses thanks to sensitive data they never
+                wanted in the first place. The same problems playing out again and again, in different contexts, with no shared solution in sight.
               </p>
               <p>
                 Covenant is my answer to both of those problems. Not built from a market analysis or a
                 whitepaper — built from the inside of the problem, by someone who has operated inside
-                the systems that failed to solve it.
+                the systems which continuously fail to solve it.
               </p>
               <p>
-                The architecture, the data model, the security roadmap — they reflect a threat model
-                developed in high-stakes federal environments, applied to Web3 infrastructure. The
+                The architecture, the data model, the security roadmap — all reflect a threat model
+                developed in high-stakes environments, applied to modern infrastructure. The
                 product reflects something simpler: a belief that trust should be legible, portable,
                 and worth earning.
               </p>
