@@ -155,9 +155,13 @@ export function About() {
 
             {/* Identity block */}
             <div className="flex flex-col items-center md:items-start text-center md:text-left">
-              {/* Photo placeholder */}
-              <div className="w-40 h-40 rounded-full border-2 border-gold/30 bg-tyrian-dark flex items-center justify-center mb-6 overflow-hidden">
-                <span className="font-cinzel text-gold/30 text-4xl font-bold">AC</span>
+              {/* Founder headshot */}
+              <div className="w-56 h-56 rounded-full border-2 border-gold/30 mb-6 overflow-hidden">
+                <img
+                  src="/founder.jpg"
+                  alt="Anthony Caraballo"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <h3 className="font-cinzel text-marble text-xl tracking-wide mb-2">Anthony Caraballo</h3>
               <p className="font-cinzel text-gold text-xs tracking-widest uppercase mb-4">
