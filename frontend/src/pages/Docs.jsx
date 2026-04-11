@@ -54,7 +54,7 @@ function CodeBlock({ children }) {
 
 function Prose({ children, className = '' }) {
   return (
-    <p className={`font-cormorant text-marble-dim text-lg leading-relaxed mb-4 ${className}`}>
+    <p className={`font-cormorant text-marble-dim text-lg md:text-xl leading-relaxed mb-4 ${className}`}>
       {children}
     </p>
   );
@@ -86,7 +86,7 @@ function Callout({ label, children }) {
       {label && (
         <p className="font-cinzel text-gold text-xs tracking-widest uppercase mb-2">{label}</p>
       )}
-      <p className="font-cormorant text-marble-muted italic text-base leading-relaxed">{children}</p>
+      <p className="font-cormorant text-marble-muted italic text-base md:text-lg leading-relaxed">{children}</p>
     </div>
   );
 }
@@ -97,7 +97,7 @@ function Bullet({ items }) {
       {items.map((item, i) => (
         <li key={i} className="flex items-start gap-3">
           <span className="w-1 h-1 bg-gold/60 rounded-full shrink-0 mt-[10px]"></span>
-          <span className="font-cormorant text-marble-muted italic text-lg leading-relaxed">{item}</span>
+          <span className="font-cormorant text-marble-muted italic text-lg md:text-xl leading-relaxed">{item}</span>
         </li>
       ))}
     </ul>
@@ -209,7 +209,7 @@ export function Docs() {
   // for short sections
   useEffect(() => {
     const handleScroll = () => {
-      const offset = 90; // navbar height + a little breathing room
+      const offset = 110; // navbar height + scroll-mt-24 (96px) + breathing room
       for (let i = ALL_IDS.length - 1; i >= 0; i--) {
         const el = document.getElementById(ALL_IDS[i]);
         if (el && el.getBoundingClientRect().top <= offset) {
@@ -233,7 +233,7 @@ export function Docs() {
 
         {/* ── Sticky Sidebar ── */}
         <aside className="hidden lg:flex flex-col w-56 xl:w-64 shrink-0 sticky top-[65px] h-[calc(100vh-65px)] border-r border-gold/15 py-10 px-6 overflow-y-auto">
-          <p className="font-cinzel text-marble-muted/60 text-xs tracking-widest uppercase mb-5">
+          <p className="font-cinzel text-marble-muted/60 text-xs xl:text-sm tracking-widest uppercase mb-5">
             On this page
           </p>
           <nav className="space-y-0.5">
@@ -241,7 +241,7 @@ export function Docs() {
               <div key={section.id} className="mb-1">
                 <button
                   onClick={() => scrollTo(section.id)}
-                  className={`w-full text-left font-cinzel text-xs tracking-wider uppercase py-1.5 transition-colors ${
+                  className={`w-full text-left font-cinzel text-xs xl:text-sm tracking-wider uppercase py-1.5 transition-colors ${
                     activeId === section.id
                       ? 'text-gold'
                       : 'text-marble-muted hover:text-marble'
@@ -253,7 +253,7 @@ export function Docs() {
                   <button
                     key={child.id}
                     onClick={() => scrollTo(child.id)}
-                    className={`w-full text-left font-cormorant italic text-sm py-1 pl-4 transition-colors border-l ${
+                    className={`w-full text-left font-cormorant italic text-sm xl:text-base py-1 pl-4 transition-colors border-l ${
                       activeId === child.id
                         ? 'text-gold border-gold/50'
                         : 'text-marble-muted/60 hover:text-marble-muted border-gold/10'
@@ -297,14 +297,14 @@ export function Docs() {
             <SectionDivider id="what-is-covenant">What is Covenant?</SectionDivider>
 
             <Prose>
-              Covenant is a membership protocol for simplified trust. It exists because the way people
+              Covenant is a membership protocol for <span className="text-gold">simplified trust</span>. It exists because the way people
               prove who they are online is broken and overcomplicated. We built Covenant to fix that.
             </Prose>
             <Prose>
-              When you join Covenant, you enter into a pact. You verify your identity once, at
-              whatever level you choose, and we issue you a seal — a permanent, portable credential
-              whose value is determined by the trust you place in us, and the trust we place in you.
-              Your information stays with us. What travels is your reputation.
+              When you join Covenant, you enter into a <span className="text-gold">pact</span>. You verify your identity once, at
+              whatever level you choose, and we issue you a <span className="text-gold">seal</span> — a <span className="text-marble">permanent, portable credential</span>{' '}
+              whose value is determined by the trust you place in us, and the trust we place in you.{' '}
+              <span className="text-marble">Your information stays with us. What travels is your reputation.</span>
             </Prose>
 
             {/* The Problem */}
@@ -312,25 +312,25 @@ export function Docs() {
 
             <Label>For People</Label>
             <Prose>
-              Problem 1 — Every financial app, every DeFi protocol, every platform that handles real
+              <span className="text-gold">Problem 1 —</span> Every financial app, every DeFi protocol, every platform that handles real
               money asks you to prove who you are. Every single time. You upload the same documents,
               enter the same information, wait for the same verification — over and over, on every
               platform you use. By the time you've done it enough times, your Social Security number
               feels like a password.
             </Prose>
             <Prose>
-              Problem 2 — Modern approaches to anonymity can bring unnecessary complexity to everyday
+              <span className="text-gold">Problem 2 —</span> Modern approaches to anonymity can bring unnecessary complexity to everyday
               transactions. The average person shouldn't have to understand blockchain tracing and
               analysis to be able to safely interact with crypto.
             </Prose>
             <Prose>
-              Covenant solves both. Verify once. Your reputation travels everywhere.
+              Covenant solves both. <span className="text-marble">Verify once. Your reputation travels everywhere.</span>
             </Prose>
 
             <Label>For Businesses</Label>
             <Prose>
               Platforms and services are burdened with heavy compliance requirements, forcing them to
-              store sensitive user identity data. This data serves as a toxic asset and when they get breached — which
+              store sensitive user identity data. This data serves as a <span className="text-marble">toxic asset</span> and when they get breached — which
               happens — they face the consequences twice: first from the attack, then from the
               regulatory penalties that follow. They're punished for holding data nobody wanted them
               to have.
@@ -341,7 +341,7 @@ export function Docs() {
               pulling only the information they need to know with consent by the user.
             </Prose>
             <Prose>
-              The compliance coverage is built in. The liability is gone.
+              <span className="text-marble">The compliance coverage is built in. The liability is gone.</span>
             </Prose>
 
             {/* Core Concepts */}
@@ -358,10 +358,10 @@ export function Docs() {
 
             <Label>The Seal</Label>
             <Prose>
-              Your Covenant seal is a Soulbound Token — a non-transferable digital credential
+              Your Covenant seal is a <span className="text-gold">Soulbound Token</span> — a <span className="text-marble">non-transferable</span> digital credential
               permanently bound to your wallet. It cannot be sold, lent, or transferred. It was earned
-              by you, and it belongs to you. The seal serves as both the compliance proof and the
-              trust signal. It tells any application that accepts it exactly what kind of user you are and the
+              by you, and it belongs to you. The seal serves as both the <span className="text-marble">compliance proof</span> and the{' '}
+              <span className="text-marble">trust signal</span>. It tells any application that accepts it exactly what kind of user you are and the
               strength of your reputation, while still preserving your anonymity.
             </Prose>
 
@@ -369,7 +369,7 @@ export function Docs() {
             <Prose>
               Your seal travels with you. Every protocol, every application, every platform that
               integrates Covenant can instantly recognize your verified standing without asking you to
-              prove it again. You do the work once. Covenant speaks for you.
+              prove it again. <span className="text-marble">You do the work once. Covenant speaks for you.</span>
             </Prose>
           </section>
 
@@ -417,15 +417,15 @@ export function Docs() {
                   </div>
                   <div>
                     <p className="font-cinzel text-marble text-xs tracking-widest uppercase mb-2">{title}</p>
-                    <p className="font-cormorant text-marble-muted italic text-base leading-relaxed">{body}</p>
+                    <p className="font-cormorant text-marble-muted italic text-base md:text-lg leading-relaxed">{body}</p>
                   </div>
                 </div>
               ))}
             </div>
 
             <Callout label="Privacy Note">
-              Your identity data is never stored on-chain. The seal contains only your tier level,
-              issuance date, expiry date, and jurisdiction category. Nothing more. Your personal
+              Your identity data is <span className="text-marble not-italic">never stored on-chain</span>. The seal contains only your tier level,
+              issuance date, expiry date, and jurisdiction category. <span className="text-marble not-italic">Nothing more.</span> Your personal
               information stays in Covenant's secured, off-chain infrastructure and is never
               transmitted to those that read your seal.
             </Callout>
@@ -435,13 +435,13 @@ export function Docs() {
 
             <Label>What Integration Looks Like</Label>
             <Prose>
-              Integrating Covenant takes a single contract read. Your protocol calls{' '}
+              Integrating Covenant takes a <span className="text-marble">single contract read</span>. Your protocol calls{' '}
               <code className="font-mono text-gold text-sm bg-tyrian-dark px-1.5 py-0.5">
                 isValid(walletAddress, minTier)
               </code>{' '}
               and receives a boolean response. If true, the wallet holds a valid Covenant seal at or
-              above your required tier. No KYC stack to build. No identity data to store. No
-              compliance liability to absorb.
+              above your required tier. <span className="text-marble">No KYC stack to build. No identity data to store. No
+              compliance liability to absorb.</span>
             </Prose>
 
             <Label>What You Get</Label>
@@ -455,9 +455,9 @@ export function Docs() {
             <Label>The Compliance Shield</Label>
             <Prose>
               When you integrate Covenant, you gain access to a network of
-              trusted users with compliance coverage built in. Covenant acts as the KYC provider of
-              record. You access the proof. We hold the data. The liability that comes with holding
-              sensitive identity information never enters your environment, so you can focus on building your product instead of building compliance infrastructure.
+              trusted users with compliance coverage built in. Covenant acts as the{' '}
+              <span className="text-gold">KYC provider of record</span>. You access the proof. We hold the data.{' '}
+              <span className="text-marble">The liability that comes with holding sensitive identity information never enters your environment</span> — so you can focus on building your product instead of building compliance infrastructure.
             </Prose>
           </section>
 
@@ -511,25 +511,25 @@ export function Docs() {
                   <div className="px-6 py-5">
                     <p className="font-cormorant text-marble italic text-base mb-4">{tagline}</p>
                     <div className="space-y-2">
-                      <p className="font-cormorant text-marble-muted text-base leading-relaxed">
+                      <p className="font-cormorant text-marble-muted text-base md:text-lg leading-relaxed">
                         <span className="font-cinzel text-xs tracking-wide not-italic text-marble-dim">
                           What it proves:{' '}
                         </span>
                         {proves}
                       </p>
-                      <p className="font-cormorant text-marble-muted text-base leading-relaxed">
+                      <p className="font-cormorant text-marble-muted text-base md:text-lg leading-relaxed">
                         <span className="font-cinzel text-xs tracking-wide not-italic text-marble-dim">
                           Requirements:{' '}
                         </span>
                         {requirements}
                       </p>
-                      <p className="font-cormorant text-marble-muted text-base leading-relaxed">
+                      <p className="font-cormorant text-marble-muted text-base md:text-lg leading-relaxed">
                         <span className="font-cinzel text-xs tracking-wide not-italic text-marble-dim">
                           Used for:{' '}
                         </span>
                         {usedFor}
                       </p>
-                      <p className="font-cormorant text-marble-muted text-base leading-relaxed">
+                      <p className="font-cormorant text-marble-muted text-base md:text-lg leading-relaxed">
                         <span className="font-cinzel text-xs tracking-wide not-italic text-marble-dim">
                           As a counterparty:{' '}
                         </span>
