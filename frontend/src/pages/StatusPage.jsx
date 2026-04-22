@@ -21,9 +21,11 @@ export function StatusPage({ walletAddress }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sealAdded, setSealAdded] = useState(false);
+  const [walletError, setWalletError] = useState(null);
 
   const addToWallet = async () => {
     if (!window.ethereum) return;
+    setWalletError(null);
     try {
       await window.ethereum.request({
         method: 'wallet_watchAsset',
@@ -36,8 +38,9 @@ export function StatusPage({ walletAddress }) {
         },
       });
       setSealAdded(true);
-    } catch {
-      // User rejected — ignore
+    } catch (err) {
+      if (err?.code === 4001) return; // User rejected — ignore
+      setWalletError('Your wallet does not support adding NFTs directly. Try MetaMask, or view on Arbiscan instead.');
     }
   };
 
@@ -319,6 +322,9 @@ export function StatusPage({ walletAddress }) {
                 >
                   Add Seal to Wallet
                 </button>
+              )}
+              {walletError && (
+                <p className="font-cormorant text-red-400 italic text-sm text-center">{walletError}</p>
               )}
             </div>
 
