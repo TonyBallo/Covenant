@@ -20,6 +20,7 @@ app.use(cors({
     'https://www.covenantprotocol.io',
     'https://covenant-sigma.vercel.app',
     'https://covenant-lookup.vercel.app',
+    'https://covenant-protocol.vercel.app',
     /\.vercel\.app$/  // Allow all Vercel preview deployments
   ],
   allowedHeaders: ['Content-Type', 'x-admin-secret'],
