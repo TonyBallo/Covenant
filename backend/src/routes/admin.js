@@ -301,7 +301,7 @@ router.post('/mint', async (req, res) => {
         const arbiscanUrl = `${ARBISCAN_BASE}/token/${process.env.CONTRACT_ADDRESS}?a=${sealId}`;
 
         await resend.emails.send({
-          from: 'Covenant Protocol <onboarding@resend.dev>',
+          from: 'Covenant Protocol <noreply@verify.covenantprotocol.io>',
           to: submission.email,
           subject: 'Your Covenant Seal Has Been Issued',
           html: `

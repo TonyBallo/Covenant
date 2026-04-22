@@ -107,7 +107,7 @@ router.post('/submit', submitLimiter, async (req, res) => {
     
     try {
       await resend.emails.send({
-        from: 'Covenant Protocol <onboarding@resend.dev>',
+        from: 'Covenant Protocol <noreply@verify.covenantprotocol.io>',
         to: email,
         subject: 'Verify your email - Covenant Protocol',
         html: `
