@@ -55,9 +55,21 @@ router.post('/submit', submitLimiter, async (req, res) => {
       .single();
 
     if (existing) {
-      return res.status(400).json({ 
-        error: 'Pending submission already exists' 
-      });
+      const tokenExpired = existing.verification_expires_at
+        ? new Date() > new Date(existing.verification_expires_at)
+        : false;
+
+      // Allow retry only if unverified AND the token has expired (email was never received)
+      if (existing.email_verified || !tokenExpired) {
+        return res.status(400).json({
+          error: existing.email_verified
+            ? 'Pending submission already exists'
+            : 'A verification email was recently sent. Please wait 15 minutes before trying again.'
+        });
+      }
+
+      // Token expired and never verified — safe to delete and allow fresh submission
+      await supabase.from('kyc_submissions').delete().eq('id', existing.id);
     }
 
     // Create or get user
