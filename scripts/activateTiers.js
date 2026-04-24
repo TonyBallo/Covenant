@@ -3,14 +3,14 @@ const { ethers } = require("hardhat");
 
 async function main() {
   const [owner] = await ethers.getSigners();
-  const pactAddress = "0xFa71D3c2dAbD20A3ceEb3Ef08319CE64548ecbA4";
+  const pactAddress = "0xBfCA5341f3c370743d4A64Df7c732113A4f83187"; // update before running
   const pact = await ethers.getContractAt("Pact", pactAddress);
 
-  // Set which tiers should be active (true) or inactive (false)
+  // Arbitrum: activate Tier III (Gold) only.
+  // Tiers I and II are activated in the constructor.
+  // Tiers IV and V (Platinum, Diamond) are Ethereum Mainnet only.
   const config = [
     { tier: 3, active: true },
-    { tier: 4, active: true },
-    { tier: 5, active: true },
   ];
 
   for (const { tier, active } of config) {

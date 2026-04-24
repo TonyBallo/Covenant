@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import kycRoutes from './routes/kyc.js';
 import adminRoutes from './routes/admin.js';
+import treeRoutes from './routes/tree.js';
 
 dotenv.config();
 
@@ -46,6 +47,7 @@ app.get('/health', (req, res) => {
 // Routes
 app.use('/api/kyc', kycRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/tree', treeRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -105,5 +107,12 @@ Available endpoints:
   POST /api/admin/mint
   POST /api/admin/revoke
   GET  /api/admin/ready-to-mint
+  GET  /api/admin/tree/:address
+  POST /api/admin/tree/set-boundary
+
+  Tree Routes:
+  GET  /api/tree/status/:address
+  POST /api/tree/record-link
+  POST /api/tree/record-unlink
   `);
 });

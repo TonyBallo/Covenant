@@ -5,8 +5,9 @@ import { supabase } from '../server.js';
 import { createMintSignature } from '../services/signature.js';
 import { mintSeal, getSealId, revokeSeal, getSealInfo } from '../services/blockchain.js';
 import { attestOnPolygon, getPolygonAttestation } from '../services/polygon.js';
+import { setCrossChainBoundaryOnChain } from '../services/treechain.js';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 const FRONTEND_URL  = process.env.FRONTEND_URL || 'https://covenant-sigma.vercel.app';
 const ARBISCAN_BASE = 'https://sepolia.arbiscan.io';
@@ -300,6 +301,7 @@ router.post('/mint', async (req, res) => {
         const statusUrl   = `${FRONTEND_URL}/demo/status`;
         const arbiscanUrl = `${ARBISCAN_BASE}/token/${process.env.CONTRACT_ADDRESS}?a=${sealId}`;
 
+        if (!resend) throw new Error('RESEND_API_KEY not configured');
         await resend.emails.send({
           from: 'Covenant Protocol <noreply@verify.covenantprotocol.io>',
           to: submission.email,
@@ -695,6 +697,67 @@ router.get('/ready-to-mint', async (req, res) => {
       error: 'Failed to fetch ready-to-mint submissions',
       details: error.message 
     });
+  }
+});
+
+/**
+ * GET /api/admin/tree/:address
+ * Full trust tree for a root address — reads from the Supabase off-chain index.
+ * Add ?active=true to return only currently active links.
+ */
+router.get('/tree/:address', async (req, res) => {
+  try {
+    const { address } = req.params;
+    const activeOnly = req.query.active === 'true';
+
+    let query = supabase
+      .from('tree_links')
+      .select('*')
+      .eq('root_address', address)
+      .order('linked_at', { ascending: true });
+
+    if (activeOnly) {
+      query = query.is('unlinked_at', null);
+    }
+
+    const { data: links, error } = await query;
+    if (error) throw error;
+
+    res.json({ root: address, count: links.length, links });
+  } catch (error) {
+    console.error('Admin tree fetch failed:', error);
+    res.status(500).json({ error: 'Failed to fetch tree', details: error.message });
+  }
+});
+
+/**
+ * POST /api/admin/tree/set-boundary
+ * Body: { node, partnerChainId, partnerAddress }
+ * Calls setCrossChainBoundary on-chain for a Gold (III) or Platinum (IV) node.
+ */
+router.post('/tree/set-boundary', async (req, res) => {
+  try {
+    const { node, partnerChainId, partnerAddress } = req.body;
+
+    if (!node || !partnerChainId || !partnerAddress) {
+      return res.status(400).json({
+        error: 'Missing required fields: node, partnerChainId, partnerAddress',
+      });
+    }
+
+    const receipt = await setCrossChainBoundaryOnChain(node, partnerChainId, partnerAddress);
+
+    res.json({
+      success: true,
+      node,
+      partnerChainId,
+      partnerAddress,
+      transactionHash: receipt.transactionHash,
+      blockNumber: receipt.blockNumber,
+    });
+  } catch (error) {
+    console.error('set-boundary failed:', error);
+    res.status(500).json({ error: 'Failed to set cross-chain boundary', details: error.message });
   }
 });
 

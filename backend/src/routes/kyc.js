@@ -7,7 +7,9 @@ import { createMintSignature } from '../services/signature.js';
 import { hasSeal } from '../services/blockchain.js';
 
 const router = express.Router();
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Instantiate lazily so a missing dev key doesn't crash the server at startup.
+// Email sends will fail gracefully if the key is absent.
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 // Frontend URL used for email verification redirect after clicking the link.
 // Must point to the deployed frontend (Vercel). Falls back to the primary deployment.
@@ -116,8 +118,9 @@ router.post('/submit', submitLimiter, async (req, res) => {
 
     // Send verification email
     const magicLink = `${process.env.BACKEND_URL || 'https://covenant-production-4cf7.up.railway.app'}/api/kyc/verify/${verificationToken}`;
-    
+
     try {
+      if (!resend) throw new Error('RESEND_API_KEY not configured');
       await resend.emails.send({
         from: 'Covenant Protocol <noreply@verify.covenantprotocol.io>',
         to: email,

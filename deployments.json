@@ -4,10 +4,21 @@
       "network": "arbitrumSepolia",
       "chainId": 421614,
       "contract": "Pact",
+      "address": "0x2c660a28826c11AfE4CFa13A003a8Fb783cfDbf1",
+      "deployer": "0xaDff4AF90C4f354eF21B6225fAEE61FbED1E642b",
+      "deployedAt": "Apr-23-2026",
+      "arbiscan": "https://sepolia.arbiscan.io/address/0x2c660a28826c11AfE4CFa13A003a8Fb783cfDbf1#code",
+      "note": "Trust tree branch — includes linkWallet, unlinkWallet, setCrossChainBoundary"
+    },
+    "Pact_v1": {
+      "network": "arbitrumSepolia",
+      "chainId": 421614,
+      "contract": "Pact",
       "address": "0xBfCA5341f3c370743d4A64Df7c732113A4f83187",
       "deployer": "0xaDff4AF90C4f354eF21B6225fAEE61FbED1E642b",
       "deployedAt": "Mar-28-2026",
-      "arbiscan": "https://sepolia.arbiscan.io/address/0xBfCA5341f3c370743d4A64Df7c732113A4f83187#code"
+      "arbiscan": "https://sepolia.arbiscan.io/address/0xBfCA5341f3c370743d4A64Df7c732113A4f83187#code",
+      "note": "Production contract — no trust tree"
     }
   },
   "polygonAmoy": {

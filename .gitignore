@@ -10,6 +10,7 @@ typechain-types/
 # Environment
 .env
 .env.local
+.env.dev
 .env.*.local
 
 # Private keys and secrets
