@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ethers } from 'ethers';
-import { checkKYCStatus, getCrossChainStatus } from '../utils/api';
-import { TIERS, formatDate } from '../utils/constants';
-import { CONTRACT_ADDRESS, CONTRACT_ABI, RPC_URL, ETHERSCAN_BASE } from '../utils/contract';
+import { checkKYCStatus, getCrossChainStatus, getTreeStatus, recordLink, recordUnlink } from '../utils/api';
+import { TIERS, formatDate, formatAddress } from '../utils/constants';
+import { CONTRACT_ADDRESS, CONTRACT_ABI, RPC_URL, ETHERSCAN_BASE, CHAIN_ID } from '../utils/contract';
 
 const tierTextClass = {
   orange: 'text-gold',
@@ -22,6 +22,13 @@ export function StatusPage({ walletAddress }) {
   const [error, setError] = useState(null);
   const [sealAdded, setSealAdded] = useState(false);
   const [walletError, setWalletError] = useState(null);
+
+  // Trust tree state
+  const [treePosition, setTreePosition] = useState(null);   // { isLinked, effectiveTier, root, parent }
+  const [treeChildren, setTreeChildren] = useState([]);      // address[]
+  const [linkAddress, setLinkAddress] = useState('');
+  const [treeError, setTreeError] = useState(null);
+  const [treeTxPending, setTreeTxPending] = useState(false);
 
   const addToWallet = async () => {
     if (!window.ethereum) return;
@@ -68,7 +75,6 @@ export function StatusPage({ walletAddress }) {
         const status = await checkKYCStatus(walletAddress);
         setKycStatus(status);
 
-        // Always check on-chain — the contract is the source of truth regardless of backend status
         const provider = new ethers.JsonRpcProvider(RPC_URL);
         const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
         const [verified, tier, revoked, burnPending] = await contract.getVerificationStatus(walletAddress);
@@ -84,6 +90,14 @@ export function StatusPage({ walletAddress }) {
           } catch {
             setChainStatus({ ethereum: true, polygon: false });
           }
+
+          // Load trust tree children for root seal holders
+          const children = await contract.getTreeChildren(walletAddress);
+          setTreeChildren(children.map(a => a));
+        } else {
+          // Not a seal holder — check if this is a linked wallet
+          const pos = await getTreeStatus(walletAddress);
+          if (pos.isLinked) setTreePosition(pos);
         }
       } catch (err) {
         setError(err.message);
@@ -94,6 +108,93 @@ export function StatusPage({ walletAddress }) {
 
     loadStatus();
   }, [walletAddress]);
+
+  const refreshTreeChildren = async () => {
+    try {
+      const provider = new ethers.JsonRpcProvider(RPC_URL);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+      const children = await contract.getTreeChildren(walletAddress);
+      setTreeChildren(children.map(a => a));
+    } catch { /* non-critical */ }
+  };
+
+  // Returns a signer locked to walletAddress on Arbitrum Sepolia,
+  // plus fresh fee data with a 2x buffer to avoid base-fee underpricing.
+  const getGuardedSigner = async () => {
+    if (!window.ethereum) throw new Error('MetaMask not found');
+    const provider = new ethers.BrowserProvider(window.ethereum);
+
+    const { chainId } = await provider.getNetwork();
+    if (Number(chainId) !== CHAIN_ID) {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: '0x' + CHAIN_ID.toString(16) }],
+      });
+    }
+
+    const signer = await provider.getSigner(walletAddress);
+    if (signer.address.toLowerCase() !== walletAddress.toLowerCase()) {
+      throw new Error('Switch MetaMask to the wallet that holds this seal.');
+    }
+
+    // Fetch current fee data — MetaMask sometimes caches stale values
+    const feeData = await provider.getFeeData();
+    const gasOpts = {
+      maxFeePerGas: feeData.maxFeePerGas * 2n,
+      maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
+    };
+
+    return { provider, signer, gasOpts };
+  };
+
+  const handleLinkWallet = async () => {
+    if (!linkAddress || treeTxPending) return;
+    setTreeError(null);
+    setTreeTxPending(true);
+    try {
+      const { provider, signer, gasOpts } = await getGuardedSigner();
+      const { chainId } = await provider.getNetwork();
+
+      const childTier = sealData.tier - 1;
+      const message = ethers.solidityPackedKeccak256(
+        ['address', 'address', 'uint8', 'address', 'uint256'],
+        [walletAddress, linkAddress, childTier, walletAddress, chainId]
+      );
+      const signature = await signer.signMessage(ethers.getBytes(message));
+
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+      const tx = await contract.linkWallet(linkAddress, childTier, signature, gasOpts);
+      const receipt = await tx.wait();
+
+      await recordLink(receipt.hash);
+      setLinkAddress('');
+      await refreshTreeChildren();
+    } catch (err) {
+      setTreeError(err.reason || err.message);
+    } finally {
+      setTreeTxPending(false);
+    }
+  };
+
+  const handleUnlinkWallet = async (childAddress) => {
+    if (treeTxPending) return;
+    setTreeError(null);
+    setTreeTxPending(true);
+    try {
+      const { signer, gasOpts } = await getGuardedSigner();
+
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+      const tx = await contract.unlinkWallet(childAddress, gasOpts);
+      const receipt = await tx.wait();
+
+      await recordUnlink(receipt.hash);
+      await refreshTreeChildren();
+    } catch (err) {
+      setTreeError(err.reason || err.message);
+    } finally {
+      setTreeTxPending(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -127,8 +228,42 @@ export function StatusPage({ walletAddress }) {
           </div>
         )}
 
+        {/* Linked Wallet — in a trust tree but holds no seal directly */}
+        {!sealData?.verified && treePosition?.isLinked && (
+          <div className="border border-gold/20 bg-tyrian-darker p-10">
+            <div className="w-px h-10 bg-gradient-to-b from-transparent via-gold/40 to-transparent mx-auto mb-6"></div>
+            <h3 className="font-cinzel text-marble text-lg tracking-wide mb-1 text-center">Linked Wallet</h3>
+            <p className="font-cormorant text-marble-muted italic text-xl mb-8 text-center">
+              This wallet is part of a trust tree.
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="border border-gold/10 bg-tyrian-dark px-5 py-4">
+                <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Effective Tier</p>
+                <p className="font-cormorant text-gold text-lg">
+                  {TIERS[treePosition.effectiveTier]?.name} — {TIERS[treePosition.effectiveTier]?.numeral}
+                </p>
+              </div>
+              <div className="border border-gold/10 bg-tyrian-dark px-5 py-4">
+                <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Status</p>
+                <p className="font-cormorant text-gold text-lg">Active</p>
+              </div>
+              <div className="col-span-2 border border-gold/10 bg-tyrian-dark px-5 py-4">
+                <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Parent Wallet</p>
+                <p className="font-mono text-marble-dim text-xs break-all">{treePosition.parent}</p>
+              </div>
+              <div className="col-span-2 border border-gold/10 bg-tyrian-dark px-5 py-4">
+                <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Root Seal Holder</p>
+                <p className="font-mono text-marble-dim text-xs break-all">{treePosition.root}</p>
+              </div>
+            </div>
+            <p className="font-cormorant text-marble-muted italic text-sm mt-6 text-center">
+              Validity is determined by the root seal holder's on-chain status.
+            </p>
+          </div>
+        )}
+
         {/* No Application */}
-        {!kycStatus?.hasSubmission && !sealData?.verified && (
+        {!kycStatus?.hasSubmission && !sealData?.verified && !treePosition?.isLinked && (
           <div className="border border-gold/20 bg-tyrian-darker p-10 text-center">
             <div className="w-px h-10 bg-gradient-to-b from-transparent via-gold/40 to-transparent mx-auto mb-6"></div>
             <h3 className="font-cinzel text-marble text-lg tracking-wide mb-3">No Application Found</h3>
@@ -327,6 +462,83 @@ export function StatusPage({ walletAddress }) {
                 <p className="font-cormorant text-red-400 italic text-sm text-center">{walletError}</p>
               )}
             </div>
+
+          </div>
+        )}
+
+        {/* Trust Tree — shown for root seal holders with tier > 1 (can link children) */}
+        {sealData?.verified && sealData.tier > 1 && (
+          <div className="border border-gold/20 bg-tyrian-darker mt-6 overflow-hidden">
+
+            {/* Header */}
+            <div className="bg-tyrian-dark border-b border-gold/25 px-5 py-4 sm:px-8 sm:py-5 flex items-center justify-between">
+              <div>
+                <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Trust Tree</p>
+                <p className="font-cinzel text-gold tracking-wide">Linked Wallets</p>
+              </div>
+              <p className="font-mono text-marble-muted text-xs">
+                {treeChildren.length} / {sealData.tier - 1} slots
+              </p>
+            </div>
+
+            {/* Children list */}
+            {treeChildren.length > 0 && (
+              <div className="divide-y divide-gold/10">
+                {treeChildren.map(child => (
+                  <div key={child} className="px-5 py-4 sm:px-8 flex items-center justify-between gap-4">
+                    <div>
+                      <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">
+                        {TIERS[sealData.tier - 1]?.name} — Tier {TIERS[sealData.tier - 1]?.numeral}
+                      </p>
+                      <p className="font-mono text-marble text-xs">{formatAddress(child)}</p>
+                    </div>
+                    <button
+                      onClick={() => handleUnlinkWallet(child)}
+                      disabled={treeTxPending}
+                      className="font-cinzel text-xs tracking-widest uppercase px-4 py-2 border border-red-800/50 text-red-400 hover:border-red-600 hover:text-red-300 transition-colors disabled:opacity-40 shrink-0"
+                    >
+                      {treeTxPending ? '…' : 'Unlink'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Empty state */}
+            {treeChildren.length === 0 && (
+              <p className="font-cormorant text-marble-muted italic text-center py-8 px-5 text-xl">
+                No wallets linked yet.
+              </p>
+            )}
+
+            {/* Link form — only shown when slots are available */}
+            {treeChildren.length < sealData.tier - 1 && (
+              <div className="border-t border-gold/15 px-5 py-5 sm:px-8">
+                <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-3">
+                  Link a {TIERS[sealData.tier - 1]?.name} Wallet
+                </p>
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={linkAddress}
+                    onChange={e => setLinkAddress(e.target.value)}
+                    placeholder="0x..."
+                    disabled={treeTxPending}
+                    className="flex-1 font-mono text-xs bg-tyrian-dark border border-gold/20 text-marble px-4 py-3 focus:outline-none focus:border-gold/50 placeholder:text-marble-muted/40 disabled:opacity-50"
+                  />
+                  <button
+                    onClick={handleLinkWallet}
+                    disabled={!linkAddress || treeTxPending}
+                    className="font-cinzel text-xs tracking-widest uppercase px-5 py-3 bg-gold text-tyrian-deep hover:bg-gold-dim transition-colors disabled:opacity-40 shrink-0"
+                  >
+                    {treeTxPending ? 'Pending…' : 'Link'}
+                  </button>
+                </div>
+                {treeError && (
+                  <p className="font-cormorant text-red-400 italic text-sm mt-3">{treeError}</p>
+                )}
+              </div>
+            )}
 
           </div>
         )}

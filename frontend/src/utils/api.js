@@ -1,6 +1,6 @@
-// Railway backend base URL. All fetch calls in this file route through here.
-// Update this if the Railway deployment URL changes.
-const API_BASE_URL = 'https://covenant-production-4cf7.up.railway.app';
+// Backend base URL. Falls back to the Railway production URL if VITE_API_URL is not set.
+// Set VITE_API_URL=http://localhost:3001 in frontend/.env.local for local dev.
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://covenant-production-4cf7.up.railway.app';
 
 // Set by Admin.jsx on successful login. Never stored in the bundle.
 let _adminSecret = '';
@@ -193,6 +193,47 @@ export async function getRevokedSeals() {
     throw new Error('Failed to get revoked seals');
   }
 
+  return response.json();
+}
+
+/**
+ * Get trust tree position of a wallet address
+ */
+export async function getTreeStatus(address) {
+  const response = await fetch(`${API_BASE_URL}/api/tree/status/${address}`);
+  if (!response.ok) throw new Error('Failed to get tree status');
+  return response.json();
+}
+
+/**
+ * Record a confirmed linkWallet() transaction in the backend
+ */
+export async function recordLink(txHash) {
+  const response = await fetch(`${API_BASE_URL}/api/tree/record-link`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ txHash }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to record link');
+  }
+  return response.json();
+}
+
+/**
+ * Record a confirmed unlinkWallet() transaction in the backend
+ */
+export async function recordUnlink(txHash) {
+  const response = await fetch(`${API_BASE_URL}/api/tree/record-unlink`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ txHash }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to record unlink');
+  }
   return response.json();
 }
 
