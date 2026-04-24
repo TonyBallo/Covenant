@@ -39,8 +39,8 @@ export function ResultDisplay({ result }) {
     }
   }, [result.address, result.verified]);
 
-  // Not verified
-  if (!result.verified) {
+  // Not verified — but check for trust tree link first
+  if (!result.verified && !result.isLinkedWallet) {
     return (
       <div className="mt-10 border border-gold/20 bg-tyrian-darker p-10 text-center">
         <div className="w-px h-12 bg-gradient-to-b from-transparent via-gold/40 to-transparent mx-auto mb-6"></div>
@@ -54,6 +54,134 @@ export function ResultDisplay({ result }) {
           <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Searched Address</p>
           <p className="font-mono text-sm text-marble-dim break-all">{result.address}</p>
         </div>
+      </div>
+    );
+  }
+
+  // Linked wallet — inherits trust from root seal holder
+  if (result.isLinkedWallet) {
+    const linkedTierInfo = TIERS[result.effectiveTier];
+    return (
+      <div className="mt-10 border border-gold/30 bg-tyrian-darker overflow-hidden">
+
+        {/* Header */}
+        <div className="bg-tyrian-dark border-b border-gold/20 px-5 py-4 sm:px-8 sm:py-5 relative">
+          <div className="flex items-center justify-between">
+            <div className="flex-1 text-center">
+              <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Linked Wallet</p>
+              <p className="font-mono text-sm text-marble">
+                {result.address.slice(0, 6)}…{result.address.slice(-4)}
+              </p>
+            </div>
+            <div className="flex items-center gap-3 absolute right-5 sm:right-8">
+              <span className="font-cinzel text-xs tracking-widest uppercase px-3 py-1 border border-gold/40 text-gold bg-gold/10">
+                Delegated
+              </span>
+              <span className="text-gold text-lg font-cinzel" title="Verified on Arbitrum">⟠</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Seal image */}
+        {result.effectiveTier >= 1 && (
+          <img
+            src={`/tiers/tier-${result.effectiveTier}.png`}
+            alt={`Tier ${result.effectiveTier} seal`}
+            className="w-full h-auto block border-b border-gold/10"
+          />
+        )}
+
+        {/* Tier row */}
+        <div className="px-5 py-5 sm:px-8 sm:py-6 border-b border-gold/15 flex items-center gap-4 sm:gap-6">
+          <div className={`font-cinzel text-5xl sm:text-6xl font-bold leading-none ${tierTextClass[linkedTierInfo.color]}`}>
+            {linkedTierInfo.numeral}
+          </div>
+          <div>
+            <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Effective Trust Tier</p>
+            <p className={`font-cinzel text-xl sm:text-2xl tracking-wide ${tierTextClass[linkedTierInfo.color]}`}>
+              {linkedTierInfo.name}
+            </p>
+          </div>
+        </div>
+
+        {/* Blurb */}
+        <div className="px-5 pt-5 sm:px-8 sm:pt-6">
+          <p className="font-cormorant text-marble-muted italic text-lg leading-relaxed">
+            This wallet is a linked delegate in the Covenant trust tree. It inherits {linkedTierInfo.name}-tier trust from a verified root seal holder and carries full trust standing for compliant protocol interactions.
+          </p>
+        </div>
+
+        {/* Trust tree info */}
+        <div className="px-5 py-5 sm:px-8 sm:py-6 flex flex-col gap-4">
+          <div className="border border-gold/10 bg-tyrian-dark px-5 py-4">
+            <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-2">Root Seal Holder</p>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+              <p className="font-mono text-sm text-marble-dim break-all flex-1">{result.treeRoot}</p>
+              <a
+                href={`${ETHERSCAN_BASE}/address/${result.treeRoot}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-cinzel text-xs tracking-wider uppercase px-3 py-2 bg-gold text-tyrian-deep hover:bg-gold-dim transition-colors whitespace-nowrap shrink-0"
+              >
+                Arbiscan ↗
+              </a>
+            </div>
+          </div>
+          {result.treeParent && result.treeParent.toLowerCase() !== result.treeRoot.toLowerCase() && (
+            <div className="border border-gold/10 bg-tyrian-dark px-5 py-4">
+              <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-2">Direct Parent</p>
+              <p className="font-mono text-sm text-marble-dim break-all">{result.treeParent}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Wallet address */}
+        <div className="px-5 pb-5 sm:px-8 sm:pb-6">
+          <div className="border border-gold/10 bg-tyrian-dark px-5 py-4">
+            <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-2">Wallet Address</p>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+              <p className="font-mono text-sm text-marble-dim break-all flex-1">{result.address}</p>
+              <div className="flex gap-2 shrink-0">
+                <button
+                  onClick={copyAddress}
+                  className="font-cinzel text-xs tracking-wider uppercase px-3 py-2 border border-gold/20 text-marble-muted hover:border-gold/50 hover:text-gold transition-colors"
+                >
+                  {copied ? 'Copied ✓' : 'Copy'}
+                </button>
+                <a
+                  href={`${ETHERSCAN_BASE}/address/${result.address}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-cinzel text-xs tracking-wider uppercase px-3 py-2 bg-gold text-tyrian-deep hover:bg-gold-dim transition-colors whitespace-nowrap"
+                >
+                  Arbiscan ↗
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer links */}
+        <div className="px-5 pb-6 sm:px-8 sm:pb-8 pt-2 border-t border-gold/10 flex gap-6 justify-center">
+          <a
+            href={`${ETHERSCAN_BASE}/address/${CONTRACT_ADDRESS}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors"
+          >
+            View Contract
+          </a>
+          <span className="text-gold/20">•</span>
+          <a
+            href={`${ETHERSCAN_BASE}/address/${result.address}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors"
+          >
+            View Address
+          </a>
+        </div>
+
       </div>
     );
   }

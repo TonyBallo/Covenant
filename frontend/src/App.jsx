@@ -229,6 +229,19 @@ function HomePage() {
         revocationReason = seal.reason || '';
       }
 
+      let treeRootAddr = null;
+      let treeParentAddr = null;
+      let effectiveTierVal = 0;
+
+      if (!verified) {
+        const root = await contract.treeRoot(address);
+        if (root !== ethers.ZeroAddress) {
+          treeRootAddr = root;
+          treeParentAddr = await contract.treeParent(address);
+          effectiveTierVal = Number(await contract.effectiveTier(address));
+        }
+      }
+
       setResult({
         address,
         verified,
@@ -239,6 +252,10 @@ function HomePage() {
         sealId: Number(sealId),
         mintedAt,
         revocationReason,
+        isLinkedWallet: !!treeRootAddr,
+        treeRoot: treeRootAddr,
+        treeParent: treeParentAddr,
+        effectiveTier: effectiveTierVal,
       });
 
     } catch (err) {

@@ -26,7 +26,9 @@ export function StatusPage({ walletAddress }) {
   // Trust tree state
   const [treePosition, setTreePosition] = useState(null);   // { isLinked, effectiveTier, root, parent }
   const [treeChildren, setTreeChildren] = useState([]);      // address[]
+  const [childTiers, setChildTiers] = useState({});          // address → tier number
   const [linkAddress, setLinkAddress] = useState('');
+  const [linkTier, setLinkTier] = useState(1);
   const [treeError, setTreeError] = useState(null);
   const [treeTxPending, setTreeTxPending] = useState(false);
 
@@ -54,6 +56,11 @@ export function StatusPage({ walletAddress }) {
   useEffect(() => {
     if (!walletAddress) navigate('/demo');
   }, [walletAddress, navigate]);
+
+  // Default linkTier to the highest tier this holder can grant
+  useEffect(() => {
+    if (sealData?.tier > 1) setLinkTier(sealData.tier - 1);
+  }, [sealData?.tier]);
 
   // Redirect to ceremony on first visit after minting (once per seal per session)
   useEffect(() => {
@@ -93,7 +100,12 @@ export function StatusPage({ walletAddress }) {
 
           // Load trust tree children for root seal holders
           const children = await contract.getTreeChildren(walletAddress);
+          const tierMap = {};
+          await Promise.all(children.map(async (child) => {
+            tierMap[child] = Number(await contract.effectiveTier(child));
+          }));
           setTreeChildren(children.map(a => a));
+          setChildTiers(tierMap);
         } else {
           // Not a seal holder — check if this is a linked wallet
           const pos = await getTreeStatus(walletAddress);
@@ -114,7 +126,12 @@ export function StatusPage({ walletAddress }) {
       const provider = new ethers.JsonRpcProvider(RPC_URL);
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
       const children = await contract.getTreeChildren(walletAddress);
+      const tierMap = {};
+      await Promise.all(children.map(async (child) => {
+        tierMap[child] = Number(await contract.effectiveTier(child));
+      }));
       setTreeChildren(children.map(a => a));
+      setChildTiers(tierMap);
     } catch { /* non-critical */ }
   };
 
@@ -155,7 +172,7 @@ export function StatusPage({ walletAddress }) {
       const { provider, signer, gasOpts } = await getGuardedSigner();
       const { chainId } = await provider.getNetwork();
 
-      const childTier = sealData.tier - 1;
+      const childTier = linkTier;
       const message = ethers.solidityPackedKeccak256(
         ['address', 'address', 'uint8', 'address', 'uint256'],
         [walletAddress, linkAddress, childTier, walletAddress, chainId]
@@ -471,36 +488,64 @@ export function StatusPage({ walletAddress }) {
           <div className="border border-gold/20 bg-tyrian-darker mt-6 overflow-hidden">
 
             {/* Header */}
-            <div className="bg-tyrian-dark border-b border-gold/25 px-5 py-4 sm:px-8 sm:py-5 flex items-center justify-between">
+            <div className="bg-tyrian-dark border-b border-gold/20 px-5 py-4 sm:px-8 sm:py-5 flex items-center justify-between">
               <div>
                 <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Trust Tree</p>
                 <p className="font-cinzel text-gold tracking-wide">Linked Wallets</p>
               </div>
               <p className="font-mono text-marble-muted text-xs">
-                {treeChildren.length} / {sealData.tier - 1} slots
+                {treeChildren.length} / {sealData.tier - 1} direct
               </p>
+            </div>
+
+            {/* Per-tier branching breakdown */}
+            <div className="border-b border-gold/10 px-5 py-3 sm:px-8 flex items-center gap-3 flex-wrap bg-tyrian-deep/20">
+              {Array.from({ length: sealData.tier }, (_, i) => {
+                const t = sealData.tier - i;
+                const isHolder = t === sealData.tier;
+                const slots = t - 1;
+                return (
+                  <div key={t} className="flex items-center gap-3">
+                    <div className="text-center">
+                      <p className={`font-cinzel text-xs tracking-widest uppercase leading-tight ${isHolder ? 'text-gold' : 'text-marble-muted'}`}>
+                        {TIERS[t]?.name}{isHolder ? ' ✦' : ''}
+                      </p>
+                      <p className="font-mono text-marble-muted/50 text-xs leading-tight mt-0.5">
+                        {slots === 0 ? 'leaf' : `${slots} slot${slots > 1 ? 's' : ''}`}
+                      </p>
+                    </div>
+                    {i < sealData.tier - 1 && (
+                      <span className="text-gold/25 text-sm">→</span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             {/* Children list */}
             {treeChildren.length > 0 && (
               <div className="divide-y divide-gold/10">
-                {treeChildren.map(child => (
-                  <div key={child} className="px-5 py-4 sm:px-8 flex items-center justify-between gap-4">
-                    <div>
-                      <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">
-                        {TIERS[sealData.tier - 1]?.name} — Tier {TIERS[sealData.tier - 1]?.numeral}
-                      </p>
-                      <p className="font-mono text-marble text-xs">{formatAddress(child)}</p>
+                {treeChildren.map(child => {
+                  const ct = childTiers[child];
+                  const ctInfo = ct != null ? TIERS[ct] : null;
+                  return (
+                    <div key={child} className="px-5 py-4 sm:px-8 flex items-center justify-between gap-4">
+                      <div>
+                        <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">
+                          {ctInfo ? `${ctInfo.name} — Tier ${ctInfo.numeral}` : 'Loading…'}
+                        </p>
+                        <p className="font-mono text-marble text-xs">{formatAddress(child)}</p>
+                      </div>
+                      <button
+                        onClick={() => handleUnlinkWallet(child)}
+                        disabled={treeTxPending}
+                        className="font-cinzel text-xs tracking-widest uppercase px-4 py-2 border border-red-800/50 text-red-400 hover:border-red-600 hover:text-red-300 transition-colors disabled:opacity-40 shrink-0"
+                      >
+                        {treeTxPending ? '…' : 'Unlink'}
+                      </button>
                     </div>
-                    <button
-                      onClick={() => handleUnlinkWallet(child)}
-                      disabled={treeTxPending}
-                      className="font-cinzel text-xs tracking-widest uppercase px-4 py-2 border border-red-800/50 text-red-400 hover:border-red-600 hover:text-red-300 transition-colors disabled:opacity-40 shrink-0"
-                    >
-                      {treeTxPending ? '…' : 'Unlink'}
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
@@ -515,8 +560,29 @@ export function StatusPage({ walletAddress }) {
             {treeChildren.length < sealData.tier - 1 && (
               <div className="border-t border-gold/15 px-5 py-5 sm:px-8">
                 <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-3">
-                  Link a {TIERS[sealData.tier - 1]?.name} Wallet
+                  Link a {TIERS[linkTier]?.name} Wallet
                 </p>
+
+                {/* Tier picker — only when the holder has more than one tier option */}
+                {sealData.tier > 2 && (
+                  <div className="flex gap-2 mb-4">
+                    {Array.from({ length: sealData.tier - 1 }, (_, i) => i + 1).map(t => (
+                      <button
+                        key={t}
+                        onClick={() => setLinkTier(t)}
+                        disabled={treeTxPending}
+                        className={`font-cinzel text-xs tracking-widest uppercase px-4 py-2 border transition-colors disabled:opacity-40 ${
+                          linkTier === t
+                            ? 'border-gold text-gold bg-gold/10'
+                            : 'border-gold/20 text-marble-muted hover:border-gold/40 hover:text-marble'
+                        }`}
+                      >
+                        {TIERS[t]?.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 <div className="flex gap-3">
                   <input
                     type="text"
