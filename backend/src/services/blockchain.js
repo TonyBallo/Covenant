@@ -34,31 +34,33 @@ const EXPIRY_BY_TIER = {
  * @param {number} tier             - Verification tier (1–5)
  * @param {string} signature        - ECDSA signature from createMintSignature
  * @param {number} jurisdictionCode - ISO 3166-1 numeric country code, or 0 for global (default: 0)
- * @returns {Object} Transaction receipt { transactionHash, blockNumber, gasUsed }
+ * @param {number|null} expiresAt   - Unix timestamp for expiry, or null to use tier defaults
+ * @returns {Object} Transaction receipt { transactionHash, blockNumber, gasUsed, expiresAt }
  */
-export async function mintSeal(userAddress, tier, signature, jurisdictionCode = 0) {
+export async function mintSeal(userAddress, tier, signature, jurisdictionCode = 0, expiresAt = null) {
   try {
-    // Calculate expiry: 12 months for Tier I, 24 months for Tier II, no expiry otherwise
-    const expiresAt = EXPIRY_BY_TIER[tier]
-      ? Math.floor(Date.now() / 1000) + EXPIRY_BY_TIER[tier]
-      : 0;
+    // Use provided expiry, or fall back to tier defaults (Tier I: 12mo, Tier II: 24mo, else no expiry)
+    const resolvedExpiresAt = expiresAt !== null
+      ? expiresAt
+      : (EXPIRY_BY_TIER[tier] ? Math.floor(Date.now() / 1000) + EXPIRY_BY_TIER[tier] : 0);
 
-    console.log(`⛓️  Minting seal for ${userAddress} tier ${tier} jurisdiction ${jurisdictionCode} expiresAt ${expiresAt || 'never'}...`);
+    console.log(`⛓️  Minting seal for ${userAddress} tier ${tier} jurisdiction ${jurisdictionCode} expiresAt ${resolvedExpiresAt || 'never'}...`);
 
-    const tx = await contract.mint(userAddress, tier, jurisdictionCode, signature, expiresAt, {
+    const tx = await contract.mint(userAddress, tier, jurisdictionCode, signature, resolvedExpiresAt, {
       gasLimit: 300000  // Conservative ceiling; actual usage is ~150–180k
     });
 
     console.log(`📤 Transaction sent: ${tx.hash}`);
-    
+
     const receipt = await tx.wait();
-    
+
     console.log(`✅ Seal minted! Gas used: ${receipt.gasUsed.toString()}`);
 
     return {
       transactionHash: receipt.hash,
       blockNumber: receipt.blockNumber,
-      gasUsed: receipt.gasUsed.toString()
+      gasUsed: receipt.gasUsed.toString(),
+      expiresAt: resolvedExpiresAt,
     };
   } catch (error) {
     console.error('Minting failed:', error);

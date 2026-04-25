@@ -8,6 +8,7 @@ export const CONTRACT_ABI = [
   "function addressToSealId(address user) view returns (uint256)",
   "function sealData(uint256 sealId) view returns (uint8 tier, bytes covenantSignature, uint256 mintedAt, uint256 expiresAt, bool revoked, string revocationReason)",
   "function isValid(address user, uint8 tier) view returns (bool)",
+  "function isExpired(address user) view returns (bool)",
 ];
 
 // Alchemy RPC endpoint for Arbitrum Sepolia — used for all read-only contract calls

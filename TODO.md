@@ -6,6 +6,7 @@
 - [ ] Update `activateTiers.js` to point at new contract address `0xBfCA5341f3c370743d4A64Df7c732113A4f83187`
 
 ## Short-term
+- [ ] **Expired seal renewal workflow** — Currently blocked. An expired user receives correct UI feedback (amber expired state on StatusPage, VendorDemo, and public lookup) but there is no path for them to resubmit for re-verification. The `ApplyForm` rejects addresses that already have a Supabase record, and the contract's `mint()` rejects addresses that already hold a seal token. Full renewal requires: (1) user-initiated burn of the expired seal on-chain, (2) Supabase record reset or a new `renewal` flow that bypasses the duplicate-submission guard, and (3) admin re-approval and remint with a fresh `expiresAt`. Until this is built, expired users should be directed to contact support.
 - [ ] External security audit before any mainnet deployment
 - [ ] JavaScript/TypeScript SDK for vendor protocol integrations
 - [ ] Integration documentation (how vendors call `isValid()` on-chain)

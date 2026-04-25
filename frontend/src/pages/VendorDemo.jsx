@@ -98,35 +98,89 @@ function ProtectedDashboard({ walletAddress }) {
 
 // ============ Access Restricted ============
 
-function AccessRestricted() {
+const DENIAL_COPY = {
+  no_seal: {
+    headline: 'No Covenant seal found for this wallet.',
+    detail: 'Protected Protocol requires a minimum Silver (Tier II) Covenant seal. This wallet has not completed Covenant verification.',
+    cta: 'Get Verified',
+    borderColor: 'border-red-900/50',
+    headerBorder: 'border-red-900/30',
+    headerText: 'text-red-400',
+    badgeBg: 'bg-red-950/40 border-red-900/40',
+    badgeDot: 'bg-red-500',
+    badgeText: 'text-red-400',
+    divider: 'via-red-800/50',
+  },
+  wrong_tier: {
+    headline: 'Insufficient trust tier.',
+    detail: 'Protected Protocol requires a minimum Silver (Tier II) Covenant seal. This wallet holds a seal below the required tier.',
+    cta: 'View Tier Requirements',
+    borderColor: 'border-red-900/50',
+    headerBorder: 'border-red-900/30',
+    headerText: 'text-red-400',
+    badgeBg: 'bg-red-950/40 border-red-900/40',
+    badgeDot: 'bg-red-500',
+    badgeText: 'text-red-400',
+    divider: 'via-red-800/50',
+  },
+  expired: {
+    headline: 'Covenant seal has expired.',
+    detail: 'This wallet\'s Covenant seal is no longer valid. Verification must be renewed before access can be granted.',
+    cta: 'Renew Verification',
+    borderColor: 'border-amber-700/50',
+    headerBorder: 'border-amber-700/30',
+    headerText: 'text-amber-400',
+    badgeBg: 'bg-amber-950/40 border-amber-700/40',
+    badgeDot: 'bg-amber-500',
+    badgeText: 'text-amber-400',
+    divider: 'via-amber-700/50',
+  },
+  revoked: {
+    headline: 'Covenant seal has been revoked.',
+    detail: 'This wallet\'s Covenant seal was revoked and is no longer valid for protocol access. Contact Covenant support if this is unexpected.',
+    cta: null,
+    borderColor: 'border-red-900/50',
+    headerBorder: 'border-red-900/30',
+    headerText: 'text-red-400',
+    badgeBg: 'bg-red-950/40 border-red-900/40',
+    badgeDot: 'bg-red-500',
+    badgeText: 'text-red-400',
+    divider: 'via-red-800/50',
+  },
+};
+
+function AccessRestricted({ reason = 'no_seal' }) {
+  const copy = DENIAL_COPY[reason] ?? DENIAL_COPY.no_seal;
   return (
-    <div className="border border-red-900/50 bg-tyrian-darker overflow-hidden">
-      <div className="bg-tyrian-dark border-b border-red-900/30 px-8 py-5 flex items-center justify-between">
+    <div className={`border ${copy.borderColor} bg-tyrian-darker overflow-hidden`}>
+      <div className={`bg-tyrian-dark border-b ${copy.headerBorder} px-8 py-5 flex items-center justify-between`}>
         <div>
           <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">
             Protected Protocol
           </p>
-          <p className="font-cinzel text-red-400 text-lg tracking-wide">Access Restricted</p>
+          <p className={`font-cinzel ${copy.headerText} text-lg tracking-wide`}>Access Restricted</p>
         </div>
-        <div className="flex items-center gap-2 bg-red-950/40 border border-red-900/40 px-3 py-2">
-          <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-          <span className="font-cinzel text-red-400 text-xs tracking-widest uppercase">Denied</span>
+        <div className={`flex items-center gap-2 ${copy.badgeBg} border px-3 py-2`}>
+          <span className={`w-2 h-2 ${copy.badgeDot} rounded-full`}></span>
+          <span className={`font-cinzel ${copy.badgeText} text-xs tracking-widest uppercase`}>Denied</span>
         </div>
       </div>
       <div className="px-8 py-10 text-center">
-        <div className="w-px h-12 bg-gradient-to-b from-transparent via-red-800/50 to-transparent mx-auto mb-8"></div>
+        <div className={`w-px h-12 bg-gradient-to-b from-transparent ${copy.divider} to-transparent mx-auto mb-8`}></div>
         <p className="font-cormorant text-marble text-2xl italic mb-4 leading-relaxed">
-          Protected Protocol requires a minimum Silver (Tier II) Covenant seal to access this platform.
+          {copy.headline}
         </p>
         <p className="font-cormorant text-marble-muted italic text-lg mb-10">
-          Obtain a Covenant verification seal to unlock access.
+          {copy.detail}
         </p>
-        <Link
-          to="/demo/get-verified"
-          className="font-cinzel text-xs tracking-widest uppercase px-8 py-3 bg-gold text-tyrian-deep hover:bg-gold-dim transition-colors"
-        >
-          Get Verified
-        </Link>
+        {copy.cta && (
+          <Link
+            to="/demo/get-verified"
+            className="font-cinzel text-xs tracking-widest uppercase px-8 py-3 bg-gold text-tyrian-deep hover:bg-gold-dim transition-colors"
+          >
+            {copy.cta}
+          </Link>
+        )}
       </div>
     </div>
   );
@@ -143,6 +197,7 @@ export function VendorDemo() {
   );
   const [checking, setChecking] = useState(false);
   const [accessGranted, setAccessGranted] = useState(null); // null = not yet checked
+  const [denialReason, setDenialReason] = useState(null);
   const [error, setError] = useState(null);
 
   const connectAndCheck = async () => {
@@ -173,6 +228,18 @@ export function VendorDemo() {
       const provider = new ethers.JsonRpcProvider(RPC_URL);
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
       const valid = await contract.isValid(address, 2);
+
+      if (!valid) {
+        const [[verified, , revoked], expired] = await Promise.all([
+          contract.getVerificationStatus(address),
+          contract.isExpired(address),
+        ]);
+        if (!verified) setDenialReason('no_seal');
+        else if (revoked) setDenialReason('revoked');
+        else if (expired) setDenialReason('expired');
+        else setDenialReason('wrong_tier');
+      }
+
       setAccessGranted(valid);
     } catch (err) {
       console.error('Vendor demo check failed:', err);
@@ -262,7 +329,7 @@ export function VendorDemo() {
           <ProtectedDashboard walletAddress={walletAddress} />
         )}
         {!checking && accessGranted === false && (
-          <AccessRestricted />
+          <AccessRestricted reason={denialReason} />
         )}
 
         {/* Integration note */}

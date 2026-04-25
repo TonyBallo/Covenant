@@ -6,7 +6,7 @@ import { createMintSignature } from '../services/signature.js';
 import { mintSeal, getSealId, revokeSeal, getSealInfo } from '../services/blockchain.js';
 import { attestOnPolygon, getPolygonAttestation } from '../services/polygon.js';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 const FRONTEND_URL  = process.env.FRONTEND_URL || 'https://covenant-sigma.vercel.app';
 const ARBISCAN_BASE = 'https://sepolia.arbiscan.io';
@@ -19,11 +19,6 @@ const TIER_LABELS = {
   5: { name: 'Diamond',  numeral: 'V' },
 };
 
-// Expiry durations per tier — mirrors blockchain.js so the email shows the correct date
-const EXPIRY_BY_TIER = {
-  1: 365 * 24 * 60 * 60,
-  2: 2 * 365 * 24 * 60 * 60,
-};
 
 function formatEmailDate(ts) {
   return new Date(ts * 1000).toLocaleDateString('en-US', {
@@ -226,7 +221,7 @@ router.post('/reject/:id', async (req, res) => {
  */
 router.post('/mint', async (req, res) => {
   try {
-    const { submissionId, walletAddress, tier, jurisdictionCode = 0 } = req.body;
+    const { submissionId, walletAddress, tier, jurisdictionCode = 0, expiresAt = null } = req.body;
 
     if (!walletAddress || !tier) {
       return res.status(400).json({
@@ -246,8 +241,8 @@ router.post('/mint', async (req, res) => {
     // Regenerate signature bound to the exact jurisdictionCode being minted
     const signature = await createMintSignature(walletAddress, tier, jurisdictionCode);
 
-    // Mint on-chain
-    const receipt = await mintSeal(walletAddress, tier, signature, jurisdictionCode);
+    // Mint on-chain — expiresAt is null if not provided, blockchain.js applies tier defaults
+    const receipt = await mintSeal(walletAddress, tier, signature, jurisdictionCode, expiresAt);
 
     // Get the seal ID
     const sealId = await getSealId(walletAddress);
@@ -291,15 +286,15 @@ router.post('/mint', async (req, res) => {
       if (submission?.email) {
         const tierLabel  = TIER_LABELS[tier] ?? TIER_LABELS[1];
         const mintedAt   = Math.floor(Date.now() / 1000);
-        const expiryDuration = EXPIRY_BY_TIER[tier];
-        const expiresAt  = expiryDuration ? mintedAt + expiryDuration : null;
+        const emailExpiresAt = receipt.expiresAt || null;
 
         const issuedStr  = formatEmailDate(mintedAt);
-        const expiryStr  = expiresAt ? formatEmailDate(expiresAt) : 'No expiry';
+        const expiryStr  = emailExpiresAt ? formatEmailDate(emailExpiresAt) : 'No expiry';
 
         const statusUrl   = `${FRONTEND_URL}/demo/status`;
         const arbiscanUrl = `${ARBISCAN_BASE}/token/${process.env.CONTRACT_ADDRESS}?a=${sealId}`;
 
+        if (!resend) throw new Error('RESEND_API_KEY not configured');
         await resend.emails.send({
           from: 'Covenant Protocol <noreply@verify.covenantprotocol.io>',
           to: submission.email,

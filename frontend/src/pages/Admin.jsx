@@ -16,6 +16,7 @@ export function Admin() {
   const [rejecting, setRejecting] = useState(null);
   const [polygonStatuses, setPolygonStatuses] = useState({});
   const [attesting, setAttesting] = useState(null);
+  const [expiryDates, setExpiryDates] = useState({});
   const [revoked, setRevoked] = useState([]);
   const [revoking, setRevoking] = useState(null);
   const [lookupAddress, setLookupAddress] = useState('');
@@ -104,11 +105,14 @@ export function Admin() {
     setSuccess(null);
     try {
       const approval = await approveKYC(submission.id);
+      const dateStr = expiryDates[submission.id];
+      const expiresAt = dateStr ? Math.floor(new Date(dateStr).getTime() / 1000) : null;
       const result = await mintSeal({
         submissionId: submission.id,
         walletAddress: submission.wallet_address,
         tier: submission.tier_requested,
-        signature: approval.signature
+        signature: approval.signature,
+        ...(expiresAt !== null && { expiresAt }),
       });
       setSuccess(`Seal #${result.sealId} minted! Tx: ${result.transactionHash}`);
       await fetchData();
@@ -460,6 +464,23 @@ export function Admin() {
 
                     {/* Card Body */}
                     <div className="px-6 py-4 flex flex-col gap-3">
+
+                      {/* Optional expiry date */}
+                      {!isMinted && (
+                        <div>
+                          <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-2">
+                            Expiry Date <span className="normal-case text-marble-muted/50">(optional — leave blank for tier default)</span>
+                          </p>
+                          <input
+                            type="date"
+                            value={expiryDates[submission.id] || ''}
+                            min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
+                            onChange={(e) => setExpiryDates({ ...expiryDates, [submission.id]: e.target.value })}
+                            className="w-full px-4 py-2 bg-tyrian-dark border border-gold/20 text-marble focus:outline-none focus:border-gold/50 font-cormorant text-base transition-colors"
+                          />
+                        </div>
+                      )}
+
                       <button
                         onClick={() => handleMint(submission)}
                         disabled={isMinted || processing === submission.id || attesting === submission.id || rejecting === submission.id}

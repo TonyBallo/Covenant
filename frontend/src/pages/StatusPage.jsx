@@ -21,6 +21,7 @@ export function StatusPage({ walletAddress }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sealAdded, setSealAdded] = useState(false);
+  const [sealExpired, setSealExpired] = useState(false);
   const [walletError, setWalletError] = useState(null);
 
   const addToWallet = async () => {
@@ -75,8 +76,12 @@ export function StatusPage({ walletAddress }) {
 
         if (verified) {
           const sealId = await contract.addressToSealId(walletAddress);
-          const seal = await contract.sealData(sealId);
+          const [seal, expired] = await Promise.all([
+            contract.sealData(sealId),
+            contract.isExpired(walletAddress),
+          ]);
           setSealData({ verified, tier: Number(tier), revoked, burnPending, sealId: Number(sealId), mintedAt: Number(seal.mintedAt), expiresAt: Number(seal.expiresAt) });
+          setSealExpired(expired);
 
           try {
             const chains = await getCrossChainStatus(walletAddress);
@@ -246,14 +251,20 @@ export function StatusPage({ walletAddress }) {
               </div>
               <div>
                 <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Expiry</p>
-                <p className="font-cormorant text-marble text-lg">
-                  {!sealData.expiresAt ? 'No expiry set' : formatDate(sealData.expiresAt)}
-                </p>
+                {!sealData.expiresAt ? (
+                  <p className="font-cormorant text-marble text-lg">No expiry set</p>
+                ) : sealExpired ? (
+                  <p className="font-cormorant text-red-400 text-lg font-semibold">{formatDate(sealData.expiresAt)} — Expired</p>
+                ) : (sealData.expiresAt * 1000 - Date.now()) < 30 * 24 * 60 * 60 * 1000 ? (
+                  <p className="font-cormorant text-amber-400 text-lg">{formatDate(sealData.expiresAt)} — Expiring soon</p>
+                ) : (
+                  <p className="font-cormorant text-marble text-lg">{formatDate(sealData.expiresAt)}</p>
+                )}
               </div>
               <div>
                 <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Status</p>
-                <p className={`font-cormorant text-lg font-semibold ${sealData.revoked ? 'text-red-400' : 'text-gold'}`}>
-                  {sealData.revoked ? 'Revoked' : 'Active'}
+                <p className={`font-cormorant text-lg font-semibold ${sealData.revoked ? 'text-red-400' : sealExpired ? 'text-amber-400' : 'text-gold'}`}>
+                  {sealData.revoked ? 'Revoked' : sealExpired ? 'Expired' : 'Active'}
                 </p>
               </div>
               <div>
@@ -286,6 +297,16 @@ export function StatusPage({ walletAddress }) {
                 <p className="font-cinzel text-red-400 text-xs tracking-widest uppercase mb-1">Trust Seal Revoked</p>
                 <p className="font-cormorant text-red-300 italic text-base">
                   This seal has been revoked and should not be used for protocol access.
+                </p>
+              </div>
+            )}
+
+            {/* Expired warning */}
+            {sealExpired && !sealData.revoked && (
+              <div className="mx-5 mb-5 sm:mx-8 sm:mb-6 border-l-4 border-amber-700 bg-amber-950/20 px-5 py-3">
+                <p className="font-cinzel text-amber-400 text-xs tracking-widest uppercase mb-1">Seal Expired</p>
+                <p className="font-cormorant text-amber-300/80 italic text-base">
+                  This seal has expired and is no longer valid for protocol access. Contact Covenant to renew your verification.
                 </p>
               </div>
             )}

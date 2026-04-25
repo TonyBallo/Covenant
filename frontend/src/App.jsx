@@ -222,11 +222,16 @@ function HomePage() {
 
       let mintedAt = null;
       let revocationReason = '';
+      let expired = false;
 
       if (verified) {
-        const seal = await contract.sealData(sealId);
+        const [seal, isExpiredResult] = await Promise.all([
+          contract.sealData(sealId),
+          contract.isExpired(address),
+        ]);
         mintedAt = Number(seal.mintedAt);
         revocationReason = seal.reason || '';
+        expired = isExpiredResult;
       }
 
       setResult({
@@ -239,6 +244,7 @@ function HomePage() {
         sealId: Number(sealId),
         mintedAt,
         revocationReason,
+        isExpired: expired,
       });
 
     } catch (err) {

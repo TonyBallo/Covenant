@@ -84,9 +84,11 @@ export function ResultDisplay({ result }) {
             <span className={`font-cinzel text-xs tracking-widest uppercase px-3 py-1 border ${
               result.revoked
                 ? 'border-red-800/60 text-red-400 bg-red-950/30'
-                : 'border-gold/40 text-gold bg-gold/10'
+                : result.isExpired
+                  ? 'border-amber-700/60 text-amber-400 bg-amber-950/20'
+                  : 'border-gold/40 text-gold bg-gold/10'
             }`}>
-              {result.revoked ? 'Revoked' : 'Active'}
+              {result.revoked ? 'Revoked' : result.isExpired ? 'Expired' : 'Active'}
             </span>
             {chainStatus.ethereum && (
               <span className="text-gold text-lg font-cinzel" title="Verified on Arbitrum">⟠</span>
@@ -108,7 +110,7 @@ export function ResultDisplay({ result }) {
       )}
 
       {/* Tier row */}
-      <div className={`px-5 py-5 sm:px-8 sm:py-6 border-b border-gold/15 flex items-center gap-4 sm:gap-6 ${result.revoked ? 'bg-red-950/20' : ''}`}>
+      <div className={`px-5 py-5 sm:px-8 sm:py-6 border-b border-gold/15 flex items-center gap-4 sm:gap-6 ${result.revoked ? 'bg-red-950/20' : result.isExpired ? 'bg-amber-950/10' : ''}`}>
         <div className={`font-cinzel text-5xl sm:text-6xl font-bold leading-none ${tierTextClass[tierInfo.color]}`}>
           {tierInfo.numeral}
         </div>
@@ -125,6 +127,10 @@ export function ResultDisplay({ result }) {
         {result.revoked ? (
           <p className="font-cormorant text-red-300/80 italic text-lg leading-relaxed">
             This wallet's Covenant seal has been revoked. Trust standing is no longer valid. Do not rely on this wallet for compliance-sensitive interactions.
+          </p>
+        ) : result.isExpired ? (
+          <p className="font-cormorant text-amber-300/80 italic text-lg leading-relaxed">
+            This wallet's Covenant seal has expired. Verification is no longer active. The wallet holder must renew their verification to regain trust standing.
           </p>
         ) : (
           <p className="font-cormorant text-marble-muted italic text-lg leading-relaxed">
@@ -145,8 +151,8 @@ export function ResultDisplay({ result }) {
         </div>
         <div>
           <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Status</p>
-          <p className={`font-cormorant text-lg font-semibold ${result.revoked ? 'text-red-400' : 'text-gold'}`}>
-            {result.revoked ? 'Revoked' : 'Active'}
+          <p className={`font-cormorant text-lg font-semibold ${result.revoked ? 'text-red-400' : result.isExpired ? 'text-amber-400' : 'text-gold'}`}>
+            {result.revoked ? 'Revoked' : result.isExpired ? 'Expired' : 'Active'}
           </p>
         </div>
         <div>
@@ -189,6 +195,15 @@ export function ResultDisplay({ result }) {
           <p className="font-cinzel text-red-400 text-xs tracking-widest uppercase mb-1">Trust Seal Revoked</p>
           <p className="font-cormorant text-red-300 italic text-base">
             This seal has been revoked and should not be trusted for protocol access.
+          </p>
+        </div>
+      )}
+
+      {result.isExpired && !result.revoked && (
+        <div className="mx-5 mb-5 sm:mx-8 sm:mb-6 border-l-4 border-amber-700 bg-amber-950/20 px-5 py-3">
+          <p className="font-cinzel text-amber-400 text-xs tracking-widest uppercase mb-1">Seal Expired</p>
+          <p className="font-cormorant text-amber-300/80 italic text-base">
+            This seal is no longer valid for protocol access. The wallet holder must renew their Covenant verification.
           </p>
         </div>
       )}
