@@ -25,7 +25,7 @@ Covenant is a membership protocol for simplified trust. It exists because the wa
 
 ## Current Status
 
-**Version:** 2.2
+**Version:** 2.3
 **Test Coverage:** 41 tests passing, 100% statement/function/line coverage, 82% branch coverage
 **Deployment:** Live on Arbitrum Sepolia testnet + Polygon Amoy
 **Next Steps:** Security audit, then mainnet launch
@@ -259,6 +259,7 @@ POST /api/admin/reject/:id             # Reject with reason
 POST /api/admin/mint                   # Mint seal on Arbitrum Sepolia
 POST /api/admin/attest/:id             # Attest seal on Polygon Amoy
 POST /api/admin/revoke                 # Revoke an existing seal
+POST /api/admin/upgrade                # Execute tier upgrade on Arbitrum Sepolia
 ```
 
 ### Health Check
@@ -392,7 +393,16 @@ await pact.executeBurn(sealId);       // Execute after 90 days
 - ✅ About page, updated docs content, trust-first language throughout
 - ✅ BSL 1.1 license added
 
-### v2.3 — Audit & SDK 🔨 (NEXT)
+### v2.3 — Seal Attributes & Upgrade Flow ✅ (COMPLETE)
+- ✅ User-initiated burn flow with 90-day countdown (StatusPage)
+- ✅ Tier upgrade application flow (user-facing: StatusPage → TierSelect → ApplyForm)
+- ✅ Admin tier upgrade execution (Pending tab badge + Ready-to-Mint Execute Upgrade button)
+- ✅ Jurisdiction code surfaced in StatusPage, ResultDisplay, and admin mint form
+- ✅ Covenant signature exposed as collapsible on-chain proof section
+- ✅ Address normalization for public seal lookup (EIP-55 case-insensitive)
+- ✅ VendorDemo denial reason specificity
+
+### v2.4 — Audit & SDK 🔨 (NEXT)
 - [ ] External security audit
 - [ ] JavaScript/TypeScript SDK for vendor integrations
 - [ ] Mainnet deployment (Arbitrum, Polygon, Base)
@@ -454,5 +464,5 @@ Security audit scheduled for Q2 2026 before mainnet deployment.
 
 ---
 
-*Last Updated: March 2026*
-*Version: 2.2*
+*Last Updated: April 2026*
+*Version: 2.3*

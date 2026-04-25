@@ -4,10 +4,10 @@ import { Resend } from 'resend';
 import crypto from 'crypto';
 import { supabase } from '../server.js';
 import { createMintSignature } from '../services/signature.js';
-import { hasSeal } from '../services/blockchain.js';
+import { getSealInfo } from '../services/blockchain.js';
 
 const router = express.Router();
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 // Frontend URL used for email verification redirect after clicking the link.
 // Must point to the deployed frontend (Vercel). Falls back to the primary deployment.
@@ -38,12 +38,16 @@ router.post('/submit', submitLimiter, async (req, res) => {
       });
     }
 
-    // Check if address already has a seal
-    const alreadyHasSeal = await hasSeal(walletAddress);
-    if (alreadyHasSeal) {
-      return res.status(400).json({ 
-        error: 'Address already has a seal' 
-      });
+    // Check on-chain seal state to gate new applications vs upgrade applications
+    const sealInfo = await getSealInfo(walletAddress);
+    if (sealInfo.found) {
+      if (sealInfo.revoked) {
+        return res.status(400).json({ error: 'Address has a revoked seal and cannot apply' });
+      }
+      if (tierRequested <= sealInfo.tier) {
+        return res.status(400).json({ error: 'Address already has a seal at this tier or higher' });
+      }
+      // tier_requested > current tier — valid upgrade application, fall through
     }
 
     // Check if already submitted (pending)
@@ -118,6 +122,7 @@ router.post('/submit', submitLimiter, async (req, res) => {
     const magicLink = `${process.env.BACKEND_URL || 'https://covenant-production-4cf7.up.railway.app'}/api/kyc/verify/${verificationToken}`;
     
     try {
+      if (!resend) throw new Error('RESEND_API_KEY not configured');
       await resend.emails.send({
         from: 'Covenant Protocol <noreply@verify.covenantprotocol.io>',
         to: email,

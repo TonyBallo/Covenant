@@ -1,4 +1,4 @@
-import { TIERS, formatDate } from '../utils/constants';
+import { TIERS, formatDate, formatJurisdiction } from '../utils/constants';
 import { ETHERSCAN_BASE, CONTRACT_ADDRESS } from '../utils/contract';
 import { getCrossChainStatus } from '../utils/api';
 import { useState, useEffect } from 'react';
@@ -24,6 +24,8 @@ const tierTextClass = {
 export function ResultDisplay({ result }) {
   const [chainStatus, setChainStatus] = useState({ ethereum: true, polygon: false });
   const [copied, setCopied] = useState(false);
+  const [showSignature, setShowSignature] = useState(false);
+  const [sigCopied, setSigCopied] = useState(false);
 
   const copyAddress = () => {
     navigator.clipboard.writeText(result.address);
@@ -84,9 +86,11 @@ export function ResultDisplay({ result }) {
             <span className={`font-cinzel text-xs tracking-widest uppercase px-3 py-1 border ${
               result.revoked
                 ? 'border-red-800/60 text-red-400 bg-red-950/30'
-                : 'border-gold/40 text-gold bg-gold/10'
+                : result.isExpired
+                  ? 'border-amber-700/60 text-amber-400 bg-amber-950/20'
+                  : 'border-gold/40 text-gold bg-gold/10'
             }`}>
-              {result.revoked ? 'Revoked' : 'Active'}
+              {result.revoked ? 'Revoked' : result.isExpired ? 'Expired' : 'Active'}
             </span>
             {chainStatus.ethereum && (
               <span className="text-gold text-lg font-cinzel" title="Verified on Arbitrum">⟠</span>
@@ -108,7 +112,7 @@ export function ResultDisplay({ result }) {
       )}
 
       {/* Tier row */}
-      <div className={`px-5 py-5 sm:px-8 sm:py-6 border-b border-gold/15 flex items-center gap-4 sm:gap-6 ${result.revoked ? 'bg-red-950/20' : ''}`}>
+      <div className={`px-5 py-5 sm:px-8 sm:py-6 border-b border-gold/15 flex items-center gap-4 sm:gap-6 ${result.revoked ? 'bg-red-950/20' : result.isExpired ? 'bg-amber-950/10' : ''}`}>
         <div className={`font-cinzel text-5xl sm:text-6xl font-bold leading-none ${tierTextClass[tierInfo.color]}`}>
           {tierInfo.numeral}
         </div>
@@ -125,6 +129,10 @@ export function ResultDisplay({ result }) {
         {result.revoked ? (
           <p className="font-cormorant text-red-300/80 italic text-lg leading-relaxed">
             This wallet's Covenant seal has been revoked. Trust standing is no longer valid. Do not rely on this wallet for compliance-sensitive interactions.
+          </p>
+        ) : result.isExpired ? (
+          <p className="font-cormorant text-amber-300/80 italic text-lg leading-relaxed">
+            This wallet's Covenant seal has expired. Verification is no longer active. The wallet holder must renew their verification to regain trust standing.
           </p>
         ) : (
           <p className="font-cormorant text-marble-muted italic text-lg leading-relaxed">
@@ -145,14 +153,20 @@ export function ResultDisplay({ result }) {
         </div>
         <div>
           <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Status</p>
-          <p className={`font-cormorant text-lg font-semibold ${result.revoked ? 'text-red-400' : 'text-gold'}`}>
-            {result.revoked ? 'Revoked' : 'Active'}
+          <p className={`font-cormorant text-lg font-semibold ${result.revoked ? 'text-red-400' : result.isExpired ? 'text-amber-400' : 'text-gold'}`}>
+            {result.revoked ? 'Revoked' : result.isExpired ? 'Expired' : 'Active'}
           </p>
         </div>
         <div>
           <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Burn Status</p>
           <p className={`font-cormorant text-lg font-semibold ${result.burnPending ? 'text-gold/70' : 'text-marble-muted'}`}>
             {result.burnPending ? 'Pending' : 'None'}
+          </p>
+        </div>
+        <div>
+          <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Jurisdiction</p>
+          <p className="font-cormorant text-marble text-lg">
+            {(() => { const j = formatJurisdiction(result.jurisdictionCode ?? 0); return `${j.flag} ${j.label}`; })()}
           </p>
         </div>
       </div>
@@ -190,6 +204,20 @@ export function ResultDisplay({ result }) {
           <p className="font-cormorant text-red-300 italic text-base">
             This seal has been revoked and should not be trusted for protocol access.
           </p>
+          {result.revocationReason && (
+            <p className="font-cormorant text-red-300/70 italic text-sm mt-2">
+              Reason: {result.revocationReason}
+            </p>
+          )}
+        </div>
+      )}
+
+      {result.isExpired && !result.revoked && (
+        <div className="mx-5 mb-5 sm:mx-8 sm:mb-6 border-l-4 border-amber-700 bg-amber-950/20 px-5 py-3">
+          <p className="font-cinzel text-amber-400 text-xs tracking-widest uppercase mb-1">Seal Expired</p>
+          <p className="font-cormorant text-amber-300/80 italic text-base">
+            This seal is no longer valid for protocol access. The wallet holder must renew their Covenant verification.
+          </p>
         </div>
       )}
 
@@ -199,6 +227,39 @@ export function ResultDisplay({ result }) {
           <p className="font-cormorant text-gold/70 italic text-base">
             The owner has requested deletion of this seal. After the 90-day delay, it will be permanently removed.
           </p>
+        </div>
+      )}
+
+      {/* Covenant Signature — collapsible */}
+      {result.covenantSignature && result.covenantSignature !== '0x' && (
+        <div className="mx-5 mb-5 sm:mx-8 sm:mb-6 border border-gold/10 bg-tyrian-dark">
+          <button
+            className="w-full flex items-center justify-between px-5 py-3 text-left"
+            onClick={() => setShowSignature(v => !v)}
+          >
+            <span className="font-cinzel text-marble-muted text-xs tracking-widest uppercase">Covenant Signature</span>
+            <span className="font-cinzel text-marble-muted text-xs tracking-widest">{showSignature ? '▲' : '▼'}</span>
+          </button>
+          {showSignature && (
+            <div className="px-5 pb-5 border-t border-gold/10 pt-4">
+              <p className="font-cormorant text-marble-muted italic text-sm mb-3">
+                The ECDSA signature issued by Covenant Protocol at mint time. Stored permanently on-chain and used to verify this seal was authorised by the issuer.
+              </p>
+              <div className="bg-tyrian-darker border border-gold/10 px-4 py-3 break-all font-mono text-xs text-marble-muted/70 leading-relaxed">
+                {result.covenantSignature}
+              </div>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(result.covenantSignature);
+                  setSigCopied(true);
+                  setTimeout(() => setSigCopied(false), 2000);
+                }}
+                className="mt-3 font-cinzel text-xs tracking-widest uppercase px-4 py-2 border border-gold/20 text-marble-muted hover:border-gold/40 hover:text-gold transition-colors"
+              >
+                {sigCopied ? 'Copied ✓' : 'Copy Signature'}
+              </button>
+            </div>
+          )}
         </div>
       )}
 

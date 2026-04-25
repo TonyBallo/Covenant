@@ -208,29 +208,43 @@ function HomePage() {
     setResult(null);
 
     try {
-      if (!ethers.isAddress(address)) {
-        throw new Error('Invalid Ethereum address format');
+      // Normalize to checksummed form — accepts all-lowercase or wrong-case addresses.
+      // Truly invalid input (wrong length, non-hex) will throw and be caught below.
+      let normalized;
+      try {
+        normalized = ethers.getAddress(address);
+      } catch {
+        normalized = ethers.getAddress(address.toLowerCase());
       }
 
       const provider = new ethers.JsonRpcProvider(RPC_URL);
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
 
       const [verified, tier, revoked, burnPending, burnExecutableAt] =
-        await contract.getVerificationStatus(address);
+        await contract.getVerificationStatus(normalized);
 
-      const sealId = await contract.addressToSealId(address);
+      const sealId = await contract.addressToSealId(normalized);
 
       let mintedAt = null;
       let revocationReason = '';
+      let expired = false;
 
+      let jurisdictionCode = 0;
+      let covenantSignature = null;
       if (verified) {
-        const seal = await contract.sealData(sealId);
+        const [seal, isExpiredResult] = await Promise.all([
+          contract.sealData(sealId),
+          contract.isExpired(normalized),
+        ]);
         mintedAt = Number(seal.mintedAt);
-        revocationReason = seal.reason || '';
+        revocationReason = seal.revocationReason || '';
+        expired = isExpiredResult;
+        jurisdictionCode = Number(seal.jurisdictionCode);
+        covenantSignature = seal.covenantSignature;
       }
 
       setResult({
-        address,
+        address: normalized,
         verified,
         tier: Number(tier),
         revoked,
@@ -239,12 +253,15 @@ function HomePage() {
         sealId: Number(sealId),
         mintedAt,
         revocationReason,
+        isExpired: expired,
+        jurisdictionCode,
+        covenantSignature,
       });
 
     } catch (err) {
       console.error('Search error:', err);
       let errorMessage = 'Failed to fetch verification status';
-      if (err.message.includes('Invalid address')) {
+      if (err.message.includes('invalid address') || err.message.includes('invalid BytesLike') || err.message.includes('bad address')) {
         errorMessage = 'Please enter a valid Ethereum address (should start with 0x)';
       } else if (err.message.includes('network')) {
         errorMessage = 'Network error — please check your internet connection';

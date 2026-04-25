@@ -3,10 +3,10 @@ import rateLimit from 'express-rate-limit';
 import { Resend } from 'resend';
 import { supabase } from '../server.js';
 import { createMintSignature } from '../services/signature.js';
-import { mintSeal, getSealId, revokeSeal, getSealInfo } from '../services/blockchain.js';
+import { mintSeal, getSealId, revokeSeal, getSealInfo, getActiveBurnRequests, upgradeSeal } from '../services/blockchain.js';
 import { attestOnPolygon, getPolygonAttestation } from '../services/polygon.js';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 const FRONTEND_URL  = process.env.FRONTEND_URL || 'https://covenant-sigma.vercel.app';
 const ARBISCAN_BASE = 'https://sepolia.arbiscan.io';
@@ -19,11 +19,6 @@ const TIER_LABELS = {
   5: { name: 'Diamond',  numeral: 'V' },
 };
 
-// Expiry durations per tier — mirrors blockchain.js so the email shows the correct date
-const EXPIRY_BY_TIER = {
-  1: 365 * 24 * 60 * 60,
-  2: 2 * 365 * 24 * 60 * 60,
-};
 
 function formatEmailDate(ts) {
   return new Date(ts * 1000).toLocaleDateString('en-US', {
@@ -67,16 +62,26 @@ router.get('/pending', async (req, res) => {
 
     if (error) throw error;
 
+    // Enrich each submission with on-chain seal info to flag upgrade applications
+    const enriched = await Promise.all((submissions || []).map(async (sub) => {
+      const info = await getSealInfo(sub.wallet_address).catch(() => ({ found: false }));
+      return {
+        ...sub,
+        isUpgradeRequest: info.found && !info.revoked,
+        currentTier: info.found ? info.tier : null,
+      };
+    }));
+
     res.json({
-      count: submissions.length,
-      submissions
+      count: enriched.length,
+      submissions: enriched,
     });
 
   } catch (error) {
     console.error('Failed to get pending submissions:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to fetch pending submissions',
-      details: error.message 
+      details: error.message
     });
   }
 });
@@ -226,7 +231,7 @@ router.post('/reject/:id', async (req, res) => {
  */
 router.post('/mint', async (req, res) => {
   try {
-    const { submissionId, walletAddress, tier, jurisdictionCode = 0 } = req.body;
+    const { submissionId, walletAddress, tier, jurisdictionCode = 0, expiresAt = null } = req.body;
 
     if (!walletAddress || !tier) {
       return res.status(400).json({
@@ -246,8 +251,8 @@ router.post('/mint', async (req, res) => {
     // Regenerate signature bound to the exact jurisdictionCode being minted
     const signature = await createMintSignature(walletAddress, tier, jurisdictionCode);
 
-    // Mint on-chain
-    const receipt = await mintSeal(walletAddress, tier, signature, jurisdictionCode);
+    // Mint on-chain — expiresAt is null if not provided, blockchain.js applies tier defaults
+    const receipt = await mintSeal(walletAddress, tier, signature, jurisdictionCode, expiresAt);
 
     // Get the seal ID
     const sealId = await getSealId(walletAddress);
@@ -291,15 +296,15 @@ router.post('/mint', async (req, res) => {
       if (submission?.email) {
         const tierLabel  = TIER_LABELS[tier] ?? TIER_LABELS[1];
         const mintedAt   = Math.floor(Date.now() / 1000);
-        const expiryDuration = EXPIRY_BY_TIER[tier];
-        const expiresAt  = expiryDuration ? mintedAt + expiryDuration : null;
+        const emailExpiresAt = receipt.expiresAt || null;
 
         const issuedStr  = formatEmailDate(mintedAt);
-        const expiryStr  = expiresAt ? formatEmailDate(expiresAt) : 'No expiry';
+        const expiryStr  = emailExpiresAt ? formatEmailDate(emailExpiresAt) : 'No expiry';
 
         const statusUrl   = `${FRONTEND_URL}/demo/status`;
         const arbiscanUrl = `${ARBISCAN_BASE}/token/${process.env.CONTRACT_ADDRESS}?a=${sealId}`;
 
+        if (!resend) throw new Error('RESEND_API_KEY not configured');
         await resend.emails.send({
           from: 'Covenant Protocol <noreply@verify.covenantprotocol.io>',
           to: submission.email,
@@ -528,6 +533,7 @@ router.post('/revoke', async (req, res) => {
         .from('kyc_submissions')
         .update({
           status: 'revoked',
+          rejection_reason: reason,
           reviewed_at: new Date().toISOString()
         })
         .eq('wallet_address', walletAddress);
@@ -557,6 +563,42 @@ router.post('/revoke', async (req, res) => {
 });
 
 /**
+ * Upgrade a seal's tier on-chain
+ * POST /api/admin/upgrade  { sealId, newTier, jurisdictionCode? }
+ */
+router.post('/upgrade', async (req, res) => {
+  try {
+    const { sealId, newTier, jurisdictionCode = 0, submissionId } = req.body;
+
+    if (!sealId || !newTier) {
+      return res.status(400).json({ error: 'Missing required fields: sealId, newTier' });
+    }
+
+    const receipt = await upgradeSeal(Number(sealId), Number(newTier), Number(jurisdictionCode));
+
+    // If this upgrade was triggered from a KYC submission, mark it as minted
+    if (submissionId) {
+      await supabase
+        .from('kyc_submissions')
+        .update({ status: 'minted', reviewed_at: new Date().toISOString() })
+        .eq('id', submissionId);
+    }
+
+    res.json({
+      success: true,
+      sealId: Number(sealId),
+      newTier: receipt.newTier,
+      walletAddress: receipt.walletAddress,
+      transactionHash: receipt.transactionHash,
+      message: `Seal #${sealId} upgraded to Tier ${receipt.newTier}`,
+    });
+  } catch (error) {
+    console.error('Upgrade failed:', error);
+    res.status(500).json({ error: 'Failed to upgrade seal', details: error.message });
+  }
+});
+
+/**
  * Get all revoked submissions
  * GET /api/admin/revoked
  */
@@ -582,6 +624,7 @@ router.get('/revoked', async (_req, res) => {
         ...sub,
         sealId: seal?.seal_id || null,
         sealTier: seal?.tier || sub.tier_requested,
+        revocationReason: sub.rejection_reason || null,
       };
     }));
 
@@ -608,6 +651,21 @@ router.get('/seal/:address', async (req, res) => {
   } catch (error) {
     console.error('Seal lookup failed:', error);
     res.status(500).json({ error: 'Failed to look up seal', details: error.message });
+  }
+});
+
+/**
+ * List all seals with an active burn request, driven by on-chain events.
+ * Does not rely on Supabase — catches seals minted via script or any other path.
+ * GET /api/admin/pending-burns
+ */
+router.get('/pending-burns', async (_req, res) => {
+  try {
+    const seals = await getActiveBurnRequests();
+    res.json({ count: seals.length, seals });
+  } catch (error) {
+    console.error('Failed to get active burn requests:', error);
+    res.status(500).json({ error: 'Failed to fetch burning seals', details: error.message });
   }
 });
 
@@ -659,25 +717,37 @@ router.get('/ready-to-mint', async (req, res) => {
 
     for (const submission of approved) {
       try {
-        const sealId = await getSealId(submission.wallet_address);
+        const sealInfo = await getSealInfo(submission.wallet_address).catch(() => ({ found: false }));
         const polygonStatus = await getPolygonAttestation(submission.wallet_address);
 
-        const isMinted = sealId > 0;
+        const existingSealId = sealInfo.found ? sealInfo.sealId : 0;
+        const currentTier    = sealInfo.found ? sealInfo.tier : 0;
+
+        // An upgrade request is one where the address already has a seal
+        // and the requested tier is higher than the current on-chain tier.
+        const isUpgradeRequest = sealInfo.found && !sealInfo.revoked && submission.tier_requested > currentTier;
+
+        const isMinted   = !isUpgradeRequest && existingSealId > 0;
+        const isUpgraded = isUpgradeRequest && currentTier >= submission.tier_requested;
         const needsAttestation = !polygonStatus.hasAttestation;
 
-        // Keep in list if either action is still pending
-        if (!isMinted || needsAttestation) {
+        // Keep in list if the primary action (mint or upgrade) or attestation is still pending
+        const actionDone = isUpgradeRequest ? isUpgraded : isMinted;
+        if (!actionDone || needsAttestation) {
           readyToMint.push({
             ...submission,
-            isMinted,
-            sealId: isMinted ? sealId : null
+            isUpgradeRequest,
+            currentTier,
+            currentSealId: existingSealId || null,
+            isMinted: isUpgradeRequest ? isUpgraded : isMinted,
+            sealId: existingSealId || null,
           });
         }
       } catch (checkError) {
         console.error(`Error checking ${submission.wallet_address}:`, checkError);
-        // Include submission even if check fails - better to show it than hide it
         readyToMint.push({
           ...submission,
+          isUpgradeRequest: false,
           isMinted: false,
           sealId: null
         });

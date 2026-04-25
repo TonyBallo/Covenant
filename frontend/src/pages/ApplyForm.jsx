@@ -1,13 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { submitKYC } from '../utils/api';
+import { TIERS } from '../utils/constants';
 
 export function ApplyForm({ walletAddress, walletConnected }) {
+  const location = useLocation();
+  const isUpgrade = location.state?.isUpgrade === true;
+  const currentTier = location.state?.currentTier ?? 0;
+  const tierRequested = location.state?.tierRequested ?? 1;
+
   const [formData, setFormData] = useState({
     walletAddress: walletAddress || '',
     fullName: '',
     email: '',
-    tierRequested: 1
+    tierRequested,
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -35,6 +41,9 @@ export function ApplyForm({ walletAddress, walletConnected }) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const requestedTierInfo = TIERS[tierRequested];
+  const currentTierInfo = TIERS[currentTier];
+
   if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center px-6 py-16">
@@ -42,7 +51,7 @@ export function ApplyForm({ walletAddress, walletConnected }) {
           <div className="w-px h-10 bg-gradient-to-b from-transparent via-gold/50 to-transparent mx-auto mb-8"></div>
           <h2 className="font-cinzel text-marble text-2xl tracking-wide mb-4">Check Your Email</h2>
           <p className="font-cormorant text-marble-dim italic text-xl leading-relaxed mb-3">
-            We've sent a verification link to your email address. Click it to confirm your application.
+            We've sent a verification link to your email address. Click it to confirm your {isUpgrade ? 'upgrade' : 'application'}.
           </p>
           <p className="font-cormorant text-marble-muted italic text-base mb-8">
             The link expires in 15 minutes. Check your spam folder if needed.
@@ -63,16 +72,37 @@ export function ApplyForm({ walletAddress, walletConnected }) {
       <div className="max-w-xl mx-auto">
 
         <div className="text-center mb-10">
-          <Link to="/demo/get-verified" className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors mb-6 inline-block">
+          <Link to="/demo/get-verified" state={isUpgrade ? { upgrade: true, currentTier } : undefined} className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors mb-6 inline-block">
             ← Back to Tiers
           </Link>
-          <div className="inline-flex items-center gap-2 border border-gold/40 text-gold bg-gold/10 px-5 py-1.5 font-cinzel text-xs tracking-widest uppercase mb-5">
-            Tier I — Bronze Verification
-          </div>
-          <h1 className="font-cinzel text-marble text-3xl tracking-wide mb-3">Apply for Verification</h1>
-          <p className="font-cormorant text-marble-muted italic text-lg">
-            Basic email verification. Review typically takes 1–2 business days.
-          </p>
+
+          {isUpgrade ? (
+            <>
+              <div className="flex items-center justify-center gap-3 mb-5">
+                <div className="inline-flex items-center gap-2 border border-gold/20 text-marble-muted bg-tyrian-dark px-4 py-1.5 font-cinzel text-xs tracking-widest uppercase">
+                  Tier {currentTier} — {currentTierInfo?.name}
+                </div>
+                <span className="font-cinzel text-gold/60 text-xs">→</span>
+                <div className="inline-flex items-center gap-2 border border-gold/40 text-gold bg-gold/10 px-4 py-1.5 font-cinzel text-xs tracking-widest uppercase">
+                  Tier {tierRequested} — {requestedTierInfo?.name}
+                </div>
+              </div>
+              <h1 className="font-cinzel text-marble text-3xl tracking-wide mb-3">Apply for Tier Upgrade</h1>
+              <p className="font-cormorant text-marble-muted italic text-lg">
+                Your existing seal will be upgraded upon approval. Submit your information to begin.
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="inline-flex items-center gap-2 border border-gold/40 text-gold bg-gold/10 px-5 py-1.5 font-cinzel text-xs tracking-widest uppercase mb-5">
+                Tier {tierRequested} — {requestedTierInfo?.name} Verification
+              </div>
+              <h1 className="font-cinzel text-marble text-3xl tracking-wide mb-3">Apply for Verification</h1>
+              <p className="font-cormorant text-marble-muted italic text-lg">
+                Basic email verification. Review typically takes 1–2 business days.
+              </p>
+            </>
+          )}
         </div>
 
         <div className="border border-gold/20 bg-tyrian-darker p-8">
@@ -98,7 +128,7 @@ export function ApplyForm({ walletAddress, walletConnected }) {
                 </div>
               )}
               <p className="font-cormorant text-marble-muted/60 italic text-sm mt-1">
-                The address that will receive the verification seal.
+                The address that holds your existing seal.
               </p>
             </div>
 
@@ -148,7 +178,7 @@ export function ApplyForm({ walletAddress, walletConnected }) {
               disabled={loading || !walletConnected}
               className="w-full font-cinzel text-xs tracking-widest uppercase py-4 bg-gold text-tyrian-deep font-semibold hover:bg-gold-dim disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Submitting…' : 'Submit Application'}
+              {loading ? 'Submitting…' : isUpgrade ? 'Submit Upgrade Request' : 'Submit Application'}
             </button>
 
             {!walletConnected && (
