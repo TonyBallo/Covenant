@@ -1,15 +1,15 @@
-// Railway backend base URL. All fetch calls in this file route through here.
-// Update this if the Railway deployment URL changes.
-const API_BASE_URL = 'https://covenant-production-4cf7.up.railway.app';
+// Backend base URL. Falls back to Railway production if VITE_API_URL is not set.
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://covenant-production-4cf7.up.railway.app';
 
 // Set by Admin.jsx on successful login. Never stored in the bundle.
 let _adminSecret = '';
 export function setAdminSecret(secret) { _adminSecret = secret; }
 
 // Sent as a header on every admin request. Verified server-side against ADMIN_SECRET.
+// Falls back to sessionStorage so Vite HMR module reloads don't silently clear the secret.
 const ADMIN_HEADERS = () => ({
   'Content-Type': 'application/json',
-  'x-admin-secret': _adminSecret,
+  'x-admin-secret': _adminSecret || sessionStorage.getItem('admin-secret') || '',
 });
 /**
  * Submit KYC application
@@ -191,6 +191,19 @@ export async function getRevokedSeals() {
 
   if (!response.ok) {
     throw new Error('Failed to get revoked seals');
+  }
+
+  return response.json();
+}
+
+/**
+ * Get all seals with a pending burn request (admin only)
+ */
+export async function getPendingBurns() {
+  const response = await fetch(`${API_BASE_URL}/api/admin/pending-burns`, { headers: ADMIN_HEADERS() });
+
+  if (!response.ok) {
+    throw new Error('Failed to get pending burns');
   }
 
   return response.json();

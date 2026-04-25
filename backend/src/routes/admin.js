@@ -3,7 +3,7 @@ import rateLimit from 'express-rate-limit';
 import { Resend } from 'resend';
 import { supabase } from '../server.js';
 import { createMintSignature } from '../services/signature.js';
-import { mintSeal, getSealId, revokeSeal, getSealInfo } from '../services/blockchain.js';
+import { mintSeal, getSealId, revokeSeal, getSealInfo, getActiveBurnRequests } from '../services/blockchain.js';
 import { attestOnPolygon, getPolygonAttestation } from '../services/polygon.js';
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
@@ -603,6 +603,21 @@ router.get('/seal/:address', async (req, res) => {
   } catch (error) {
     console.error('Seal lookup failed:', error);
     res.status(500).json({ error: 'Failed to look up seal', details: error.message });
+  }
+});
+
+/**
+ * List all seals with an active burn request, driven by on-chain events.
+ * Does not rely on Supabase — catches seals minted via script or any other path.
+ * GET /api/admin/pending-burns
+ */
+router.get('/pending-burns', async (_req, res) => {
+  try {
+    const seals = await getActiveBurnRequests();
+    res.json({ count: seals.length, seals });
+  } catch (error) {
+    console.error('Failed to get active burn requests:', error);
+    res.status(500).json({ error: 'Failed to fetch burning seals', details: error.message });
   }
 });
 

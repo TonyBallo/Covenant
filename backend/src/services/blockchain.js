@@ -9,18 +9,27 @@ const CONTRACT_ABI = [
   "function revoke(uint256 sealId, string reason)",
   "function getVerificationStatus(address user) view returns (bool verified, uint8 tier, bool revoked, bool burnPending, uint256 burnExecutableAt)",
   "function addressToSealId(address user) view returns (uint256)",
+  "function adminBurn(uint256 sealId) external",
+  "function sealData(uint256 sealId) view returns (uint8 tier, bytes covenantSignature, uint256 mintedAt, uint256 expiresAt, bool revoked, string revocationReason)",
+  "event BurnRequested(uint256 indexed sealId, address indexed owner, uint256 executableAt)",
+  "event BurnCancelled(uint256 indexed sealId, address indexed owner)",
+  "event SealBurned(uint256 indexed sealId, address indexed owner)",
 ];
 
-// Arbitrum Sepolia provider and deployer wallet (used for all state-changing calls)
+// Approximate block at contract deployment (Arbitrum Sepolia, Mar-28-2026).
+// Used as fromBlock for event queries to avoid scanning the entire chain.
+const DEPLOY_BLOCK = 250_000_000;
+
+// Alchemy provider — used for all state-changing calls (mint, revoke, etc.)
 const provider = new ethers.JsonRpcProvider(process.env.ARBITRUM_SEPOLIA_RPC_URL);
 const wallet = new ethers.Wallet(process.env.OWNER_PRIVATE_KEY, provider);
+const contract = new ethers.Contract(process.env.CONTRACT_ADDRESS, CONTRACT_ABI, wallet);
 
-// Create contract instance
-const contract = new ethers.Contract(
-  process.env.CONTRACT_ADDRESS,
-  CONTRACT_ABI,
-  wallet
-);
+// Public RPC — used for event log queries only.
+// Alchemy free tier caps eth_getLogs at a 10-block range; the public endpoint has no such limit.
+const PUBLIC_RPC_URL = 'https://sepolia-rollup.arbitrum.io/rpc';
+const eventProvider = new ethers.JsonRpcProvider(PUBLIC_RPC_URL);
+const eventContract = new ethers.Contract(process.env.CONTRACT_ADDRESS, CONTRACT_ABI, eventProvider);
 
 // Expiry durations by tier (in seconds)
 const EXPIRY_BY_TIER = {
@@ -116,6 +125,52 @@ export async function getSealInfo(userAddress) {
     console.error('Failed to get seal info:', error);
     throw new Error(`Failed to get seal info: ${error.message}`);
   }
+}
+
+/**
+ * Return all seals with an active (non-cancelled, non-executed) burn request.
+ * Driven entirely by on-chain events — does not rely on Supabase.
+ * @returns {Array<{ sealId, walletAddress, tier, burnExecutableAt, canExecute, secondsRemaining }>}
+ */
+export async function getActiveBurnRequests() {
+  const [requested, cancelled, burned] = await Promise.all([
+    eventContract.queryFilter(eventContract.filters.BurnRequested(), DEPLOY_BLOCK),
+    eventContract.queryFilter(eventContract.filters.BurnCancelled(), DEPLOY_BLOCK),
+    eventContract.queryFilter(eventContract.filters.SealBurned(), DEPLOY_BLOCK),
+  ]);
+
+  const cancelledIds = new Set(cancelled.map(e => e.args.sealId.toString()));
+  const burnedIds    = new Set(burned.map(e => e.args.sealId.toString()));
+
+  const active = requested.filter(e => {
+    const id = e.args.sealId.toString();
+    return !cancelledIds.has(id) && !burnedIds.has(id);
+  });
+
+  const now = Math.floor(Date.now() / 1000);
+
+  const results = await Promise.all(active.map(async (e) => {
+    const sealId = Number(e.args.sealId);
+    const walletAddress = e.args.owner;
+    const burnExecutableAt = Number(e.args.executableAt);
+    let tier = 0;
+    try {
+      const data = await contract.sealData(sealId);
+      tier = Number(data[0]);
+    } catch { /* seal may have been burned between event scan and now */ }
+
+    return {
+      sealId,
+      walletAddress,
+      tier,
+      burnExecutableAt,
+      canExecute: now >= burnExecutableAt,
+      secondsRemaining: Math.max(0, burnExecutableAt - now),
+    };
+  }));
+
+  // Drop any that were burned between the event scan and the sealData call
+  return results.filter(r => r.tier > 0);
 }
 
 /**

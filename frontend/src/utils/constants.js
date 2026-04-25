@@ -51,6 +51,19 @@ export function formatDate(timestamp) {
   });
 }
 
+// Format a burn countdown from a Unix timestamp (seconds).
+// Returns a human-readable string showing days+hours or hours+minutes as appropriate.
+export function formatBurnCountdown(burnExecutableAt) {
+  const secondsLeft = burnExecutableAt - Math.floor(Date.now() / 1000);
+  if (secondsLeft <= 0) return 'Ready to execute';
+  const days = Math.floor(secondsLeft / 86400);
+  const hours = Math.floor((secondsLeft % 86400) / 3600);
+  const minutes = Math.floor((secondsLeft % 3600) / 60);
+  if (days > 0) return `${days}d ${hours}h remaining`;
+  if (hours > 0) return `${hours}h ${minutes}m remaining`;
+  return `${minutes}m remaining`;
+}
+
 // Format address for display
 export function formatAddress(address) {
   if (!address) return '';

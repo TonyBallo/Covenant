@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getPendingSubmissions, approveKYC, mintSeal, getReadyToMint, rejectKYC, attestPolygon, checkPolygonStatus, revokeSeal, getRevokedSeals, lookupSeal, setAdminSecret } from '../utils/api';
-import { TIERS } from '../utils/constants';
+import { getPendingSubmissions, approveKYC, mintSeal, getReadyToMint, rejectKYC, attestPolygon, checkPolygonStatus, revokeSeal, getRevokedSeals, lookupSeal, setAdminSecret, getPendingBurns } from '../utils/api';
+import { TIERS, formatBurnCountdown } from '../utils/constants';
 
 export function Admin() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -18,6 +18,7 @@ export function Admin() {
   const [attesting, setAttesting] = useState(null);
   const [expiryDates, setExpiryDates] = useState({});
   const [revoked, setRevoked] = useState([]);
+  const [pendingBurns, setPendingBurns] = useState([]);
   const [revoking, setRevoking] = useState(null);
   const [lookupAddress, setLookupAddress] = useState('');
   const [lookupResult, setLookupResult] = useState(null);
@@ -58,14 +59,16 @@ export function Admin() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [pendingData, mintData, revokedData] = await Promise.all([
+      const [pendingData, mintData, revokedData, burnsData] = await Promise.all([
         getPendingSubmissions(),
         getReadyToMint(),
-        getRevokedSeals().catch(() => ({ submissions: [] }))
+        getRevokedSeals().catch(() => ({ submissions: [] })),
+        getPendingBurns().catch(() => ({ seals: [] })),
       ]);
       setPending(pendingData.submissions || []);
       setReadyToMint(mintData.submissions || []);
       setRevoked(revokedData.submissions || []);
+      setPendingBurns(burnsData.seals || []);
 
       const statuses = {};
       for (const submission of mintData.submissions || []) {
@@ -330,6 +333,16 @@ export function Admin() {
               Ready to Mint ({readyToMint.length})
             </button>
             <button
+              onClick={() => setActiveTab('pending-burns')}
+              className={`font-cinzel text-xs tracking-widest uppercase px-4 sm:px-6 py-3 border-b-2 transition-colors whitespace-nowrap ${
+                activeTab === 'pending-burns'
+                  ? 'border-amber-600 text-amber-400'
+                  : 'border-transparent text-marble-muted hover:text-marble'
+              }`}
+            >
+              Seals Burning {pendingBurns.length > 0 && `(${pendingBurns.length})`}
+            </button>
+            <button
               onClick={() => setActiveTab('revoke-lookup')}
               className={`font-cinzel text-xs tracking-widest uppercase px-4 sm:px-6 py-3 border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'revoke-lookup'
@@ -544,6 +557,60 @@ export function Admin() {
                       )}
                     </div>
 
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+
+        {/* Seals Burning */}
+        {activeTab === 'pending-burns' && (
+          <div className="space-y-4">
+            <div className="border border-amber-700/20 bg-amber-950/10 px-5 py-3 flex items-start gap-3">
+              <span className="w-1.5 h-1.5 bg-amber-500 rounded-full flex-shrink-0 mt-1.5"></span>
+              <p className="font-cormorant text-amber-300/70 italic text-sm leading-relaxed">
+                These users have initiated seal deletion. The 90-day window gives time to reach out before their trust standing is permanently removed.
+              </p>
+            </div>
+
+            {pendingBurns.length === 0 ? (
+              <div className="border border-gold/20 bg-tyrian-darker p-10 text-center">
+                <div className="w-px h-8 bg-gradient-to-b from-transparent via-gold/30 to-transparent mx-auto mb-4"></div>
+                <p className="font-cormorant text-marble-muted italic text-xl">No seals currently burning</p>
+              </div>
+            ) : (
+              pendingBurns.map((seal) => {
+                const countdown = formatBurnCountdown(seal.burnExecutableAt);
+                const elapsed = 90 - Math.ceil(seal.secondsRemaining / 86400);
+                const progressPct = Math.min(100, Math.round((elapsed / 90) * 100));
+                return (
+                  <div key={seal.sealId} className="border border-amber-700/30 bg-tyrian-darker overflow-hidden">
+                    <div className="bg-tyrian-dark border-b border-amber-700/15 px-6 py-4 flex justify-between items-start">
+                      <div>
+                        <p className="font-cinzel text-marble text-base tracking-wide">Seal #{seal.sealId}</p>
+                        <p className="font-mono text-marble-muted/60 text-xs mt-1">{seal.walletAddress}</p>
+                      </div>
+                      <span className={`border font-cinzel text-xs tracking-widest uppercase px-3 py-1 ${tierBadgeClass[TIERS[seal.tier]?.color] || ''}`}>
+                        Tier {seal.tier} — {TIERS[seal.tier]?.name ?? '—'}
+                      </span>
+                    </div>
+                    <div className="px-6 py-4 space-y-4">
+                      {/* Progress bar */}
+                      <div>
+                        <div className="flex justify-between items-center mb-2">
+                          <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase">Burn Progress</p>
+                          <p className="font-cinzel text-amber-400 text-xs tracking-widest">{countdown}</p>
+                        </div>
+                        <div className="h-1.5 bg-tyrian-dark border border-amber-700/20 overflow-hidden">
+                          <div
+                            className="h-full bg-amber-600/60 transition-all"
+                            style={{ width: `${progressPct}%` }}
+                          />
+                        </div>
+                        <p className="font-cormorant text-marble-muted/60 italic text-xs mt-1">{elapsed} of 90 days elapsed</p>
+                      </div>
+                    </div>
                   </div>
                 );
               })
