@@ -3,7 +3,7 @@ import rateLimit from 'express-rate-limit';
 import { Resend } from 'resend';
 import { supabase } from '../server.js';
 import { createMintSignature } from '../services/signature.js';
-import { mintSeal, getSealId, revokeSeal, getSealInfo, getActiveBurnRequests, upgradeSeal } from '../services/blockchain.js';
+import { mintSeal, getSealId, revokeSeal, getSealInfo, getActiveBurnRequests, upgradeSeal, verifySealOwnership } from '../services/blockchain.js';
 import { attestOnPolygon, getPolygonAttestation } from '../services/polygon.js';
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
@@ -522,6 +522,16 @@ router.post('/revoke', async (req, res) => {
       return res.status(400).json({
         error: 'Missing required fields: sealId, reason'
       });
+    }
+
+    // Verify the sealId belongs to the provided walletAddress before revoking
+    if (walletAddress) {
+      const ownershipValid = await verifySealOwnership(walletAddress, sealId);
+      if (!ownershipValid) {
+        return res.status(400).json({
+          error: 'Ownership mismatch: sealId does not belong to walletAddress'
+        });
+      }
     }
 
     // Revoke on-chain
