@@ -533,6 +533,7 @@ router.post('/revoke', async (req, res) => {
         .from('kyc_submissions')
         .update({
           status: 'revoked',
+          rejection_reason: reason,
           reviewed_at: new Date().toISOString()
         })
         .eq('wallet_address', walletAddress);
@@ -623,6 +624,7 @@ router.get('/revoked', async (_req, res) => {
         ...sub,
         sealId: seal?.seal_id || null,
         sealTier: seal?.tier || sub.tier_requested,
+        revocationReason: sub.rejection_reason || null,
       };
     }));
 

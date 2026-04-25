@@ -237,7 +237,7 @@ function HomePage() {
           contract.isExpired(normalized),
         ]);
         mintedAt = Number(seal.mintedAt);
-        revocationReason = seal.reason || '';
+        revocationReason = seal.revocationReason || '';
         expired = isExpiredResult;
         jurisdictionCode = Number(seal.jurisdictionCode);
         covenantSignature = seal.covenantSignature;

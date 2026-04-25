@@ -94,7 +94,7 @@ export function StatusPage({ walletAddress }) {
         contract.sealData(sealId),
         contract.isExpired(walletAddress),
       ]);
-      setSealData({ verified, tier: Number(tier), revoked, burnPending, burnExecutableAt: Number(burnExecutableAt), sealId: Number(sealId), mintedAt: Number(seal.mintedAt), expiresAt: Number(seal.expiresAt), jurisdictionCode: Number(seal.jurisdictionCode), covenantSignature: seal.covenantSignature });
+      setSealData({ verified, tier: Number(tier), revoked, burnPending, burnExecutableAt: Number(burnExecutableAt), sealId: Number(sealId), mintedAt: Number(seal.mintedAt), expiresAt: Number(seal.expiresAt), jurisdictionCode: Number(seal.jurisdictionCode), covenantSignature: seal.covenantSignature, revocationReason: seal.revocationReason || '' });
       setSealExpired(expired);
     } else {
       setSealData(null);
@@ -193,7 +193,7 @@ export function StatusPage({ walletAddress }) {
             contract.sealData(sealId),
             contract.isExpired(walletAddress),
           ]);
-          setSealData({ verified, tier: Number(tier), revoked, burnPending, burnExecutableAt: Number(burnExecutableAt), sealId: Number(sealId), mintedAt: Number(seal.mintedAt), expiresAt: Number(seal.expiresAt), jurisdictionCode: Number(seal.jurisdictionCode), covenantSignature: seal.covenantSignature });
+          setSealData({ verified, tier: Number(tier), revoked, burnPending, burnExecutableAt: Number(burnExecutableAt), sealId: Number(sealId), mintedAt: Number(seal.mintedAt), expiresAt: Number(seal.expiresAt), jurisdictionCode: Number(seal.jurisdictionCode), covenantSignature: seal.covenantSignature, revocationReason: seal.revocationReason || '' });
           setSealExpired(expired);
 
           try {
@@ -417,6 +417,11 @@ export function StatusPage({ walletAddress }) {
                 <p className="font-cormorant text-red-300 italic text-base">
                   This seal has been revoked and should not be used for protocol access.
                 </p>
+                {sealData.revocationReason && (
+                  <p className="font-cormorant text-red-300/70 italic text-sm mt-2">
+                    Reason: {sealData.revocationReason}
+                  </p>
+                )}
               </div>
             )}
 

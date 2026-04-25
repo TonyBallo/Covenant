@@ -972,6 +972,13 @@ export function Admin() {
                     </div>
                   </div>
 
+                  {submission.revocationReason && (
+                    <div className="px-6 pb-4 border-t border-red-900/20 pt-3">
+                      <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Revocation Reason</p>
+                      <p className="font-cormorant text-red-300/80 italic text-base">{submission.revocationReason}</p>
+                    </div>
+                  )}
+
                 </div>
               ))
             )}

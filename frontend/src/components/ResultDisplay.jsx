@@ -204,6 +204,11 @@ export function ResultDisplay({ result }) {
           <p className="font-cormorant text-red-300 italic text-base">
             This seal has been revoked and should not be trusted for protocol access.
           </p>
+          {result.revocationReason && (
+            <p className="font-cormorant text-red-300/70 italic text-sm mt-2">
+              Reason: {result.revocationReason}
+            </p>
+          )}
         </div>
       )}
 
