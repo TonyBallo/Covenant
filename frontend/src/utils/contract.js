@@ -1,5 +1,5 @@
 // Deployed Pact contract on Arbitrum Sepolia (Chain ID 421614)
-export const CONTRACT_ADDRESS = '0xBfCA5341f3c370743d4A64Df7c732113A4f83187';
+export const CONTRACT_ADDRESS = '0x3daB0f859804b2C42349ac6E54CCd7bc9417d871';
 
 // Read-only ABI — only the view functions needed for public seal lookup.
 // sealData returns: (tier, covenantSignature, mintedAt, expiresAt, revoked, revocationReason, jurisdictionCode)

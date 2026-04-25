@@ -4,13 +4,14 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/interfaces/IERC4906.sol";
 
 /**
  * @title Pact
  * @dev Soulbound seals for verified identities with tiered trust levels
  * @author Project Covenant - Web3 Certificate Authority
  */
-contract Pact is ERC721, Ownable, ReentrancyGuard {
+contract Pact is ERC721, IERC4906, Ownable, ReentrancyGuard {
 
     // Tier levels for verification seals
     enum Tier {
@@ -183,6 +184,7 @@ contract Pact is ERC721, Ownable, ReentrancyGuard {
     sealData[sealId].jurisdictionCode = jurisdictionCode;
 
     emit SealUpgraded(sealId, oldTier, newTier);
+    emit MetadataUpdate(sealId);
 }
 
     /**
@@ -270,11 +272,18 @@ contract Pact is ERC721, Ownable, ReentrancyGuard {
     /**
      * @dev Override transfer functions to make seals soulbound
      */
-    function transferFrom(address, address, uint256) public pure override {
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721, IERC165) returns (bool) {
+        return interfaceId == bytes4(0x49064906) || super.supportsInterface(interfaceId);
+    }
+
+    /**
+     * @dev Override transfer functions to make seals soulbound
+     */
+    function transferFrom(address, address, uint256) public pure override(ERC721, IERC721) {
         revert("Soulbound: Transfer not allowed");
     }
 
-    function safeTransferFrom(address, address, uint256, bytes memory) public pure override {
+    function safeTransferFrom(address, address, uint256, bytes memory) public pure override(ERC721, IERC721) {
         revert("Soulbound: Transfer not allowed");
     }
 

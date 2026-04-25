@@ -192,6 +192,19 @@ describe("Pact", function () {
         .withArgs(sealId, 1, 2); // oldTier=1, newTier=2
     });
 
+    it("Should emit MetadataUpdate event on tier upgrade", async function () {
+      const sealId = await pact.addressToSealId(user1.address);
+      const newSignature = await createSignature(owner, user1.address, 2);
+
+      await expect(pact.upgradeTier(sealId, 2, 0, newSignature))
+        .to.emit(pact, "MetadataUpdate")
+        .withArgs(sealId);
+    });
+
+    it("Should support EIP-4906 interface", async function () {
+      expect(await pact.supportsInterface("0x49064906")).to.equal(true);
+    });
+
     it("Should prevent tier downgrades", async function () {
       const sealId = await pact.addressToSealId(user1.address);
 

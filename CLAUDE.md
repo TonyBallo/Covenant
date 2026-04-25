@@ -163,9 +163,9 @@ VITE_API_URL
 | Field | Value |
 |---|---|
 | Contract | Pact |
-| Address | `0xBfCA5341f3c370743d4A64Df7c732113A4f83187` |
+| Address | `0x3daB0f859804b2C42349ac6E54CCd7bc9417d871` |
 | Deployer | `0xaDff4AF90C4f354eF21B6225fAEE61FbED1E642b` |
-| Deployed | Mar-28-2026 |
+| Deployed | Apr-25-2026 |
 | RPC | Alchemy Arbitrum Sepolia |
 | Explorer | https://sepolia.arbiscan.io |
 | ERC721 Name | "Covenant Pact" |

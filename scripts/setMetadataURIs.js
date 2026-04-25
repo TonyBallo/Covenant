@@ -1,7 +1,7 @@
 const { ethers } = require("hardhat");
 
 async function main() {
-  const address = "0xBfCA5341f3c370743d4A64Df7c732113A4f83187";
+  const address = "0x3daB0f859804b2C42349ac6E54CCd7bc9417d871";
   const pact = await ethers.getContractAt("Pact", address);
 
   const uris = [

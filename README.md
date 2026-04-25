@@ -18,8 +18,8 @@ Covenant is a membership protocol for simplified trust. It exists because the wa
 
 **Frontend:** [covenantprotocol.io](https://www.covenantprotocol.io)
 **Backend API:** https://covenant-production-4cf7.up.railway.app
-**Contract (Arbitrum Sepolia):** `0xBfCA5341f3c370743d4A64Df7c732113A4f83187`
-**Arbiscan:** [View Contract](https://sepolia.arbiscan.io/address/0xBfCA5341f3c370743d4A64Df7c732113A4f83187)
+**Contract (Arbitrum Sepolia):** `0x3daB0f859804b2C42349ac6E54CCd7bc9417d871`
+**Arbiscan:** [View Contract](https://sepolia.arbiscan.io/address/0x3daB0f859804b2C42349ac6E54CCd7bc9417d871)
 
 ---
 
@@ -218,7 +218,7 @@ SUPABASE_URL=your_supabase_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_KEY=your_supabase_service_key
 ARBITRUM_SEPOLIA_RPC_URL=your_alchemy_arbitrum_sepolia_url
-CONTRACT_ADDRESS=0xBfCA5341f3c370743d4A64Df7c732113A4f83187
+CONTRACT_ADDRESS=0x3daB0f859804b2C42349ac6E54CCd7bc9417d871
 OWNER_PRIVATE_KEY=your_deployer_wallet_private_key
 POLYGON_RPC_URL=your_polygon_amoy_rpc_url
 POLYGON_ATTESTATION_ADDRESS=0x3F214e98C967e49f451c670654fA7D0580da3730
@@ -386,7 +386,7 @@ await pact.executeBurn(sealId);       // Execute after 90 days
 ### v2.2 — NFT Metadata, Mint UX & Polish ✅ (COMPLETE)
 - ✅ ERC721 `tokenURI` support — tier metadata pinned to IPFS via Pinata
 - ✅ `adminBurn()` on Pact for clean contract migrations
-- ✅ Contract redeployed to `0xBfCA5341f3c370743d4A64Df7c732113A4f83187`, seals migrated
+- ✅ Contract redeployed to `0x3daB0f859804b2C42349ac6E54CCd7bc9417d871`, seals migrated
 - ✅ Mint ceremony page with `wallet_watchAsset` NFT import
 - ✅ Mint confirmation email via Resend
 - ✅ Seal images in StatusPage, ResultDisplay, and public lookup
