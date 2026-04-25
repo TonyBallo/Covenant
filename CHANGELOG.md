@@ -311,15 +311,59 @@ First working implementation deployed to Sepolia testnet.
 
 ---
 
+## [2.3.0] - 2026-04-25
+
+### Added
+
+#### User-Initiated Burn Flow
+- Full 90-day burn lifecycle surfaced in `StatusPage.jsx` — request, countdown, cancel, and execute
+- `requestBurn`, `cancelBurnRequest`, `executeBurn` added to frontend contract ABI
+- Collapsible "Seal Deletion" section with 4 states: idle, confirm-request, pending-countdown, confirm-execute
+- Live countdown via `formatBurnCountdown()` helper in `constants.js`
+- Burn actions require wallet connection and network switch to Arbitrum Sepolia
+- Hidden for revoked seals (contract blocks `requestBurn` on revoked seals)
+
+#### Admin "Seals Burning" Tab
+- New tab in admin panel driven entirely by on-chain `BurnRequested` / `BurnCancelled` / `SealBurned` events
+- Public Arbitrum Sepolia RPC used for event log queries (Alchemy free tier caps `eth_getLogs` at 10 blocks)
+- `DEPLOY_BLOCK = 250_000_000` set as lower bound to avoid full chain scans
+- Shows live countdown per seal; read-only retention monitoring tool — no admin action buttons
+- `GET /api/admin/pending-burns` endpoint returns active burn requests
+
+#### Tier Upgrade Application Flow
+- **User path:** "Apply for Tier Upgrade →" button on `StatusPage` for active, non-revoked, non-expired seals with tier < 5
+- **TierSelect upgrade mode:** reads `location.state.upgrade`; shows "Upgrade Your Seal" heading, labels current tier, marks lower tiers as "Already Surpassed", filters apply button to eligible tiers only
+- **ApplyForm upgrade mode:** Tier N→M arrow banner, "Submit Upgrade Request" button, "holds your existing seal" wallet label, upgrade-specific success copy
+- **Backend:** `POST /api/kyc/submit` detects upgrade applications via on-chain `getSealInfo`; allows `tier_requested > current_tier` when address already holds a seal; rejects revoked seals
+- **Admin Pending tab:** upgrade submissions display a blue "Upgrade" pill and "Tier N → Tier M" annotation; both pending and ready-to-mint tabs enriched with `isUpgradeRequest` and `currentTier` from on-chain state
+- **Admin Ready-to-Mint tab:** upgrade submissions show "Execute Upgrade on Arbitrum" button (blue) instead of "Mint Seal"; calls `POST /api/admin/upgrade` with `submissionId`; marks submission as `minted` in Supabase on success
+- `POST /api/admin/upgrade` now accepts optional `submissionId` to close the submission loop
+
+#### SealData Fields Surfaced
+- **`jurisdictionCode`** — shown in `StatusPage` and `ResultDisplay` data grids as `🌐 Global` or country flag + name; admin mint form has jurisdiction picker defaulting to Global; `JURISDICTIONS` map (18 ISO 3166-1 numeric codes) and `formatJurisdiction()` helper added to `constants.js`; `sealData` ABI updated to include 7th return field `uint8 jurisdictionCode` in both frontend and backend
+- **`covenantSignature`** — collapsible "Covenant Signature" section with copy button in both `StatusPage` and `ResultDisplay`; describes the ECDSA bytes stored on-chain at mint time; hidden if empty or `0x`
+
+#### VendorDemo Denial Specificity
+- `VendorDemo.jsx` now detects the specific denial reason (`no_seal`, `wrong_tier`, `expired`, `revoked`) after `isValid()` returns false
+- Each reason renders distinct copy explaining why access was denied
+
+### Fixed
+- **Lookup tool address normalization** — `handleSearch` now normalizes any valid hex address to its EIP-55 checksummed form via `ethers.getAddress()` before contract calls; wrong-case addresses (e.g. copied from wallets with different casing) are accepted rather than rejected; truly invalid input (non-hex, wrong length) still surfaces a clear error message
+- **Lookup error messages** — broadened `catch` patterns to correctly classify address validation errors (`invalid address`, `bad address`, `invalid BytesLike`)
+- **Admin upgrade flow** — `ready-to-mint` endpoint previously dropped upgrade submissions because `sealId > 0` falsely indicated the seal was already minted; now detects upgrade requests and tracks `isUpgraded` separately from `isMinted`
+
+---
+
 ## [Unreleased]
 
-### Planned for v2.3
+### Planned for v2.4
 - External security audit
 - JavaScript/TypeScript SDK
 - Integration documentation for vendor protocols
 - Bug bounty program
 - Mainnet deployment (Ethereum, Polygon, Arbitrum, Base)
 - Protocol partnerships
+- Expired seal renewal workflow
 
 ### Planned for v3.0
 - Multi-sig verification
@@ -331,7 +375,8 @@ First working implementation deployed to Sepolia testnet.
 
 ## Version History
 
-- **v2.2.0** (Current) - NFT metadata, mint ceremony, contract redeployment, seal images in UI
+- **v2.3.0** (Current) - Burn flow UI, tier upgrade flow, jurisdictionCode + covenantSignature surfaced, lookup normalization
+- **v2.2.0** - NFT metadata, mint ceremony, contract redeployment, seal images in UI
 - **v2.1.0** - Landing page, docs, admin security, route restructure, repo cleanup
 - **v2.0.0** - Production security hardening, breaking changes
 - **v1.0.0** - Initial proof of concept
