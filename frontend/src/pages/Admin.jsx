@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getPendingSubmissions, approveKYC, mintSeal, getReadyToMint, rejectKYC, attestPolygon, checkPolygonStatus, revokeSeal, getRevokedSeals, lookupSeal, setAdminSecret, getPendingBurns, upgradeSealTier } from '../utils/api';
-import { TIERS, formatBurnCountdown, JURISDICTIONS } from '../utils/constants';
+import { TIERS, formatBurnCountdown, JURISDICTIONS, formatJurisdiction, formatDate } from '../utils/constants';
 
 export function Admin() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -902,6 +902,21 @@ export function Admin() {
                         Already Revoked
                       </span>
                     )}
+                  </div>
+                </div>
+
+                <div className="px-6 py-3 grid grid-cols-3 gap-4 border-b border-gold/10">
+                  <div>
+                    <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Issued</p>
+                    <p className="font-cormorant text-marble text-sm">{lookupResult.issuedAt ? formatDate(lookupResult.issuedAt) : '—'}</p>
+                  </div>
+                  <div>
+                    <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Expires</p>
+                    <p className="font-cormorant text-marble text-sm">{lookupResult.expiresAt ? formatDate(lookupResult.expiresAt) : 'No expiry'}</p>
+                  </div>
+                  <div>
+                    <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Jurisdiction</p>
+                    <p className="font-cormorant text-marble text-sm">{(() => { const j = formatJurisdiction(lookupResult.jurisdictionCode ?? 0); return `${j.flag} ${j.label}`; })()}</p>
                   </div>
                 </div>
 

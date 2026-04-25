@@ -13,6 +13,8 @@ const CONTRACT_ABI = [
   "function ownerOf(uint256 tokenId) view returns (address)",
   "function adminBurn(uint256 sealId) external",
   "function sealData(uint256 sealId) view returns (uint8 tier, bytes covenantSignature, uint256 mintedAt, uint256 expiresAt, bool revoked, string revocationReason, uint8 jurisdictionCode)",
+  "function getSeal(address wallet) view returns (uint8 tier, uint256 issuedAt, uint256 expiresAt, uint8 jurisdictionCode, bool revoked)",
+  "function verifyOwnership(address user, uint256 sealId) view returns (bool)",
   "event BurnRequested(uint256 indexed sealId, address indexed owner, uint256 executableAt)",
   "event BurnCancelled(uint256 indexed sealId, address indexed owner)",
   "event SealBurned(uint256 indexed sealId, address indexed owner)",
@@ -107,7 +109,7 @@ export async function hasSeal(userAddress) {
 /**
  * Get full seal info for an address
  * @param {string} userAddress - User's wallet address
- * @returns {Object} { found, sealId, tier, revoked, verified }
+ * @returns {Object} { found, sealId, tier, revoked, verified, burnPending, burnExecutableAt, issuedAt, expiresAt, jurisdictionCode }
  */
 export async function getSealInfo(userAddress) {
   try {
@@ -115,17 +117,42 @@ export async function getSealInfo(userAddress) {
     const id = Number(sealId);
     if (id === 0) return { found: false };
 
-    const status = await contract.getVerificationStatus(userAddress);
+    const [status, seal] = await Promise.all([
+      contract.getVerificationStatus(userAddress),
+      contract.getSeal(userAddress),
+    ]);
+
     return {
       found: true,
       sealId: id,
-      tier: Number(status[1]),
-      revoked: status[2],
-      verified: status[0],
+      tier: Number(status.tier),
+      revoked: status.revoked,
+      verified: status.verified,
+      burnPending: status.burnPending,
+      burnExecutableAt: Number(status.burnExecutableAt),
+      issuedAt: Number(seal.issuedAt),
+      expiresAt: Number(seal.expiresAt),
+      jurisdictionCode: Number(seal.jurisdictionCode),
     };
   } catch (error) {
     console.error('Failed to get seal info:', error);
     throw new Error(`Failed to get seal info: ${error.message}`);
+  }
+}
+
+/**
+ * Verify that a wallet address owns a specific seal ID.
+ * Guards against spoofing attacks where a caller supplies a mismatched address/sealId pair.
+ * @param {string} userAddress - Wallet address claimed to own the seal
+ * @param {number} sealId      - Seal ID to verify ownership of
+ * @returns {boolean}
+ */
+export async function verifySealOwnership(userAddress, sealId) {
+  try {
+    return await contract.verifyOwnership(userAddress, sealId);
+  } catch (error) {
+    console.error('Ownership verification failed:', error);
+    return false;
   }
 }
 
