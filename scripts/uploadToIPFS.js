@@ -92,7 +92,7 @@ async function pinJSON(obj, name) {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
-  const tiers = [1, 2, 3];
+  const tiers = [1, 2, 3, 4, 5];
   const results = [];
 
   console.log("═══════════════════════════════════════════════════════════");

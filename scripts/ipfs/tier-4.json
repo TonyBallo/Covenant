@@ -1,0 +1,19 @@
+{
+  "name": "Covenant Seal — Platinum",
+  "description": "Tier IV Platinum identity seal. Issued by Covenant Protocol. Comprehensive due diligence complete — accredited investor or professional verification confirmed.",
+  "image": "ipfs://QmZJMLrMjRa6vnmae9Su5CsSNUpDxnATqsSoeGypSJpjcn",
+  "attributes": [
+    {
+      "trait_type": "Tier",
+      "value": "Platinum"
+    },
+    {
+      "trait_type": "Tier Level",
+      "value": 4
+    },
+    {
+      "trait_type": "Anchor Chain",
+      "value": "Arbitrum"
+    }
+  ]
+}

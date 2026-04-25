@@ -1,0 +1,19 @@
+{
+  "name": "Covenant Seal — Diamond",
+  "description": "Tier V Diamond identity seal. Issued by Covenant Protocol. Institutional-grade verification — maximum trust tier reserved for institutional participants.",
+  "image": "ipfs://QmcVRwcK5atVxbUKrSzkjXSE33nTEtksYSdzbZAswaV4Ma",
+  "attributes": [
+    {
+      "trait_type": "Tier",
+      "value": "Diamond"
+    },
+    {
+      "trait_type": "Tier Level",
+      "value": 5
+    },
+    {
+      "trait_type": "Anchor Chain",
+      "value": "Arbitrum"
+    }
+  ]
+}
