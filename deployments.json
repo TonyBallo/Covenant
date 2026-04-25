@@ -15,10 +15,10 @@
       "network": "amoy",
       "chainId": 80002,
       "contract": "PactWitness",
-      "address": "0x3F214e98C967e49f451c670654fA7D0580da3730",
+      "address": "0x9E81f21Ca8e4dc0ce5D8db5F642E7b4D72a6B6F5",
       "deployer": "0xaDff4AF90C4f354eF21B6225fAEE61FbED1E642b",
-      "deployedAt": "Mar-19-2026",
-      "polygonscan": "https://amoy.polygonscan.com/address/0x3F214e98C967e49f451c670654fA7D0580da3730#code"
+      "deployedAt": "Apr-25-2026",
+      "polygonscan": "https://amoy.polygonscan.com/address/0x9E81f21Ca8e4dc0ce5D8db5F642E7b4D72a6B6F5#code"
     }
   }
 }

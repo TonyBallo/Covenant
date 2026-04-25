@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getPendingSubmissions, approveKYC, mintSeal, getReadyToMint, rejectKYC, attestPolygon, checkPolygonStatus, revokeSeal, getRevokedSeals, lookupSeal, setAdminSecret, getPendingBurns, upgradeSealTier } from '../utils/api';
+import { getPendingSubmissions, approveKYC, mintSeal, getReadyToMint, rejectKYC, attestPolygon, reattestPolygon, checkPolygonStatus, revokeSeal, getRevokedSeals, lookupSeal, setAdminSecret, getPendingBurns, upgradeSealTier } from '../utils/api';
 import { TIERS, formatBurnCountdown, JURISDICTIONS, formatJurisdiction, formatDate } from '../utils/constants';
 
 export function Admin() {
@@ -220,6 +220,21 @@ export function Admin() {
     try {
       const result = await attestPolygon(submission.id);
       setSuccess(`Attested on Polygon! Tx: ${result.polygonTxHash.slice(0, 10)}...`);
+      await fetchData();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setAttesting(null);
+    }
+  };
+
+  const handleReattest = async (submission) => {
+    setAttesting(submission.id);
+    setError(null);
+    setSuccess(null);
+    try {
+      const result = await reattestPolygon(submission.id);
+      setSuccess(`Polygon attestation updated: Tier ${result.oldTier} → ${result.newTier}. Tx: ${result.polygonTxHash.slice(0, 10)}...`);
       await fetchData();
     } catch (err) {
       setError(err.message);
@@ -660,7 +675,17 @@ export function Admin() {
                         </button>
                       )}
 
-                      {hasPolygonAttestation && (
+                      {hasPolygonAttestation && polygonStatuses[submission.wallet_address]?.tier < submission.tier_requested && (
+                        <button
+                          onClick={() => handleReattest(submission)}
+                          disabled={processing === submission.id || attesting === submission.id || rejecting === submission.id}
+                          className="w-full font-cinzel text-xs tracking-widest uppercase py-3 border border-purple-900/40 text-purple-400 hover:bg-purple-950/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {attesting === submission.id ? 'Updating Polygon…' : 'Re-attest on Polygon'}
+                        </button>
+                      )}
+
+                      {hasPolygonAttestation && !(polygonStatuses[submission.wallet_address]?.tier < submission.tier_requested) && (
                         <div className="w-full border border-gold/15 bg-tyrian-dark font-cinzel text-xs tracking-widest uppercase py-3 text-center text-marble-muted">
                           Attested on Polygon
                         </div>

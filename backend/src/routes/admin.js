@@ -4,7 +4,7 @@ import { Resend } from 'resend';
 import { supabase } from '../server.js';
 import { createMintSignature } from '../services/signature.js';
 import { mintSeal, getSealId, revokeSeal, getSealInfo, getActiveBurnRequests, upgradeSeal, verifySealOwnership } from '../services/blockchain.js';
-import { attestOnPolygon, getPolygonAttestation } from '../services/polygon.js';
+import { attestOnPolygon, getPolygonAttestation, updatePolygonAttestation } from '../services/polygon.js';
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
@@ -506,6 +506,75 @@ router.post('/attest/:id', async (req, res) => {
     res.status(500).json({ 
       error: 'Failed to attest on Polygon',
       details: error.message 
+    });
+  }
+});
+
+/**
+ * Update an existing Polygon attestation to reflect a tier upgrade on Arbitrum.
+ * POST /api/admin/reattest/:id
+ */
+router.post('/reattest/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { data: submission, error: fetchError } = await supabase
+      .from('kyc_submissions')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchError) throw fetchError;
+    if (!submission) return res.status(404).json({ error: 'Submission not found' });
+
+    // Confirm the wallet actually has an attestation to update
+    const existing = await getPolygonAttestation(submission.wallet_address);
+    if (!existing.hasAttestation) {
+      return res.status(400).json({ error: 'No existing Polygon attestation — use attest instead' });
+    }
+
+    // Read current on-chain tier from Arbitrum
+    const sealInfo = await getSealInfo(submission.wallet_address);
+    if (!sealInfo.found) {
+      return res.status(400).json({ error: 'No seal found on Arbitrum for this address' });
+    }
+
+    if (sealInfo.tier <= existing.tier) {
+      return res.status(400).json({
+        error: `Polygon attestation already at tier ${existing.tier} — Arbitrum seal is tier ${sealInfo.tier}, no upgrade needed`
+      });
+    }
+
+    // Generate a fresh Polygon-specific signature for the new tier
+    const polygonSignature = await createMintSignature(
+      submission.wallet_address,
+      sealInfo.tier,
+      0,
+      80002
+    );
+
+    const result = await updatePolygonAttestation(
+      submission.wallet_address,
+      sealInfo.tier,
+      polygonSignature
+    );
+
+    console.log(`✅ Polygon attestation updated for ${submission.wallet_address}: tier ${existing.tier} → ${sealInfo.tier}`);
+
+    res.json({
+      success: true,
+      walletAddress: submission.wallet_address,
+      oldTier: existing.tier,
+      newTier: sealInfo.tier,
+      polygonTxHash: result.transactionHash,
+      message: `Polygon attestation updated from tier ${existing.tier} to tier ${sealInfo.tier}`
+    });
+
+  } catch (error) {
+    console.error('Polygon reattest failed:', error);
+    res.status(500).json({
+      error: 'Failed to update Polygon attestation',
+      details: error.message
     });
   }
 });

@@ -175,7 +175,7 @@ VITE_API_URL
 | Field | Value |
 |---|---|
 | Contract | PactWitness |
-| Address | `0x3F214e98C967e49f451c670654fA7D0580da3730` |
+| Address | `0x9E81f21Ca8e4dc0ce5D8db5F642E7b4D72a6B6F5` |
 | RPC | https://rpc-amoy.polygon.technology/ |
 | Explorer | https://amoy.polygonscan.com |
 

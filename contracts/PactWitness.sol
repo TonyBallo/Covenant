@@ -26,6 +26,8 @@ contract PactWitness is Ownable {
     
     // Credential hash => is it revoked?
     mapping(bytes32 => bool) public revokedCredentials;
+
+    event AttestationUpdated(address indexed wallet, uint8 oldTier, uint8 newTier);
     
     // ============ Constructor ============
     
@@ -72,6 +74,33 @@ contract PactWitness is Ownable {
         });
     }
     
+    /**
+     * @notice Update the tier of an existing attestation after a seal upgrade on Arbitrum.
+     * Mirrors the upgradeTier pattern on Pact.sol — tier can only move upward.
+     * The credentialHash is preserved so existing revocation references remain valid.
+     * @param wallet Address whose attestation is being updated
+     * @param newTier New verification tier — must be strictly greater than current tier
+     * @param jurisdictionCode ISO 3166-1 numeric country code, or 0 for global
+     * @param signature Proof from Covenant authority signed with (wallet, newTier, jurisdictionCode, chainId)
+     */
+    function updateAttestation(
+        address wallet,
+        uint8 newTier,
+        uint8 jurisdictionCode,
+        bytes memory signature
+    ) external onlyOwner {
+        require(attestations[wallet].tier > 0, "No existing attestation");
+        require(newTier > attestations[wallet].tier, "Can only upgrade tier");
+        require(newTier >= 1 && newTier <= 5, "Invalid tier");
+
+        bytes32 messageHash = keccak256(abi.encodePacked(wallet, newTier, jurisdictionCode, block.chainid));
+        require(recoverSigner(messageHash, signature) == owner(), "Invalid signature");
+
+        attestations[wallet].tier = newTier;
+
+        emit AttestationUpdated(wallet, attestations[wallet].tier, newTier);
+    }
+
     /**
      * @notice Revoke a credential across all chains
      * @param credentialHash Hash of credential to revoke

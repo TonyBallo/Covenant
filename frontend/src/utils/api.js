@@ -138,6 +138,20 @@ export async function attestPolygon(submissionId) {
   return response.json();
 }
 
+export async function reattestPolygon(submissionId) {
+  const response = await fetch(`${API_BASE_URL}/api/admin/reattest/${submissionId}`, {
+    method: 'POST',
+    headers: ADMIN_HEADERS(),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to update Polygon attestation');
+  }
+
+  return response.json();
+}
+
 /**
  * Check Polygon attestation status (admin only)
  */

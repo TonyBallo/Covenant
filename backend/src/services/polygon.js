@@ -6,6 +6,7 @@ dotenv.config();
 // PactWitness contract ABI
 const ATTESTATION_ABI = [
   "function attestSeal(address wallet, uint8 tier, uint8 jurisdictionCode, bytes32 credentialHash, bytes signature)",
+  "function updateAttestation(address wallet, uint8 newTier, uint8 jurisdictionCode, bytes signature)",
   "function getVerificationStatus(address wallet) view returns (uint8 tier, uint256 expiresAt, bool isRevoked)",
   "function isVerified(address wallet, uint8 minTier) view returns (bool)",
   "function revokeCredential(bytes32 credentialHash)"
@@ -75,6 +76,39 @@ export async function attestOnPolygon(userAddress, tier, ethereumSealId, signatu
   } catch (error) {
     console.error('Polygon attestation failed:', error);
     throw new Error(`Failed to attest on Polygon: ${error.message}`);
+  }
+}
+
+/**
+ * Update the tier of an existing Polygon attestation after a seal upgrade on Arbitrum.
+ * @param {string} userAddress - Wallet address to update
+ * @param {number} newTier     - New tier (must be strictly greater than current attested tier)
+ * @param {string} signature   - Polygon-specific ECDSA signature (chainId 80002)
+ * @returns {Object} { transactionHash, blockNumber }
+ */
+export async function updatePolygonAttestation(userAddress, newTier, signature) {
+  try {
+    console.log(`🟣 Updating Polygon attestation for ${userAddress} to tier ${newTier}...`);
+
+    const tx = await attestationContract.updateAttestation(
+      userAddress,
+      newTier,
+      0,
+      signature,
+      { gasLimit: 200000 }
+    );
+
+    console.log(`📤 Polygon tx sent: ${tx.hash}`);
+    const receipt = await tx.wait();
+    console.log(`✅ Attestation updated! Gas used: ${receipt.gasUsed.toString()}`);
+
+    return {
+      transactionHash: receipt.hash,
+      blockNumber: receipt.blockNumber,
+    };
+  } catch (error) {
+    console.error('Polygon attestation update failed:', error);
+    throw new Error(`Failed to update Polygon attestation: ${error.message}`);
   }
 }
 
