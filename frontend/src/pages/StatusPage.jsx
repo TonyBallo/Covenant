@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ethers } from 'ethers';
 import { checkKYCStatus, getCrossChainStatus } from '../utils/api';
-import { TIERS, formatDate, formatBurnCountdown } from '../utils/constants';
+import { TIERS, formatDate, formatBurnCountdown, formatJurisdiction } from '../utils/constants';
 import { CONTRACT_ADDRESS, CONTRACT_ABI, RPC_URL, ETHERSCAN_BASE } from '../utils/contract';
 
 const tierTextClass = {
@@ -28,6 +28,8 @@ export function StatusPage({ walletAddress }) {
   const [burnTx, setBurnTx] = useState(null);
   const [showBurnConfirm, setShowBurnConfirm] = useState(false);
   const [showExecuteConfirm, setShowExecuteConfirm] = useState(false);
+  const [showSignature, setShowSignature] = useState(false);
+  const [sigCopied, setSigCopied] = useState(false);
 
   const addToWallet = async () => {
     if (!window.ethereum) return;
@@ -92,7 +94,7 @@ export function StatusPage({ walletAddress }) {
         contract.sealData(sealId),
         contract.isExpired(walletAddress),
       ]);
-      setSealData({ verified, tier: Number(tier), revoked, burnPending, burnExecutableAt: Number(burnExecutableAt), sealId: Number(sealId), mintedAt: Number(seal.mintedAt), expiresAt: Number(seal.expiresAt) });
+      setSealData({ verified, tier: Number(tier), revoked, burnPending, burnExecutableAt: Number(burnExecutableAt), sealId: Number(sealId), mintedAt: Number(seal.mintedAt), expiresAt: Number(seal.expiresAt), jurisdictionCode: Number(seal.jurisdictionCode), covenantSignature: seal.covenantSignature });
       setSealExpired(expired);
     } else {
       setSealData(null);
@@ -191,7 +193,7 @@ export function StatusPage({ walletAddress }) {
             contract.sealData(sealId),
             contract.isExpired(walletAddress),
           ]);
-          setSealData({ verified, tier: Number(tier), revoked, burnPending, burnExecutableAt: Number(burnExecutableAt), sealId: Number(sealId), mintedAt: Number(seal.mintedAt), expiresAt: Number(seal.expiresAt) });
+          setSealData({ verified, tier: Number(tier), revoked, burnPending, burnExecutableAt: Number(burnExecutableAt), sealId: Number(sealId), mintedAt: Number(seal.mintedAt), expiresAt: Number(seal.expiresAt), jurisdictionCode: Number(seal.jurisdictionCode), covenantSignature: seal.covenantSignature });
           setSealExpired(expired);
 
           try {
@@ -385,6 +387,12 @@ export function StatusPage({ walletAddress }) {
                 </p>
               </div>
               <div>
+                <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Jurisdiction</p>
+                <p className="font-cormorant text-marble text-lg">
+                  {(() => { const j = formatJurisdiction(sealData.jurisdictionCode ?? 0); return `${j.flag} ${j.label}`; })()}
+                </p>
+              </div>
+              <div>
                 <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Polygon Attestation</p>
                 {chainStatus.polygon ? (
                   <p className="font-cormorant text-purple-400 text-lg font-semibold">Witnessed on Amoy</p>
@@ -419,6 +427,39 @@ export function StatusPage({ walletAddress }) {
                 <p className="font-cormorant text-amber-300/80 italic text-base">
                   This seal has expired and is no longer valid for protocol access. Contact Covenant to renew your verification.
                 </p>
+              </div>
+            )}
+
+            {/* Covenant Signature — collapsible, shows the ECDSA bytes stored on-chain at mint */}
+            {sealData.covenantSignature && sealData.covenantSignature !== '0x' && (
+              <div className="mx-5 mb-5 sm:mx-8 sm:mb-6 border border-gold/10 bg-tyrian-dark">
+                <button
+                  className="w-full flex items-center justify-between px-5 py-3 text-left"
+                  onClick={() => setShowSignature(v => !v)}
+                >
+                  <span className="font-cinzel text-marble-muted text-xs tracking-widest uppercase">Covenant Signature</span>
+                  <span className="font-cinzel text-marble-muted text-xs tracking-widest">{showSignature ? '▲' : '▼'}</span>
+                </button>
+                {showSignature && (
+                  <div className="px-5 pb-5 border-t border-gold/10 pt-4">
+                    <p className="font-cormorant text-marble-muted italic text-sm mb-3">
+                      The ECDSA signature issued by Covenant Protocol at mint time. Stored permanently on-chain and used to verify this seal was authorised by the issuer.
+                    </p>
+                    <div className="bg-tyrian-darker border border-gold/10 px-4 py-3 break-all font-mono text-xs text-marble-muted/70 leading-relaxed">
+                      {sealData.covenantSignature}
+                    </div>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(sealData.covenantSignature);
+                        setSigCopied(true);
+                        setTimeout(() => setSigCopied(false), 2000);
+                      }}
+                      className="mt-3 font-cinzel text-xs tracking-widest uppercase px-4 py-2 border border-gold/20 text-marble-muted hover:border-gold/40 hover:text-gold transition-colors"
+                    >
+                      {sigCopied ? 'Copied ✓' : 'Copy Signature'}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -593,6 +634,15 @@ export function StatusPage({ walletAddress }) {
               )}
               {walletError && (
                 <p className="font-cormorant text-red-400 italic text-sm text-center">{walletError}</p>
+              )}
+              {sealData.verified && !sealData.revoked && !sealExpired && sealData.tier < 5 && (
+                <Link
+                  to="/demo/get-verified"
+                  state={{ upgrade: true, currentTier: sealData.tier }}
+                  className="w-full font-cinzel text-xs tracking-widest uppercase py-3 px-4 border border-gold/20 text-marble-muted hover:border-gold/40 hover:text-gold transition-colors text-center block"
+                >
+                  Apply for Tier Upgrade →
+                </Link>
               )}
             </div>
 

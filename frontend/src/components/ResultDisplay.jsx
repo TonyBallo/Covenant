@@ -1,4 +1,4 @@
-import { TIERS, formatDate } from '../utils/constants';
+import { TIERS, formatDate, formatJurisdiction } from '../utils/constants';
 import { ETHERSCAN_BASE, CONTRACT_ADDRESS } from '../utils/contract';
 import { getCrossChainStatus } from '../utils/api';
 import { useState, useEffect } from 'react';
@@ -24,6 +24,8 @@ const tierTextClass = {
 export function ResultDisplay({ result }) {
   const [chainStatus, setChainStatus] = useState({ ethereum: true, polygon: false });
   const [copied, setCopied] = useState(false);
+  const [showSignature, setShowSignature] = useState(false);
+  const [sigCopied, setSigCopied] = useState(false);
 
   const copyAddress = () => {
     navigator.clipboard.writeText(result.address);
@@ -161,6 +163,12 @@ export function ResultDisplay({ result }) {
             {result.burnPending ? 'Pending' : 'None'}
           </p>
         </div>
+        <div>
+          <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Jurisdiction</p>
+          <p className="font-cormorant text-marble text-lg">
+            {(() => { const j = formatJurisdiction(result.jurisdictionCode ?? 0); return `${j.flag} ${j.label}`; })()}
+          </p>
+        </div>
       </div>
 
       {/* Wallet address */}
@@ -214,6 +222,39 @@ export function ResultDisplay({ result }) {
           <p className="font-cormorant text-gold/70 italic text-base">
             The owner has requested deletion of this seal. After the 90-day delay, it will be permanently removed.
           </p>
+        </div>
+      )}
+
+      {/* Covenant Signature — collapsible */}
+      {result.covenantSignature && result.covenantSignature !== '0x' && (
+        <div className="mx-5 mb-5 sm:mx-8 sm:mb-6 border border-gold/10 bg-tyrian-dark">
+          <button
+            className="w-full flex items-center justify-between px-5 py-3 text-left"
+            onClick={() => setShowSignature(v => !v)}
+          >
+            <span className="font-cinzel text-marble-muted text-xs tracking-widest uppercase">Covenant Signature</span>
+            <span className="font-cinzel text-marble-muted text-xs tracking-widest">{showSignature ? '▲' : '▼'}</span>
+          </button>
+          {showSignature && (
+            <div className="px-5 pb-5 border-t border-gold/10 pt-4">
+              <p className="font-cormorant text-marble-muted italic text-sm mb-3">
+                The ECDSA signature issued by Covenant Protocol at mint time. Stored permanently on-chain and used to verify this seal was authorised by the issuer.
+              </p>
+              <div className="bg-tyrian-darker border border-gold/10 px-4 py-3 break-all font-mono text-xs text-marble-muted/70 leading-relaxed">
+                {result.covenantSignature}
+              </div>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(result.covenantSignature);
+                  setSigCopied(true);
+                  setTimeout(() => setSigCopied(false), 2000);
+                }}
+                className="mt-3 font-cinzel text-xs tracking-widest uppercase px-4 py-2 border border-gold/20 text-marble-muted hover:border-gold/40 hover:text-gold transition-colors"
+              >
+                {sigCopied ? 'Copied ✓' : 'Copy Signature'}
+              </button>
+            </div>
+          )}
         </div>
       )}
 

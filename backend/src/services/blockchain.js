@@ -7,10 +7,12 @@ dotenv.config();
 const CONTRACT_ABI = [
   "function mint(address to, uint8 tier, uint8 jurisdictionCode, bytes signature, uint256 expiresAt)",
   "function revoke(uint256 sealId, string reason)",
+  "function upgradeTier(uint256 sealId, uint8 newTier, uint8 jurisdictionCode, bytes newSignature)",
   "function getVerificationStatus(address user) view returns (bool verified, uint8 tier, bool revoked, bool burnPending, uint256 burnExecutableAt)",
   "function addressToSealId(address user) view returns (uint256)",
+  "function ownerOf(uint256 tokenId) view returns (address)",
   "function adminBurn(uint256 sealId) external",
-  "function sealData(uint256 sealId) view returns (uint8 tier, bytes covenantSignature, uint256 mintedAt, uint256 expiresAt, bool revoked, string revocationReason)",
+  "function sealData(uint256 sealId) view returns (uint8 tier, bytes covenantSignature, uint256 mintedAt, uint256 expiresAt, bool revoked, string revocationReason, uint8 jurisdictionCode)",
   "event BurnRequested(uint256 indexed sealId, address indexed owner, uint256 executableAt)",
   "event BurnCancelled(uint256 indexed sealId, address indexed owner)",
   "event SealBurned(uint256 indexed sealId, address indexed owner)",
@@ -125,6 +127,26 @@ export async function getSealInfo(userAddress) {
     console.error('Failed to get seal info:', error);
     throw new Error(`Failed to get seal info: ${error.message}`);
   }
+}
+
+/**
+ * Upgrade a seal's tier on-chain.
+ * Looks up the seal owner from the contract, generates a fresh ECDSA signature,
+ * then calls upgradeTier. New tier must be strictly greater than current tier.
+ * @param {number} sealId
+ * @param {number} newTier - 1–5
+ * @param {number} jurisdictionCode - ISO 3166-1 numeric, 0 = global
+ * @returns {Object} { transactionHash, blockNumber, walletAddress, newTier }
+ */
+export async function upgradeSeal(sealId, newTier, jurisdictionCode = 0) {
+  const walletAddress = await contract.ownerOf(sealId);
+  const { createMintSignature } = await import('./signature.js');
+  const signature = await createMintSignature(walletAddress, newTier, jurisdictionCode);
+  console.log(`⬆️  Upgrading seal #${sealId} to tier ${newTier} for ${walletAddress}`);
+  const tx = await contract.upgradeTier(sealId, newTier, jurisdictionCode, signature, { gasLimit: 250000 });
+  const receipt = await tx.wait();
+  console.log(`✅ Seal #${sealId} upgraded to tier ${newTier}. Tx: ${receipt.hash}`);
+  return { transactionHash: receipt.hash, blockNumber: receipt.blockNumber, walletAddress, newTier };
 }
 
 /**

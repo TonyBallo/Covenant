@@ -197,6 +197,24 @@ export async function getRevokedSeals() {
 }
 
 /**
+ * Upgrade a seal's tier on-chain (admin only)
+ */
+export async function upgradeSealTier({ sealId, newTier, jurisdictionCode = 0, submissionId }) {
+  const response = await fetch(`${API_BASE_URL}/api/admin/upgrade`, {
+    method: 'POST',
+    headers: ADMIN_HEADERS(),
+    body: JSON.stringify({ sealId, newTier, jurisdictionCode, submissionId }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to upgrade seal');
+  }
+
+  return response.json();
+}
+
+/**
  * Get all seals with a pending burn request (admin only)
  */
 export async function getPendingBurns() {
