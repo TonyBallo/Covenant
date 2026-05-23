@@ -68,26 +68,21 @@ export function ResultDisplay({ result }) {
 
       {/* Seal — floats above the card with cast shadow */}
       {result.tier >= 1 && (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
           <img
             src={`/tiers/tier-${result.tier}.png`}
             alt={`Tier ${result.tier} seal`}
-            style={{
-              width: '128px',
-              height: '128px',
-              objectFit: 'contain',
-              display: 'block',
-            }}
+            style={{ width: '100%', height: 'auto', display: 'block' }}
           />
           {/* Cast shadow — blurred oval between seal and card */}
           <div style={{
-            width: '72px',
-            height: '10px',
+            width: '40%',
+            height: '14px',
             background: 'rgba(0,0,0,0.55)',
             borderRadius: '50%',
-            filter: 'blur(7px)',
-            marginTop: '-4px',
-            marginBottom: '10px',
+            filter: 'blur(10px)',
+            marginTop: '-8px',
+            marginBottom: '12px',
           }} />
         </div>
       )}
