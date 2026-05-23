@@ -187,14 +187,12 @@ export function About() {
                 wanted in the first place. The same problems playing out again and again, in different contexts, with no shared solution in sight.
               </p>
               <p>
-                Covenant is my answer to both of those problems. Not built from a market analysis or a
-                whitepaper — built from the inside of the problem, by someone who has operated inside
-                the systems which continuously fail to solve it.
+                Covenant is my answer to both of those problems. A simplified approach to trust, shipped to modern platforms. Built by someone who understands the value first hand.
               </p>
               <p>
                 The architecture, the data model, the security roadmap — all reflect a threat model
                 developed in high-stakes environments, applied to modern infrastructure. The
-                product reflects something simpler: a belief that trust should be legible, portable,
+                product reflects something simpler: a belief that trust should be intuitive, portable,
                 and worth earning.
               </p>
             </div>
