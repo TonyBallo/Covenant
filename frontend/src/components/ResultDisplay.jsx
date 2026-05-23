@@ -64,16 +64,11 @@ export function ResultDisplay({ result }) {
   const mintDate = formatDate(result.mintedAt);
 
   return (
-    <div className="mt-10" style={{ position: 'relative', paddingTop: result.tier >= 1 ? '64px' : '0' }}>
+    <div className="mt-10">
 
-      {/* Seal — floats above the card */}
+      {/* Seal — floats above the card with cast shadow */}
       {result.tier >= 1 && (
-        <div style={{
-          position: 'absolute', top: 0, left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 10,
-          pointerEvents: 'none',
-        }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <img
             src={`/tiers/tier-${result.tier}.png`}
             alt={`Tier ${result.tier} seal`}
@@ -81,18 +76,26 @@ export function ResultDisplay({ result }) {
               width: '128px',
               height: '128px',
               objectFit: 'contain',
-              filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.8))',
               display: 'block',
             }}
           />
+          {/* Cast shadow — blurred oval between seal and card */}
+          <div style={{
+            width: '72px',
+            height: '10px',
+            background: 'rgba(0,0,0,0.55)',
+            borderRadius: '50%',
+            filter: 'blur(7px)',
+            marginTop: '-4px',
+            marginBottom: '10px',
+          }} />
         </div>
       )}
 
       <div className="border border-gold/30 bg-tyrian-darker overflow-hidden">
 
       {/* Header */}
-      <div className="bg-tyrian-dark border-b border-gold/20 px-5 sm:px-8 relative"
-        style={{ paddingTop: result.tier >= 1 ? '72px' : '16px', paddingBottom: '16px' }}>
+      <div className="bg-tyrian-dark border-b border-gold/20 px-5 py-4 sm:px-8 sm:py-5 relative">
         <div className="flex items-center justify-between">
           <div className="flex-1 text-center">
             <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Trust Seal</p>
