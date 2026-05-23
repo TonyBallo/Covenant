@@ -70,17 +70,30 @@ const CARDS = [
   },
 ];
 
-const CARD_W        = 400;
-const CARD_H        = 212;
-const WALLET_W      = 430;
-const WALLET_H      = 262;
-const CARD_TOP_PAD  = 20;           // headroom so hover-lift never clips
-const WALLET_TOP    = 138 + CARD_TOP_PAD;
-const CONTAINER_H   = WALLET_TOP + WALLET_H;
-const CARD_PEEK     = 10;
-const CARD_Y_IN     = WALLET_TOP - CARD_PEEK;
-const CARD_Y_OUT    = CARD_TOP_PAD;
-const GAP           = 28;
+// Base dimensions (desktop)
+const CARD_W       = 400;
+const CARD_H       = 212;
+const WALLET_W     = 430;
+const WALLET_H     = 262;
+const CARD_TOP_PAD = 20;
+const WALLET_TOP   = 138 + CARD_TOP_PAD;
+const CONTAINER_H  = WALLET_TOP + WALLET_H;
+const CARD_PEEK    = 10;
+const CARD_Y_IN    = WALLET_TOP - CARD_PEEK;
+const CARD_Y_OUT   = CARD_TOP_PAD;
+const GAP          = 28;
+
+// Returns a 0–1 scale factor so the wallet fits within the viewport with padding
+function useViewScale() {
+  const compute = () => Math.min(1, (window.innerWidth - 32) / WALLET_W);
+  const [vs, setVs] = useState(compute);
+  useEffect(() => {
+    const onResize = () => setVs(compute());
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  return vs;
+}
 
 // Renders the card face at any scale — used in both carousel and inspect overlay
 function CardFace({ c, scale = 1, isActive = false, inspect = false, verifiedOverride = null }) {
@@ -122,7 +135,6 @@ function CardFace({ c, scale = 1, isActive = false, inspect = false, verifiedOve
         {c.numeral}
       </div>
 
-
       {/* Card content */}
       <div style={{ padding: `${s(14)} ${s(20)}`, display: 'flex', flexDirection: 'column', height: `calc(100% - ${s(4)})` }}>
 
@@ -160,7 +172,6 @@ function CardFace({ c, scale = 1, isActive = false, inspect = false, verifiedOve
         {/* Footer — normal: address + verified dot  |  inspect: sig + date + status */}
         {inspect ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: s(6) }}>
-            {/* Covenant signature */}
             <div>
               <p style={{ fontFamily: 'Cinzel, serif', fontSize: s(6), letterSpacing: '0.3em', textTransform: 'uppercase', color: '#ffffff28', marginBottom: s(2) }}>
                 Covenant Signature
@@ -169,7 +180,6 @@ function CardFace({ c, scale = 1, isActive = false, inspect = false, verifiedOve
                 {c.sig}
               </p>
             </div>
-            {/* Issue date + status */}
             <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', paddingBottom: s(4) }}>
               <div>
                 <p style={{ fontFamily: 'Cinzel, serif', fontSize: s(6), letterSpacing: '0.3em', textTransform: 'uppercase', color: '#ffffff28', marginBottom: s(2) }}>
@@ -227,7 +237,9 @@ const BREATHE_STYLE = (
 // Full-screen inspect overlay
 function InspectOverlay({ card, onClose, onVerify }) {
   const [visible, setVisible] = useState(false);
-  const [liveVerified, setLiveVerified] = useState(null); // null = loading
+  const [liveVerified, setLiveVerified] = useState(null);
+  // Fit card to viewport on mobile, allow up to 1.72× on desktop
+  const inspectScale = Math.min(1.72, (window.innerWidth - 48) / CARD_W);
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true));
@@ -257,7 +269,6 @@ function InspectOverlay({ card, onClose, onVerify }) {
       }}
     >
       {BREATHE_STYLE}
-      {/* Card — spring up */}
       <div
         onClick={e => e.stopPropagation()}
         style={{
@@ -267,10 +278,9 @@ function InspectOverlay({ card, onClose, onVerify }) {
           filter: `drop-shadow(0 24px 48px ${card.accent}30)`,
         }}
       >
-        <CardFace c={card} scale={1.72} isActive inspect verifiedOverride={liveVerified} />
+        <CardFace c={card} scale={inspectScale} isActive inspect verifiedOverride={liveVerified} />
       </div>
 
-      {/* Actions */}
       <div
         onClick={e => e.stopPropagation()}
         style={{
@@ -305,17 +315,27 @@ export function WalletShowcase({ onSearch }) {
   const [inspecting, setInspecting] = useState(false);
   const [hovered, setHovered] = useState(null);
   const scrollRef = useRef(null);
-  const scrollSource = useRef('programmatic'); // 'programmatic' | 'user'
+  const scrollSource = useRef('programmatic');
 
-  // Only scroll programmatically when active changed via dot/auto-rotate, not user scroll
+  // Responsive scale — shrinks everything on narrow viewports
+  const vs = useViewScale();
+  const walletW    = Math.round(WALLET_W * vs);
+  const walletH    = Math.round(WALLET_H * vs);
+  const containerH = Math.round(CONTAINER_H * vs);
+  const cardYIn    = Math.round(CARD_Y_IN * vs);
+  const cardYOut   = Math.round(CARD_Y_OUT * vs);
+  const gap        = Math.round(GAP * vs);
+  const liftPx     = Math.round(6 * vs);
+
+  // Scroll to active item; skip if the change came from user scroll
   useEffect(() => {
     if (!scrollRef.current) return;
     if (scrollSource.current === 'user') {
       scrollSource.current = 'programmatic';
       return;
     }
-    scrollRef.current.scrollTo({ left: active * (WALLET_W + GAP), behavior: 'smooth' });
-  }, [active]);
+    scrollRef.current.scrollTo({ left: active * (walletW + gap), behavior: 'smooth' });
+  }, [active, walletW, gap]);
 
   useEffect(() => {
     if (paused || settled) return;
@@ -325,14 +345,14 @@ export function WalletShowcase({ onSearch }) {
 
   const handleScroll = useCallback(() => {
     if (!scrollRef.current) return;
-    const i = Math.round(scrollRef.current.scrollLeft / (WALLET_W + GAP));
+    const i = Math.round(scrollRef.current.scrollLeft / (walletW + gap));
     const clamped = Math.max(0, Math.min(CARDS.length - 1, i));
     if (clamped !== active) {
       scrollSource.current = 'user';
       setActive(clamped);
       setSettled(true);
     }
-  }, [active]);
+  }, [active, walletW, gap]);
 
   const handleItemClick = (i) => {
     if (i === active) {
@@ -363,13 +383,13 @@ export function WalletShowcase({ onSearch }) {
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
-        {/* Carousel rail — scroll-snap based, horizontally scrollable */}
+        {/* Carousel rail — scroll-snap, horizontally scrollable */}
         <div
           ref={scrollRef}
           onScroll={handleScroll}
           className="showcase-scroll relative w-full"
           style={{
-            height: `${CONTAINER_H}px`,
+            height: `${containerH}px`,
             overflowX: 'auto',
             scrollSnapType: 'x mandatory',
             scrollbarWidth: 'none',
@@ -379,17 +399,17 @@ export function WalletShowcase({ onSearch }) {
           <div
             className="flex"
             style={{
-              gap: `${GAP}px`,
-              paddingLeft: `calc(50% - ${WALLET_W / 2}px)`,
-              paddingRight: `calc(50% - ${WALLET_W / 2}px)`,
+              gap: `${gap}px`,
+              paddingLeft: `calc(50% - ${walletW / 2}px)`,
+              paddingRight: `calc(50% - ${walletW / 2}px)`,
               height: '100%',
               width: 'max-content',
             }}
           >
             {CARDS.map((c, i) => {
-              const dist           = Math.abs(i - active);
-              const isActive       = dist === 0;
-              const isHovered      = hovered === i;
+              const dist            = Math.abs(i - active);
+              const isActive        = dist === 0;
+              const isHovered       = hovered === i;
               const isActiveHovered = isActive && isHovered;
 
               return (
@@ -397,8 +417,8 @@ export function WalletShowcase({ onSearch }) {
                   key={c.tier}
                   onClick={() => handleItemClick(i)}
                   style={{
-                    width: `${WALLET_W}px`,
-                    height: `${CONTAINER_H}px`,
+                    width: `${walletW}px`,
+                    height: `${containerH}px`,
                     position: 'relative',
                     flexShrink: 0,
                     scrollSnapAlign: 'center',
@@ -407,19 +427,19 @@ export function WalletShowcase({ onSearch }) {
                     transition: 'opacity 0.3s ease',
                   }}
                 >
-                  {/* Credential card — hover target is the card only, not the wallet body */}
+                  {/* Credential card — hover target is the card only */}
                   <div
                     onMouseEnter={() => setHovered(i)}
                     onMouseLeave={() => setHovered(null)}
                     style={{
                       position: 'absolute', left: '50%', top: 0,
-                      transform: `translateX(-50%) translateY(${isActive ? (isActiveHovered ? CARD_Y_OUT - 6 : CARD_Y_OUT) : CARD_Y_IN}px)`,
+                      transform: `translateX(-50%) translateY(${isActive ? (isActiveHovered ? cardYOut - liftPx : cardYOut) : cardYIn}px)`,
                       transition: 'transform 0.4s cubic-bezier(0.25, 1.35, 0.5, 1), filter 0.3s ease',
                       filter: isActiveHovered ? `drop-shadow(0 12px 28px ${c.accent}45)` : 'none',
                       zIndex: 5,
                     }}
                   >
-                    <CardFace c={c} scale={1} isActive={isActive} />
+                    <CardFace c={c} scale={vs} isActive={isActive} />
                   </div>
 
                   {/* Wallet body */}
@@ -427,8 +447,8 @@ export function WalletShowcase({ onSearch }) {
                     style={{
                       position: 'absolute', bottom: 0, left: '50%',
                       transform: 'translateX(-50%)',
-                      width: `${WALLET_W}px`,
-                      height: `${WALLET_H}px`,
+                      width: `${walletW}px`,
+                      height: `${walletH}px`,
                       zIndex: 10,
                       background: 'linear-gradient(180deg, #120009 0%, #0a0005 60%, #070003 100%)',
                       border: `1px solid rgba(255,255,255,0.08)`,
@@ -444,7 +464,8 @@ export function WalletShowcase({ onSearch }) {
                       style={{
                         position: 'absolute',
                         top: '-8px', right: '-8px',
-                        width: '80px', height: '80px',
+                        width: `${Math.round(80 * vs)}px`,
+                        height: `${Math.round(80 * vs)}px`,
                         objectFit: 'contain',
                         opacity: 0.9,
                         pointerEvents: 'none',
@@ -488,7 +509,6 @@ export function WalletShowcase({ onSearch }) {
             />
           ))}
         </div>
-
 
       </div>
     </>
