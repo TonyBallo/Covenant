@@ -1,5 +1,5 @@
 import { TIERS, formatDate, formatJurisdiction, formatBurnCountdown } from '../utils/constants';
-import { ETHERSCAN_BASE, CONTRACT_ADDRESS } from '../utils/contract';
+import { ETHERSCAN_BASE } from '../utils/contract';
 import { getCrossChainStatus } from '../utils/api';
 import { useState, useEffect } from 'react';
 
@@ -305,26 +305,6 @@ export function ResultDisplay({ result }) {
         </div>
       )}
 
-      {/* Footer links */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', marginTop: '14px' }}>
-        <a
-          href={`${ETHERSCAN_BASE}/address/${CONTRACT_ADDRESS}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ fontFamily: 'Cinzel, serif', fontSize: '7px', letterSpacing: '0.28em', textTransform: 'uppercase', color: `${accent}55`, textDecoration: 'none' }}
-        >
-          View Contract
-        </a>
-        <span style={{ color: 'rgba(212,175,90,0.2)' }}>•</span>
-        <a
-          href={`${ETHERSCAN_BASE}/address/${result.address}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ fontFamily: 'Cinzel, serif', fontSize: '7px', letterSpacing: '0.28em', textTransform: 'uppercase', color: `${accent}55`, textDecoration: 'none' }}
-        >
-          View Address
-        </a>
-      </div>
 
     </div>
   );
