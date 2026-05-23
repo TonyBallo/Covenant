@@ -213,12 +213,17 @@ export function ResultDisplay({ result }) {
 
           {/* Footer — address + actions */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
-            <button
-              onClick={copyAddress}
-              style={{ fontFamily: 'monospace', fontSize: '11px', color: copied ? accent : 'rgba(255,255,255,0.25)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, transition: 'color 0.2s' }}
-            >
-              {copied ? 'Copied ✓' : `${result.address.slice(0, 6)}···${result.address.slice(-6)}`}
-            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              <p style={{ fontFamily: 'Cinzel, serif', fontSize: '6px', letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)' }}>
+                Wallet Address
+              </p>
+              <button
+                onClick={copyAddress}
+                style={{ fontFamily: 'monospace', fontSize: '11px', color: copied ? accent : 'rgba(255,255,255,0.25)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, transition: 'color 0.2s', textAlign: 'left' }}
+              >
+                {copied ? 'Copied ✓' : `${result.address.slice(0, 6)}···${result.address.slice(-6)}`}
+              </button>
+            </div>
             <div style={{ display: 'flex', gap: '8px' }}>
               <a
                 href={`${ETHERSCAN_BASE}/address/${result.address}`}
