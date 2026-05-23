@@ -361,15 +361,17 @@ function HomePage() {
         )}
       </div>
 
-      <main className="max-w-5xl mx-auto px-6 py-10 md:py-14">
+      <main className={`max-w-5xl mx-auto px-6 ${result ? 'py-4' : 'py-10 md:py-14'}`}>
 
         {/* Title */}
-        <div className="mb-14 text-center">
-          <div className="flex items-center justify-center gap-3 mb-5 opacity-50">
-            <div className="h-px w-10 bg-gradient-to-r from-transparent to-gold-dim"></div>
-            <div className="w-1 h-1 bg-gold rotate-45"></div>
-            <div className="h-px w-10 bg-gradient-to-l from-transparent to-gold-dim"></div>
-          </div>
+        <div className={`${result ? 'mb-0' : 'mb-14'} text-center`}>
+          {!result && (
+            <div className="flex items-center justify-center gap-3 mb-5 opacity-50">
+              <div className="h-px w-10 bg-gradient-to-r from-transparent to-gold-dim"></div>
+              <div className="w-1 h-1 bg-gold rotate-45"></div>
+              <div className="h-px w-10 bg-gradient-to-l from-transparent to-gold-dim"></div>
+            </div>
+          )}
           <h2 className="font-cinzel text-marble text-3xl md:text-4xl tracking-wide mb-4">
             Member Lookup
           </h2>
@@ -404,7 +406,7 @@ function HomePage() {
         )}
 
         {result && !loading && (
-          <div className="animate-fadeIn flex flex-col items-center">
+          <div className="animate-fadeIn flex flex-col items-center -mt-2">
             <div className="w-full max-w-lg">
               <ResultDisplay result={result} />
             </div>

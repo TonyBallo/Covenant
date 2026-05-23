@@ -86,7 +86,7 @@ export function ResultDisplay({ result }) {
   })();
 
   return (
-    <div className="mt-10">
+    <div>
 
       {/* Seal — full-width, floats above card with cast shadow */}
       {result.tier >= 1 && (
