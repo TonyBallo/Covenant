@@ -414,8 +414,10 @@ function HomePage() {
         )}
 
         {result && !loading && (
-          <div className="animate-fadeIn">
-            <ResultDisplay result={result} />
+          <div className="animate-fadeIn flex flex-col items-center">
+            <div className="w-full max-w-lg">
+              <ResultDisplay result={result} />
+            </div>
           </div>
         )}
 
