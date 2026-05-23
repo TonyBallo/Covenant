@@ -3,23 +3,29 @@ import { ETHERSCAN_BASE, CONTRACT_ADDRESS } from '../utils/contract';
 import { getCrossChainStatus } from '../utils/api';
 import { useState, useEffect } from 'react';
 
-const TIER_BLURB = {
-  1: 'This wallet belongs to a verified unique human. Trusted for governance, airdrops, and community access.',
-  2: 'This wallet is linked to a confirmed legal identity. Trusted for light-compliance DeFi, DAO interactions, and identity-gated applications.',
-  3: 'This wallet has passed enhanced due diligence including liveness, sanctions screening, and source of funds review. Trusted for regulated DeFi and MiCA-exposed platforms.',
-  4: 'This wallet belongs to a verified, sophisticated investor. Trusted for RWA platforms, security token offerings, and investor-gated participation.',
-  5: 'This wallet is linked to a verified legal entity with transparent ownership and a certified AML program. Trusted for institutional counterparty and corporate treasury interactions.',
+const TIER_TAGLINE = {
+  1: 'Verified Human',
+  2: 'Named Identity',
+  3: 'Enhanced Due Diligence',
+  4: 'Sophisticated Investor',
+  5: 'Institutional Entity',
 };
 
-// Dark-theme tier color maps (keyed by TIERS[n].color string)
-const tierTextClass = {
-  orange: 'text-gold',
-  gray:   'text-marble-dim',
-  yellow: 'text-gold',
-  blue:   'text-blue-300',
-  purple: 'text-purple-300',
+const TIER_ACCENT = {
+  1: '#c8922a',
+  2: '#a09488',
+  3: '#d4af5a',
+  4: '#93c5fd',
+  5: '#d8b4fe',
 };
 
+const TIER_BG = {
+  1: 'linear-gradient(145deg, #1c0900 0%, #14000c 55%, #0a0006 100%)',
+  2: 'linear-gradient(145deg, #151515 0%, #14000c 55%, #0a0006 100%)',
+  3: 'linear-gradient(145deg, #1a1300 0%, #14000c 55%, #0a0006 100%)',
+  4: 'linear-gradient(145deg, #00091c 0%, #14000c 55%, #0a0006 100%)',
+  5: 'linear-gradient(145deg, #0e0018 0%, #14000c 55%, #0a0006 100%)',
+};
 
 export function ResultDisplay({ result }) {
   const [chainStatus, setChainStatus] = useState({ ethereum: true, polygon: false });
@@ -41,236 +47,226 @@ export function ResultDisplay({ result }) {
     }
   }, [result.address, result.verified]);
 
-  // Not verified
   if (!result.verified) {
     return (
-      <div className="mt-10 border border-gold/20 bg-tyrian-darker p-10 text-center">
-        <div className="w-px h-12 bg-gradient-to-b from-transparent via-gold/40 to-transparent mx-auto mb-6"></div>
-        <h3 className="font-cinzel text-marble text-xl tracking-wide mb-3">
+      <div style={{
+        background: 'linear-gradient(145deg, #0d0010 0%, #0a0006 100%)',
+        border: '1px solid rgba(212,175,90,0.15)',
+        padding: '40px 24px',
+        textAlign: 'center',
+      }}>
+        <div style={{ width: '1px', height: '40px', background: 'linear-gradient(to bottom, transparent, rgba(212,175,90,0.4), transparent)', margin: '0 auto 20px' }} />
+        <p style={{ fontFamily: 'Cinzel, serif', fontSize: '12px', letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: '10px' }}>
           No Trust Seal Found
-        </h3>
-        <p className="font-cormorant text-marble-muted italic text-lg mb-6">
-          This wallet has not completed Covenant verification. No trust standing has been established.
         </p>
-        <div className="border border-gold/10 bg-tyrian-dark px-6 py-3 max-w-lg mx-auto">
-          <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Searched Address</p>
-          <p className="font-mono text-sm text-marble-dim break-all">{result.address}</p>
-        </div>
+        <p style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: '16px', color: 'rgba(255,255,255,0.25)', marginBottom: '20px' }}>
+          This wallet has not completed Covenant verification.
+        </p>
+        <p style={{ fontFamily: 'monospace', fontSize: '11px', color: 'rgba(255,255,255,0.2)', letterSpacing: '0.04em' }}>
+          {result.address}
+        </p>
       </div>
     );
   }
 
   const tierInfo = TIERS[result.tier];
+  const accent   = TIER_ACCENT[result.tier] ?? '#d4af5a';
   const mintDate = formatDate(result.mintedAt);
+  const jurisdiction = formatJurisdiction(result.jurisdictionCode ?? 0);
+
+  const statusColor = result.revoked ? '#fca5a5' : result.isExpired ? '#fcd34d' : accent;
+  const statusLabel = result.revoked ? 'Revoked' : result.isExpired ? 'Expired' : 'Active';
 
   return (
-    <div className="mt-10">
+    <div>
+      {/* Main card */}
+      <div style={{
+        background: TIER_BG[result.tier],
+        border: `1px solid ${accent}38`,
+        overflow: 'hidden',
+        position: 'relative',
+      }}>
 
-      {/* Seal — floats above the card with cast shadow */}
-      {result.tier >= 1 && (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-          <img
-            src={`/tiers/tier-${result.tier}.png`}
-            alt={`Tier ${result.tier} seal`}
-            style={{ width: '100%', height: 'auto', display: 'block' }}
-          />
-          {/* Cast shadow — blurred oval between seal and card */}
-          <div style={{
-            width: '40%',
-            height: '14px',
-            background: 'rgba(0,0,0,0.55)',
-            borderRadius: '50%',
-            filter: 'blur(10px)',
-            marginTop: '-8px',
-            marginBottom: '12px',
-          }} />
-        </div>
-      )}
+        {/* Top accent bar */}
+        <div style={{ height: '4px', background: accent, opacity: 0.75 }} />
 
-      <div className="border border-gold/30 bg-tyrian-darker overflow-hidden">
+        {/* Diagonal stripe texture */}
+        <div style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 18px, rgba(255,255,255,0.013) 18px, rgba(255,255,255,0.013) 19px)`,
+        }} />
 
-      {/* Header */}
-      <div className="bg-tyrian-dark border-b border-gold/20 px-5 py-4 sm:px-8 sm:py-5 relative">
-        <div className="flex items-center justify-between">
-          <div className="flex-1 text-center">
-            <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Trust Seal</p>
-            <button
-              onClick={copyAddress}
-              className="font-mono text-sm text-marble hover:text-gold transition-colors"
-              title="Click to copy full address"
-            >
-              {result.address.slice(0, 6)}…{result.address.slice(-4)}
-            </button>
-            {copied && (
-              <p className="font-cinzel text-gold/70 text-xs tracking-widest uppercase mt-1">Copied ✓</p>
-            )}
-          </div>
-          <div className="flex items-center gap-3 absolute right-5 sm:right-8 top-4">
-            <span className={`font-cinzel text-xs tracking-widest uppercase px-3 py-1 border ${
-              result.revoked
-                ? 'border-red-800/60 text-red-400 bg-red-950/30'
-                : result.isExpired
-                  ? 'border-amber-700/60 text-amber-400 bg-amber-950/20'
-                  : 'border-gold/40 text-gold bg-gold/10'
-            }`}>
-              {result.revoked ? 'Revoked' : result.isExpired ? 'Expired' : 'Active'}
-            </span>
-            {chainStatus.ethereum && (
-              <span className="text-gold text-lg font-cinzel" title="Verified on Arbitrum">⟠</span>
-            )}
-            {chainStatus.polygon && (
-              <span className="text-purple-400 text-lg" title="Attested on Polygon">⬡</span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Tier row */}
-      <div className={`px-5 py-5 sm:px-8 sm:py-6 border-b border-gold/15 flex items-center gap-4 sm:gap-6 ${result.revoked ? 'bg-red-950/20' : result.isExpired ? 'bg-amber-950/10' : ''}`}>
-        <div className={`font-cinzel text-5xl sm:text-6xl font-bold leading-none ${tierTextClass[tierInfo.color]}`}>
+        {/* Watermark numeral */}
+        <div style={{
+          position: 'absolute', top: '50%', left: '35%',
+          transform: 'translate(-50%, -50%)',
+          fontFamily: 'Cinzel, serif', fontWeight: 700,
+          fontSize: 'clamp(120px, 20vw, 220px)', lineHeight: 1,
+          color: accent, opacity: 0.04,
+          pointerEvents: 'none', userSelect: 'none',
+        }}>
           {tierInfo.numeral}
         </div>
-        <div>
-          <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Trust Tier</p>
-          <p className={`font-cinzel text-xl sm:text-2xl tracking-wide ${tierTextClass[tierInfo.color]}`}>
-            {tierInfo.name}
-          </p>
-        </div>
-      </div>
 
-      {/* Tier blurb */}
-      <div className="px-5 pt-5 sm:px-8 sm:pt-6">
-        {result.revoked ? (
-          <p className="font-cormorant text-red-300/80 italic text-lg leading-relaxed">
-            This wallet's Covenant seal has been revoked. Trust standing is no longer valid. Do not rely on this wallet for compliance-sensitive interactions.
-          </p>
-        ) : result.isExpired ? (
-          <p className="font-cormorant text-amber-300/80 italic text-lg leading-relaxed">
-            This wallet's Covenant seal has expired. Verification is no longer active. The wallet holder must renew their verification to regain trust standing.
-          </p>
-        ) : (
-          <p className="font-cormorant text-marble-muted italic text-lg leading-relaxed">
-            {TIER_BLURB[result.tier]}
-          </p>
-        )}
-      </div>
+        {/* Content */}
+        <div style={{ padding: '20px 24px', position: 'relative' }}>
 
-      {/* Data grid */}
-      <div className="px-5 py-5 sm:px-8 sm:py-6 grid grid-cols-2 gap-4">
-        <div>
-          <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Seal ID</p>
-          <p className="font-mono text-marble font-bold text-lg">#{result.sealId}</p>
-        </div>
-        <div>
-          <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Issued</p>
-          <p className="font-cormorant text-marble text-lg">{mintDate}</p>
-        </div>
-        <div>
-          <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Status</p>
-          <p className={`font-cormorant text-lg font-semibold ${result.revoked ? 'text-red-400' : result.isExpired ? 'text-amber-400' : 'text-gold'}`}>
-            {result.revoked ? 'Revoked' : result.isExpired ? 'Expired' : 'Active'}
-          </p>
-        </div>
-        <div>
-          <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Burn Status</p>
-          <p className={`font-cormorant text-lg font-semibold ${result.burnPending ? 'text-gold/70' : 'text-marble-muted'}`}>
-            {result.burnPending ? 'Pending' : 'None'}
-          </p>
-        </div>
-        <div>
-          <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Jurisdiction</p>
-          <p className="font-cormorant text-marble text-lg">
-            {(() => { const j = formatJurisdiction(result.jurisdictionCode ?? 0); return `${j.flag} ${j.label}`; })()}
-          </p>
-        </div>
-      </div>
+          {/* Row 1 — Covenant header + status + chain badges */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
+            <div>
+              <p style={{ fontFamily: 'Cinzel, serif', fontSize: '8px', letterSpacing: '0.36em', textTransform: 'uppercase', color: '#ffffff2a' }}>
+                Covenant
+              </p>
+              <p style={{ fontFamily: 'Cinzel, serif', fontSize: '6px', letterSpacing: '0.44em', textTransform: 'uppercase', color: '#ffffff16', marginTop: '3px' }}>
+                Protocol
+              </p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {chainStatus.ethereum && (
+                <span style={{ fontFamily: 'Cinzel, serif', color: accent, fontSize: '16px', opacity: 0.7 }} title="Verified on Arbitrum">⟠</span>
+              )}
+              {chainStatus.polygon && (
+                <span style={{ color: '#c084fc', fontSize: '16px', opacity: 0.7 }} title="Attested on Polygon">⬡</span>
+              )}
+              <span style={{
+                fontFamily: 'Cinzel, serif', fontSize: '7px', letterSpacing: '0.22em',
+                textTransform: 'uppercase', padding: '4px 10px',
+                border: `1px solid ${statusColor}50`,
+                color: statusColor,
+                background: `${statusColor}12`,
+              }}>
+                {statusLabel}
+              </span>
+            </div>
+          </div>
 
-      {/* Wallet address */}
-      <div className="px-5 pb-5 sm:px-8 sm:pb-6">
-        <div className="border border-gold/10 bg-tyrian-dark px-5 py-4">
-          <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-2">Wallet Address</p>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-            <p className="font-mono text-sm text-marble-dim break-all flex-1">{result.address}</p>
-            <div className="flex gap-2 shrink-0">
-              <button
-                onClick={() => navigator.clipboard.writeText(result.address)}
-                className="font-cinzel text-xs tracking-wider uppercase px-3 py-2 border border-gold/20 text-marble-muted hover:border-gold/50 hover:text-gold transition-colors"
-              >
-                Copy
-              </button>
+          {/* Divider */}
+          <div style={{ height: '1px', background: `${accent}22`, marginBottom: '14px' }} />
+
+          {/* Tier hero */}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '16px', marginBottom: '14px' }}>
+            <span style={{ fontFamily: 'Cinzel, serif', fontWeight: 700, fontSize: 'clamp(36px, 8vw, 52px)', lineHeight: 1, color: accent }}>
+              {tierInfo.numeral}
+            </span>
+            <div>
+              <p style={{ fontFamily: 'Cinzel, serif', fontSize: '14px', letterSpacing: '0.2em', textTransform: 'uppercase', color: accent }}>
+                {tierInfo.name}
+              </p>
+              <p style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: '13px', color: 'rgba(255,255,255,0.3)', marginTop: '3px' }}>
+                {TIER_TAGLINE[result.tier]}
+              </p>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div style={{ height: '1px', background: `${accent}22`, marginBottom: '14px' }} />
+
+          {/* Data grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '14px' }}>
+            {[
+              { label: 'Seal ID',      value: `#${result.sealId}` },
+              { label: 'Issued',       value: mintDate },
+              { label: 'Jurisdiction', value: `${jurisdiction.flag} ${jurisdiction.label}` },
+            ].map(({ label, value }) => (
+              <div key={label}>
+                <p style={{ fontFamily: 'Cinzel, serif', fontSize: '6px', letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', marginBottom: '4px' }}>
+                  {label}
+                </p>
+                <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '14px', color: 'rgba(255,255,255,0.65)' }}>
+                  {value}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Divider */}
+          <div style={{ height: '1px', background: `${accent}22`, marginBottom: '12px' }} />
+
+          {/* Footer — address + actions */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+            <button
+              onClick={copyAddress}
+              style={{ fontFamily: 'monospace', fontSize: '11px', color: copied ? accent : 'rgba(255,255,255,0.25)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, transition: 'color 0.2s' }}
+            >
+              {copied ? 'Copied ✓' : `${result.address.slice(0, 6)}···${result.address.slice(-6)}`}
+            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
               <a
                 href={`${ETHERSCAN_BASE}/address/${result.address}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-cinzel text-xs tracking-wider uppercase px-3 py-2 bg-gold text-tyrian-deep hover:bg-gold-dim transition-colors whitespace-nowrap"
+                style={{
+                  fontFamily: 'Cinzel, serif', fontSize: '7px', letterSpacing: '0.22em',
+                  textTransform: 'uppercase', padding: '5px 12px',
+                  background: accent, color: '#0a0006',
+                  textDecoration: 'none', fontWeight: 600,
+                }}
               >
                 Arbiscan ↗
               </a>
             </div>
           </div>
+
         </div>
+
+        {/* Warning banners — inside the card at the bottom */}
+        {result.revoked && (
+          <div style={{ borderTop: '1px solid rgba(239,68,68,0.25)', background: 'rgba(127,29,29,0.3)', padding: '10px 24px' }}>
+            <p style={{ fontFamily: 'Cinzel, serif', fontSize: '7px', letterSpacing: '0.28em', textTransform: 'uppercase', color: '#fca5a5', marginBottom: '4px' }}>
+              Trust Seal Revoked
+            </p>
+            <p style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: '13px', color: 'rgba(252,165,165,0.7)' }}>
+              {result.revocationReason || 'This seal has been revoked and should not be trusted for protocol access.'}
+            </p>
+          </div>
+        )}
+
+        {result.isExpired && !result.revoked && (
+          <div style={{ borderTop: '1px solid rgba(217,119,6,0.25)', background: 'rgba(120,53,15,0.2)', padding: '10px 24px' }}>
+            <p style={{ fontFamily: 'Cinzel, serif', fontSize: '7px', letterSpacing: '0.28em', textTransform: 'uppercase', color: '#fcd34d', marginBottom: '4px' }}>
+              Seal Expired
+            </p>
+            <p style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: '13px', color: 'rgba(252,211,77,0.6)' }}>
+              This seal is no longer valid. The wallet holder must renew their Covenant verification.
+            </p>
+          </div>
+        )}
+
+        {result.burnPending && (
+          <div style={{ borderTop: `1px solid ${accent}25`, background: `${accent}08`, padding: '10px 24px' }}>
+            <p style={{ fontFamily: 'Cinzel, serif', fontSize: '7px', letterSpacing: '0.28em', textTransform: 'uppercase', color: accent, marginBottom: '4px', opacity: 0.7 }}>
+              Burn Pending
+            </p>
+            <p style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: '13px', color: 'rgba(255,255,255,0.3)' }}>
+              The owner has requested deletion. After the 90-day delay it will be permanently removed.
+            </p>
+          </div>
+        )}
+
       </div>
 
-      {/* Warnings */}
-      {result.revoked && (
-        <div className="mx-5 mb-5 sm:mx-8 sm:mb-6 border-l-4 border-red-800 bg-red-950/30 px-5 py-3">
-          <p className="font-cinzel text-red-400 text-xs tracking-widest uppercase mb-1">Trust Seal Revoked</p>
-          <p className="font-cormorant text-red-300 italic text-base">
-            This seal has been revoked and should not be trusted for protocol access.
-          </p>
-          {result.revocationReason && (
-            <p className="font-cormorant text-red-300/70 italic text-sm mt-2">
-              Reason: {result.revocationReason}
-            </p>
-          )}
-        </div>
-      )}
-
-      {result.isExpired && !result.revoked && (
-        <div className="mx-5 mb-5 sm:mx-8 sm:mb-6 border-l-4 border-amber-700 bg-amber-950/20 px-5 py-3">
-          <p className="font-cinzel text-amber-400 text-xs tracking-widest uppercase mb-1">Seal Expired</p>
-          <p className="font-cormorant text-amber-300/80 italic text-base">
-            This seal is no longer valid for protocol access. The wallet holder must renew their Covenant verification.
-          </p>
-        </div>
-      )}
-
-      {result.burnPending && (
-        <div className="mx-5 mb-5 sm:mx-8 sm:mb-6 border-l-4 border-gold/50 bg-gold/5 px-5 py-3">
-          <p className="font-cinzel text-gold text-xs tracking-widest uppercase mb-1">Burn Pending</p>
-          <p className="font-cormorant text-gold/70 italic text-base">
-            The owner has requested deletion of this seal. After the 90-day delay, it will be permanently removed.
-          </p>
-        </div>
-      )}
-
-      {/* Covenant Signature — collapsible */}
+      {/* Covenant Signature — collapsible, below the card */}
       {result.covenantSignature && result.covenantSignature !== '0x' && (
-        <div className="mx-5 mb-5 sm:mx-8 sm:mb-6 border border-gold/10 bg-tyrian-dark">
+        <div style={{ marginTop: '8px', border: `1px solid ${accent}18`, background: 'rgba(10,0,6,0.6)' }}>
           <button
-            className="w-full flex items-center justify-between px-5 py-3 text-left"
+            style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer' }}
             onClick={() => setShowSignature(v => !v)}
           >
-            <span className="font-cinzel text-marble-muted text-xs tracking-widest uppercase">Covenant Signature</span>
-            <span className="font-cinzel text-marble-muted text-xs tracking-widest">{showSignature ? '▲' : '▼'}</span>
+            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '7px', letterSpacing: '0.28em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)' }}>
+              Covenant Signature
+            </span>
+            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '7px', color: 'rgba(255,255,255,0.2)' }}>{showSignature ? '▲' : '▼'}</span>
           </button>
           {showSignature && (
-            <div className="px-5 pb-5 border-t border-gold/10 pt-4">
-              <p className="font-cormorant text-marble-muted italic text-sm mb-3">
-                The ECDSA signature issued by Covenant Protocol at mint time. Stored permanently on-chain and used to verify this seal was authorised by the issuer.
-              </p>
-              <div className="bg-tyrian-darker border border-gold/10 px-4 py-3 break-all font-mono text-xs text-marble-muted/70 leading-relaxed">
+            <div style={{ padding: '0 16px 14px', borderTop: `1px solid ${accent}12` }}>
+              <p style={{ fontFamily: 'monospace', fontSize: '10px', color: 'rgba(255,255,255,0.25)', wordBreak: 'break-all', lineHeight: 1.6, padding: '10px 0' }}>
                 {result.covenantSignature}
-              </div>
+              </p>
               <button
-                onClick={() => {
-                  navigator.clipboard.writeText(result.covenantSignature);
-                  setSigCopied(true);
-                  setTimeout(() => setSigCopied(false), 2000);
-                }}
-                className="mt-3 font-cinzel text-xs tracking-widest uppercase px-4 py-2 border border-gold/20 text-marble-muted hover:border-gold/40 hover:text-gold transition-colors"
+                onClick={() => { navigator.clipboard.writeText(result.covenantSignature); setSigCopied(true); setTimeout(() => setSigCopied(false), 2000); }}
+                style={{ fontFamily: 'Cinzel, serif', fontSize: '7px', letterSpacing: '0.22em', textTransform: 'uppercase', padding: '5px 12px', border: `1px solid ${accent}25`, color: 'rgba(255,255,255,0.3)', background: 'none', cursor: 'pointer' }}
               >
-                {sigCopied ? 'Copied ✓' : 'Copy Signature'}
+                {sigCopied ? 'Copied ✓' : 'Copy'}
               </button>
             </div>
           )}
@@ -278,27 +274,26 @@ export function ResultDisplay({ result }) {
       )}
 
       {/* Footer links */}
-      <div className="px-5 pb-6 sm:px-8 sm:pb-8 pt-2 border-t border-gold/10 flex gap-6 justify-center">
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', marginTop: '14px' }}>
         <a
           href={`${ETHERSCAN_BASE}/address/${CONTRACT_ADDRESS}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors"
+          style={{ fontFamily: 'Cinzel, serif', fontSize: '7px', letterSpacing: '0.28em', textTransform: 'uppercase', color: `${accent}55`, textDecoration: 'none' }}
         >
           View Contract
         </a>
-        <span className="text-gold/20">•</span>
+        <span style={{ color: 'rgba(212,175,90,0.2)' }}>•</span>
         <a
           href={`${ETHERSCAN_BASE}/address/${result.address}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors"
+          style={{ fontFamily: 'Cinzel, serif', fontSize: '7px', letterSpacing: '0.28em', textTransform: 'uppercase', color: `${accent}55`, textDecoration: 'none' }}
         >
           View Address
         </a>
       </div>
 
-      </div>
     </div>
   );
 }
