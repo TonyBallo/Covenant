@@ -86,7 +86,27 @@ export function ResultDisplay({ result }) {
   })();
 
   return (
-    <div>
+    <div className="mt-10">
+
+      {/* Seal — full-width, floats above card with cast shadow */}
+      {result.tier >= 1 && (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+          <img
+            src={`/tiers/tier-${result.tier}.png`}
+            alt={`Tier ${result.tier} seal`}
+            style={{ width: '100%', height: 'auto', display: 'block' }}
+          />
+          <div style={{
+            width: '40%', height: '14px',
+            background: 'rgba(0,0,0,0.55)',
+            borderRadius: '50%',
+            filter: 'blur(10px)',
+            marginTop: '-8px',
+            marginBottom: '12px',
+          }} />
+        </div>
+      )}
+
       {/* Main card */}
       <div style={{
         background: TIER_BG[result.tier],
