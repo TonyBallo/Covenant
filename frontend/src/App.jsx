@@ -376,12 +376,6 @@ function HomePage() {
           <p className="font-cormorant text-marble-dim text-lg italic leading-relaxed">
             Verify any wallet's standing in the Covenant trust network — instantly, on-chain.
           </p>
-          <Link
-            to="/demo/docs"
-            className="font-cinzel text-gold/50 hover:text-gold text-[10px] tracking-widest uppercase transition-colors mt-5 inline-block"
-          >
-            Documentation →
-          </Link>
         </div>
 
         {/* Main area */}
