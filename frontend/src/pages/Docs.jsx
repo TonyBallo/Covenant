@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
-const PACT_ADDRESS    = '0xBfCA5341f3c370743d4A64Df7c732113A4f83187';
-const WITNESS_ADDRESS = '0x3F214e98C967e49f451c670654fA7D0580da3730';
+const PACT_ADDRESS    = '0x3daB0f859804b2C42349ac6E54CCd7bc9417d871';
+const WITNESS_ADDRESS = '0x9E81f21Ca8e4dc0ce5D8db5F642E7b4D72a6B6F5';
 
 const TOC = [
   {
@@ -298,12 +298,12 @@ export function Docs() {
 
             <Prose>
               Covenant is a membership protocol for <span className="text-gold">simplified trust</span>. It exists because the way people
-              prove who they are online is broken and overcomplicated. We built Covenant to fix that.
+              prove who they are online is broken and overcomplicated. Covenant exists to fix that.
             </Prose>
             <Prose>
-              When you join Covenant, you enter into a <span className="text-gold">pact</span>. You verify your identity once, at
-              whatever level you choose, and we issue you a <span className="text-gold">seal</span> — a <span className="text-marble">permanent, portable credential</span>{' '}
-              whose value is determined by the trust you place in us, and the trust we place in you.{' '}
+              By becoming a member, you enter into a <span className="text-gold">pact</span>. You verify your identity once, at
+              a level of your choosing, and in return are issued a <span className="text-gold">seal</span> — a <span className="text-marble">permanent, portable credential</span>{' '}
+              whose value is determined by mutual trust.{' '}
               <span className="text-marble">Your information stays with us. What travels is your reputation.</span>
             </Prose>
 
@@ -312,33 +312,31 @@ export function Docs() {
 
             <Label>For People</Label>
             <Prose>
-              <span className="text-gold">Problem 1 —</span> Every financial app, every DeFi protocol, every platform that handles real
-              money asks you to prove who you are. Every single time. You upload the same documents,
-              enter the same information, wait for the same verification — over and over, on every
-              platform you use. By the time you've done it enough times, your Social Security number
-              feels like a password.
+              Every modern application and platform asks you to prove who you are. Each time you upload the same documents,
+              enter the same information, wait for the same verification — over and over. By the time you've done it enough times, your personal information is stored in dozens of places, multiplying your exposure to data breaches and identity theft.
+              Your social security number shouldn't feel like a password you have to enter everywhere just to use the internet.
             </Prose>
             <Prose>
-              <span className="text-gold">Problem 2 —</span> Modern approaches to anonymity can bring unnecessary complexity to everyday
-              transactions. The average person shouldn't have to understand blockchain tracing and
-              analysis to be able to safely interact with crypto.
+              Modern solutions to this issue provide anonymity but introduces unnecessary complexity to everyday
+              interactions, especially in digital finance. The average person shouldn't need to understand blockchain tracing and
+              analysis just to be able to safely interact with peer to peer platforms.
             </Prose>
             <Prose>
-              Covenant solves both. <span className="text-marble">Verify once. Your reputation travels everywhere.</span>
+              Covenant solves the problem of online identity verification by providing a simple, secure way to prove who you are without exposing your personal information. <span className="text-marble">Verify once. Covenant will take care of the rest.</span>
             </Prose>
 
             <Label>For Businesses</Label>
             <Prose>
               Platforms and services are burdened with heavy compliance requirements, forcing them to
-              store sensitive user identity data. This data serves as a <span className="text-marble">toxic asset</span> and when they get breached — which
+              store sensitive user identity data. This data only serves as a <span className="text-marble">toxic asset</span> and when they get breached — which
               happens — they face the consequences twice: first from the attack, then from the
               regulatory penalties that follow. They're punished for holding data nobody wanted them
-              to have.
+              to have. It's an unfair system with no good options.
             </Prose>
             <Prose>
               Covenant removes that burden. Businesses that integrate Covenant access a network of
-              trusted users without ever needing to touch the underlying identity data themselves,
-              pulling only the information they need to know with consent by the user.
+              trusted members without ever needing to touch the underlying identity data themselves,
+              pulling only the information they need to know with the consent of the member.
             </Prose>
             <Prose>
               <span className="text-marble">The compliance coverage is built in. The liability is gone.</span>
@@ -349,26 +347,25 @@ export function Docs() {
 
             <Label>The Pact</Label>
             <Prose>
-              Joining Covenant is not signing up for a service. It is entering into an online society built
-              on trust. You share your information with us, we protect it and verify it, and we give
-              you something back: a recognized standing in the digital world that reflects your
-              commitment to being trustworthy. A pact with Covenant is an agreement to remain
-              trustworthy. The seal reflects that standing.
+              By joining Covenant, you are entering into an online society built
+              on trust. You lock your personal information with us, and we give
+              you something back: a digital credential that reflects your
+              commitment to being trustworthy. Your pact with Covenant is an agreement to remain
+              trustworthy.
             </Prose>
 
             <Label>The Seal</Label>
             <Prose>
               Your Covenant seal is a <span className="text-gold">Soulbound Token</span> — a <span className="text-marble">non-transferable</span> digital credential
               permanently bound to your wallet. It cannot be sold, lent, or transferred. It was earned
-              by you, and it belongs to you. The seal serves as both the <span className="text-marble">compliance proof</span> and the{' '}
-              <span className="text-marble">trust signal</span>. It tells any application that accepts it exactly what kind of user you are and the
+              by you, and it belongs to you. The seal serves as both the <span className="text-marble">proof of verification</span> and the{' '}
+              <span className="text-marble">reputation</span>. It tells any application or person exactly what kind of user you are and the
               strength of your reputation, while still preserving your anonymity.
             </Prose>
 
             <Label>The Reputation</Label>
             <Prose>
-              Your seal travels with you. Every protocol, every application, every platform that
-              integrates Covenant can instantly recognize your verified standing without asking you to
+              Your seal travels with you. Every protocol, every application, every platform, every person using Covenant can instantly recognize your verified standing without asking you to
               prove it again. <span className="text-marble">You do the work once. Covenant speaks for you.</span>
             </Prose>
           </section>
@@ -385,27 +382,27 @@ export function Docs() {
                 {
                   step: '01',
                   title: 'Connect Your Wallet',
-                  body: 'Start by connecting your digital wallet to Covenant. Your wallet address becomes the anchor for your seal — it is the identity you are building a reputation for.',
+                  body: 'Start by connecting a digital wallet to Covenant. Your wallet will hold the seal — just like a physical ID.',
                 },
                 {
                   step: '02',
                   title: 'Choose Your Tier',
-                  body: 'Covenant offers five verification tiers, each proving a different level of identity and trust. You choose how much you share. The more you share, the more your seal proves, and the more doors it opens. Start with Bronze and build your reputation over time.',
+                  body: 'Covenant offers five verification tiers, each proving a different level of identity and trust. You choose how much to share. The more you share, the more your seal proves, and the more doors it opens. Start with Bronze and build your reputation over time.',
                 },
                 {
                   step: '03',
                   title: 'Enter the Pact',
-                  body: "Submit your verification information for the tier you've chosen. Your information is encrypted, stored securely in Covenant's protected infrastructure, and never shared without your explicit consent. Nothing personally identifying will ever touch the blockchain.",
+                  body: "Submit your verification information for the tier you've chosen. Your information is encrypted, stored securely in Covenant's protected infrastructure, and will never be shared without your explicit consent. Nothing personally identifying will ever be publicly viewable.",
                 },
                 {
                   step: '04',
                   title: 'Receive Your Seal',
-                  body: 'Once verified, Covenant issues your seal — a non-transferable credential minted to your wallet on Arbitrum. Your seal is immediately readable by any protocol that integrates Covenant. A cross-chain attestation is simultaneously issued on Polygon, making your reputation visible across the ecosystem.',
+                  body: 'Once verified, Covenant issues your seal. Your seal is immediately readable by any protocol that integrates Covenant. A cross-chain attestation is simultaneously issued on all partnered networks, making your reputation usable across the entire ecosystem.',
                 },
                 {
                   step: '05',
                   title: 'Your Reputation Travels',
-                  body: 'From this point on, any application that checks Covenant attestations can verify your standing instantly. No re-verification. No repeated submissions. The seal does the work for you.',
+                  body: 'From this point on, any application integrated with Covenant can verify your standing instantly. No re-verification needed. No repeated submissions. The seal does the work for you.',
                 },
               ].map(({ step, title, body }) => (
                 <div
@@ -424,7 +421,7 @@ export function Docs() {
             </div>
 
             <Callout label="Privacy Note">
-              Your identity data is <span className="text-marble not-italic">never stored on-chain</span>. The seal contains only your tier level,
+              Your personal information is <span className="text-marble not-italic">never stored on-chain</span>. The seal contains only your tier level,
               issuance date, expiry date, and jurisdiction category. <span className="text-marble not-italic">Nothing more.</span> Your personal
               information stays in Covenant's secured, off-chain infrastructure and is never
               transmitted to those that read your seal.
@@ -440,8 +437,8 @@ export function Docs() {
                 isValid(walletAddress, minTier)
               </code>{' '}
               and receives a boolean response. If true, the wallet holds a valid Covenant seal at or
-              above your required tier. <span className="text-marble">No KYC stack to build. No identity data to store. No
-              compliance liability to absorb.</span>
+              above your required tier. <span className="text-marble">No additional KYC stack to build. No identity data to store. No
+              compliance liability to absorb. Your protocol can focus on what it does best.</span>
             </Prose>
 
             <Label>What You Get</Label>
@@ -467,8 +464,7 @@ export function Docs() {
 
             <Prose>
               Covenant offers five trust tiers. Each tier makes a specific, honest claim about what
-              has been verified and to what standard. Your tier is not just a compliance level — it
-              is your recognized standing in the ecosystem.
+              has been verified and to what standard. Each tier is designed to meet the needs of different applications and use cases, from basic human verification to institutional-grade counterparty vetting. The tier system allows members to choose how much they want to share and gives protocols the flexibility to set their own trust requirements.
             </Prose>
             <Prose>
               Tiers I through III are anchored on Arbitrum. Tiers IV and V are anchored on Ethereum
