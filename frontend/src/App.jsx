@@ -364,8 +364,8 @@ function HomePage() {
       <main className="max-w-5xl mx-auto px-6 py-10 md:py-14">
 
         {/* Title */}
-        <div className="mb-14 max-w-md">
-          <div className="flex items-center gap-3 mb-5 opacity-50">
+        <div className="mb-14 text-center">
+          <div className="flex items-center justify-center gap-3 mb-5 opacity-50">
             <div className="h-px w-10 bg-gradient-to-r from-transparent to-gold-dim"></div>
             <div className="w-1 h-1 bg-gold rotate-45"></div>
             <div className="h-px w-10 bg-gradient-to-l from-transparent to-gold-dim"></div>
