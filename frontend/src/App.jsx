@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Link, Outlet, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { SearchBar } from './components/SearchBar';
+import { WalletShowcase } from './components/WalletShowcase';
 import { ResultDisplay } from './components/ResultDisplay';
 import { TierSelect } from './pages/TierSelect';
 import { ApplyForm } from './pages/ApplyForm';
@@ -274,36 +274,123 @@ function HomePage() {
     }
   };
 
+  const [searchInput, setSearchInput] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (searchInput.trim()) handleSearch(searchInput.trim());
+  };
+
+  const handleClear = () => {
+    setResult(null);
+    setError(null);
+    setSearchInput('');
+  };
+
   return (
     <div className="min-h-screen">
-      <main className="max-w-4xl mx-auto px-6 py-10 md:py-16">
+      <main className="max-w-5xl mx-auto px-6 py-10 md:py-14">
 
-        {/* Hero */}
-        <div className="text-center mb-14">
-          <div className="flex items-center justify-center gap-4 mb-8 opacity-60">
-            <div className="h-px w-16 bg-gradient-to-r from-transparent to-gold-dim"></div>
-            <div className="w-1.5 h-1.5 bg-gold rotate-45"></div>
-            <div className="h-px w-16 bg-gradient-to-l from-transparent to-gold-dim"></div>
+        {/* Top row: title left, search right */}
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8 mb-14">
+
+          {/* Left: title + subtitle */}
+          <div className="max-w-md">
+            <div className="flex items-center gap-3 mb-5 opacity-50">
+              <div className="h-px w-10 bg-gradient-to-r from-transparent to-gold-dim"></div>
+              <div className="w-1 h-1 bg-gold rotate-45"></div>
+              <div className="h-px w-10 bg-gradient-to-l from-transparent to-gold-dim"></div>
+            </div>
+            <h2 className="font-cinzel text-marble text-3xl md:text-4xl tracking-wide mb-4">
+              Member Lookup
+            </h2>
+            <p className="font-cormorant text-marble-dim text-lg italic leading-relaxed">
+              Verify any wallet's standing in the Covenant trust network — instantly, on-chain.
+            </p>
+            <Link
+              to="/demo/docs"
+              className="font-cinzel text-gold/50 hover:text-gold text-[10px] tracking-widest uppercase transition-colors mt-5 inline-block"
+            >
+              Documentation →
+            </Link>
           </div>
-          <h2 className="font-cinzel text-marble text-4xl md:text-5xl tracking-wide mb-6">
-            Member Lookup
-          </h2>
-          <p className="font-cormorant text-marble-dim text-xl italic max-w-2xl mx-auto leading-relaxed">
-            Enter any wallet address to confirm whether the entity behind it is a trusted member of the Covenant network.
-          </p>
-          <Link
-            to="/demo/docs"
-            className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors mt-6 inline-block"
-          >
-            Read the Documentation →
-          </Link>
+
+          {/* Right: compact search */}
+          <div className="md:w-64 flex-shrink-0">
+
+            {/* Label */}
+            <p className="font-cinzel text-[9px] tracking-[0.3em] uppercase text-marble-muted/50 mb-2">
+              Verify Address
+            </p>
+
+            <form onSubmit={handleSubmit}>
+              <div
+                className="flex items-center transition-colors duration-200"
+                style={{
+                  borderBottom: searchInput
+                    ? '1px solid rgba(212,175,90,0.7)'
+                    : '1px solid rgba(212,175,90,0.25)',
+                }}
+              >
+                {/* Search icon */}
+                <svg
+                  className="w-3.5 h-3.5 flex-shrink-0 mr-2.5"
+                  style={{ color: 'rgba(212,175,90,0.4)' }}
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+                </svg>
+
+                <input
+                  type="text"
+                  value={searchInput}
+                  onChange={e => setSearchInput(e.target.value)}
+                  placeholder="0x…"
+                  className="flex-1 min-w-0 py-2 bg-transparent text-marble font-mono text-xs placeholder-marble-muted/30 focus:outline-none"
+                  disabled={loading}
+                  autoComplete="off"
+                  spellCheck="false"
+                />
+
+                {/* Submit — arrow icon when idle, spinner when loading, × when result */}
+                {loading ? (
+                  <span className="w-3 h-3 border border-gold/50 border-t-transparent rounded-full animate-spin flex-shrink-0 ml-2" />
+                ) : searchInput.trim() ? (
+                  <button
+                    type="submit"
+                    className="flex-shrink-0 ml-2 transition-colors"
+                    style={{ color: 'rgba(212,175,90,0.6)' }}
+                    onMouseEnter={e => e.currentTarget.style.color = '#d4af5a'}
+                    onMouseLeave={e => e.currentTarget.style.color = 'rgba(212,175,90,0.6)'}
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                    </svg>
+                  </button>
+                ) : null}
+              </div>
+            </form>
+
+            {/* Error inline under search */}
+            {error && (
+              <p className="font-cormorant text-red-400 italic text-xs mt-2">{error}</p>
+            )}
+
+            {/* Clear result */}
+            {(result || error) && !loading && (
+              <button
+                onClick={handleClear}
+                className="mt-3 font-cinzel text-[9px] tracking-widest uppercase text-marble-muted/40 hover:text-gold/60 transition-colors"
+              >
+                ← Clear
+              </button>
+            )}
+          </div>
         </div>
 
-        <SearchBar onSearch={handleSearch} loading={loading} />
-
-        {/* Loading skeleton */}
+        {/* Main area */}
         {loading && (
-          <div className="mt-10 border border-gold/20 bg-tyrian-darker animate-pulse">
+          <div className="border border-gold/20 bg-tyrian-darker animate-pulse">
             <div className="border-b border-gold/10 px-8 py-5">
               <div className="h-4 bg-gold/10 rounded w-1/4"></div>
             </div>
@@ -324,42 +411,17 @@ function HomePage() {
           </div>
         )}
 
-        {/* Error */}
-        {error && (
-          <div className="mt-8 border-l-4 border-red-800 bg-red-950/30 px-6 py-4">
-            <p className="font-cinzel text-red-400 text-xs tracking-widest uppercase mb-1">Error</p>
-            <p className="font-cormorant text-red-300 text-lg">{error}</p>
-          </div>
-        )}
-
-        {/* Result */}
-        {result && (
+        {result && !loading && (
           <div className="animate-fadeIn">
             <ResultDisplay result={result} />
           </div>
         )}
 
-        {/* Feature cards */}
         {!result && !loading && !error && (
-          <div className="mt-16 grid md:grid-cols-3 gap-6">
-            {[
-              { label: 'Private', body: 'All personal data is stored securely off-chain.' },
-              { label: 'Transparent', body: 'Anyone can verify trust — no intermediary required.' },
-              { label: 'Instant', body: 'Real-time membership status read directly from the chain.' },
-            ].map(({ label, body }) => (
-              <div
-                key={label}
-                className="border border-gold/15 bg-tyrian-darker p-8 text-center hover:border-gold/35 transition-colors"
-              >
-                <div className="w-px h-8 bg-gradient-to-b from-gold/50 to-transparent mx-auto mb-6"></div>
-                <h3 className="font-cinzel text-marble text-xs tracking-widest uppercase mb-3">{label}</h3>
-                <p className="font-cormorant text-marble-muted italic text-lg leading-relaxed">{body}</p>
-              </div>
-            ))}
-          </div>
+          <WalletShowcase onSearch={(addr) => { setSearchInput(addr); handleSearch(addr); }} />
         )}
-      </main>
 
+      </main>
     </div>
   );
 }
