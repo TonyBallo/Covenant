@@ -64,10 +64,35 @@ export function ResultDisplay({ result }) {
   const mintDate = formatDate(result.mintedAt);
 
   return (
-    <div className="mt-10 border border-gold/30 bg-tyrian-darker overflow-hidden">
+    <div className="mt-10" style={{ position: 'relative', paddingTop: result.tier >= 1 ? '64px' : '0' }}>
+
+      {/* Seal — floats above the card */}
+      {result.tier >= 1 && (
+        <div style={{
+          position: 'absolute', top: 0, left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 10,
+          pointerEvents: 'none',
+        }}>
+          <img
+            src={`/tiers/tier-${result.tier}.png`}
+            alt={`Tier ${result.tier} seal`}
+            style={{
+              width: '128px',
+              height: '128px',
+              objectFit: 'contain',
+              filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.8))',
+              display: 'block',
+            }}
+          />
+        </div>
+      )}
+
+      <div className="border border-gold/30 bg-tyrian-darker overflow-hidden">
 
       {/* Header */}
-      <div className="bg-tyrian-dark border-b border-gold/20 px-5 py-4 sm:px-8 sm:py-5 relative">
+      <div className="bg-tyrian-dark border-b border-gold/20 px-5 sm:px-8 relative"
+        style={{ paddingTop: result.tier >= 1 ? '72px' : '16px', paddingBottom: '16px' }}>
         <div className="flex items-center justify-between">
           <div className="flex-1 text-center">
             <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">Trust Seal</p>
@@ -82,7 +107,7 @@ export function ResultDisplay({ result }) {
               <p className="font-cinzel text-gold/70 text-xs tracking-widest uppercase mt-1">Copied ✓</p>
             )}
           </div>
-          <div className="flex items-center gap-3 absolute right-5 sm:right-8">
+          <div className="flex items-center gap-3 absolute right-5 sm:right-8 top-4">
             <span className={`font-cinzel text-xs tracking-widest uppercase px-3 py-1 border ${
               result.revoked
                 ? 'border-red-800/60 text-red-400 bg-red-950/30'
@@ -101,15 +126,6 @@ export function ResultDisplay({ result }) {
           </div>
         </div>
       </div>
-
-      {/* Seal image — full width, no padding */}
-      {result.tier >= 1 && (
-        <img
-          src={`/tiers/tier-${result.tier}.png`}
-          alt={`Tier ${result.tier} seal`}
-          className="w-full h-auto block border-b border-gold/10"
-        />
-      )}
 
       {/* Tier row */}
       <div className={`px-5 py-5 sm:px-8 sm:py-6 border-b border-gold/15 flex items-center gap-4 sm:gap-6 ${result.revoked ? 'bg-red-950/20' : result.isExpired ? 'bg-amber-950/10' : ''}`}>
@@ -284,6 +300,7 @@ export function ResultDisplay({ result }) {
         </a>
       </div>
 
+      </div>
     </div>
   );
 }
