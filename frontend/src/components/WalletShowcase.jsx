@@ -300,9 +300,6 @@ function InspectOverlay({ card, onClose, onVerify }) {
         >
           More Info
         </button>
-        <p style={{ fontFamily: 'Cinzel, serif', fontSize: '8px', letterSpacing: '0.24em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)', cursor: 'default' }}>
-          esc to close
-        </p>
       </div>
     </div>
   );
