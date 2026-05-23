@@ -1,4 +1,4 @@
-import { TIERS, formatDate, formatJurisdiction } from '../utils/constants';
+import { TIERS, formatDate, formatJurisdiction, formatBurnCountdown } from '../utils/constants';
 import { ETHERSCAN_BASE, CONTRACT_ADDRESS } from '../utils/contract';
 import { getCrossChainStatus } from '../utils/api';
 import { useState, useEffect } from 'react';
@@ -76,6 +76,14 @@ export function ResultDisplay({ result }) {
 
   const statusColor = result.revoked ? '#fca5a5' : result.isExpired ? '#fcd34d' : accent;
   const statusLabel = result.revoked ? 'Revoked' : result.isExpired ? 'Expired' : 'Active';
+
+  const expiryLabel = (() => {
+    if (!result.expiresAt) return 'No Expiry';
+    if (result.isExpired) return `${formatDate(result.expiresAt)} — Expired`;
+    const msLeft = result.expiresAt * 1000 - Date.now();
+    if (msLeft < 30 * 24 * 60 * 60 * 1000) return `${formatDate(result.expiresAt)} — Soon`;
+    return formatDate(result.expiresAt);
+  })();
 
   return (
     <div>
@@ -161,18 +169,19 @@ export function ResultDisplay({ result }) {
           {/* Divider */}
           <div style={{ height: '1px', background: `${accent}22`, marginBottom: '14px' }} />
 
-          {/* Data grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '14px' }}>
+          {/* Data grid — 2×2 */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px', marginBottom: '14px' }}>
             {[
               { label: 'Seal ID',      value: `#${result.sealId}` },
               { label: 'Issued',       value: mintDate },
+              { label: 'Expires',      value: expiryLabel, color: result.isExpired ? '#fca5a5' : result.expiresAt && (result.expiresAt * 1000 - Date.now()) < 30 * 24 * 60 * 60 * 1000 ? '#fcd34d' : null },
               { label: 'Jurisdiction', value: `${jurisdiction.flag} ${jurisdiction.label}` },
-            ].map(({ label, value }) => (
+            ].map(({ label, value, color }) => (
               <div key={label}>
                 <p style={{ fontFamily: 'Cinzel, serif', fontSize: '6px', letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', marginBottom: '4px' }}>
                   {label}
                 </p>
-                <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '14px', color: 'rgba(255,255,255,0.65)' }}>
+                <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '14px', color: color ?? 'rgba(255,255,255,0.65)' }}>
                   {value}
                 </p>
               </div>
@@ -238,7 +247,10 @@ export function ResultDisplay({ result }) {
               Burn Pending
             </p>
             <p style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: '13px', color: 'rgba(255,255,255,0.3)' }}>
-              The owner has requested deletion. After the 90-day delay it will be permanently removed.
+              The owner has requested deletion of this seal.{' '}
+              {result.burnExecutableAt
+                ? formatBurnCountdown(result.burnExecutableAt)
+                : 'Awaiting 90-day delay.'}
             </p>
           </div>
         )}

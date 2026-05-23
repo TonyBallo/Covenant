@@ -226,9 +226,9 @@ function HomePage() {
       const sealId = await contract.addressToSealId(normalized);
 
       let mintedAt = null;
+      let expiresAt = 0;
       let revocationReason = '';
       let expired = false;
-
       let jurisdictionCode = 0;
       let covenantSignature = null;
       if (verified) {
@@ -241,6 +241,7 @@ function HomePage() {
         expired = isExpiredResult;
         jurisdictionCode = Number(seal.jurisdictionCode);
         covenantSignature = seal.covenantSignature;
+        expiresAt = Number(seal.expiresAt);
       }
 
       setResult({
@@ -252,6 +253,7 @@ function HomePage() {
         burnExecutableAt: Number(burnExecutableAt),
         sealId: Number(sealId),
         mintedAt,
+        expiresAt,
         revocationReason,
         isExpired: expired,
         jurisdictionCode,
