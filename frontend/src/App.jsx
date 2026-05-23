@@ -373,9 +373,11 @@ function HomePage() {
           <h2 className="font-cinzel text-marble text-3xl md:text-4xl tracking-wide mb-4">
             Member Lookup
           </h2>
-          <p className="font-cormorant text-marble-dim text-lg italic leading-relaxed">
-            Verify any wallet's standing in the Covenant trust network — instantly, on-chain.
-          </p>
+          {!result && (
+            <p className="font-cormorant text-marble-dim text-lg italic leading-relaxed">
+              Verify any wallet's standing in the Covenant trust network — instantly, on-chain.
+            </p>
+          )}
         </div>
 
         {/* Main area */}
