@@ -201,6 +201,15 @@ function HomePage() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [searchInput, setSearchInput] = useState('');
+  const { key: locationKey } = useLocation();
+
+  // Reset to showcase view on every navigation to this page
+  useEffect(() => {
+    setResult(null);
+    setError(null);
+    setSearchInput('');
+  }, [locationKey]);
 
   const handleSearch = async (address) => {
     setLoading(true);
@@ -275,8 +284,6 @@ function HomePage() {
       setLoading(false);
     }
   };
-
-  const [searchInput, setSearchInput] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
