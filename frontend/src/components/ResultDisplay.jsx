@@ -216,13 +216,13 @@ export function ResultDisplay({ result }) {
               {showTierInfo && (
                 <div style={{
                   position: 'absolute', top: 'calc(100% + 8px)', left: 0,
-                  zIndex: 50, maxWidth: '320px', pointerEvents: 'none',
+                  zIndex: 50, width: 'max(340px, 100%)', pointerEvents: 'none',
                   background: 'rgba(8,0,5,0.97)',
-                  border: `1px solid ${accent}30`,
-                  boxShadow: `0 4px 24px rgba(0,0,0,0.7), 0 0 16px ${accent}10`,
-                  padding: '14px 18px',
+                  border: `1px solid ${accent}40`,
+                  boxShadow: `0 4px 24px rgba(0,0,0,0.7), 0 0 16px ${accent}12`,
+                  padding: '16px 20px',
                 }}>
-                  <p style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: '15px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.65, margin: 0 }}>
+                  <p style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: '17px', color: 'rgba(255,255,255,0.82)', lineHeight: 1.7, margin: 0 }}>
                     {TIER_DESCRIPTION[result.tier]}
                   </p>
                 </div>
