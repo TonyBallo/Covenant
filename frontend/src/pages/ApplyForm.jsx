@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { submitKYC } from '../utils/api';
 import { TIERS } from '../utils/constants';
-import { isEmailDomainAllowed } from '../utils/emailValidation';
+import { isValidEmailFormat, isEmailDomainAllowed } from '../utils/emailValidation';
 
 export function ApplyForm({ walletAddress, walletConnected }) {
   const location = useLocation();
@@ -27,6 +27,10 @@ export function ApplyForm({ walletAddress, walletConnected }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isValidEmailFormat(formData.email)) {
+      setEmailError('Please enter a valid email address.');
+      return;
+    }
     if (!isEmailDomainAllowed(formData.email)) {
       setEmailError('Please use a personal, institutional (.edu/.gov), or business email. Disposable addresses are not accepted.');
       return;
@@ -49,7 +53,10 @@ export function ApplyForm({ walletAddress, walletConnected }) {
   };
 
   const handleEmailBlur = () => {
-    if (formData.email && !isEmailDomainAllowed(formData.email)) {
+    if (!formData.email) return;
+    if (!isValidEmailFormat(formData.email)) {
+      setEmailError('Please enter a valid email address.');
+    } else if (!isEmailDomainAllowed(formData.email)) {
       setEmailError('Please use a personal, institutional (.edu/.gov), or business email. Disposable addresses are not accepted.');
     } else {
       setEmailError(null);

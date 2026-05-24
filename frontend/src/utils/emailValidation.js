@@ -23,6 +23,10 @@ const DISPOSABLE_DOMAINS = new Set([
   'zetmail.com', 'jetable.fr', 'spambox.us',
 ]);
 
+export function isValidEmailFormat(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((email || '').trim());
+}
+
 export function isEmailDomainAllowed(email) {
   const parts = (email || '').toLowerCase().trim().split('@');
   if (parts.length !== 2 || !parts[1]) return false;

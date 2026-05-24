@@ -34,6 +34,10 @@ const DISPOSABLE_EMAIL_DOMAINS = new Set([
   'zetmail.com', 'jetable.fr', 'spambox.us',
 ]);
 
+function isValidEmailFormat(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((email || '').trim());
+}
+
 function isEmailDomainAllowed(email) {
   const parts = (email || '').toLowerCase().trim().split('@');
   if (parts.length !== 2 || !parts[1]) return false;
@@ -71,6 +75,10 @@ router.post('/submit', submitLimiter, async (req, res) => {
       return res.status(400).json({
         error: 'Missing required fields'
       });
+    }
+
+    if (!isValidEmailFormat(email)) {
+      return res.status(400).json({ error: 'Please enter a valid email address.' });
     }
 
     if (!isEmailDomainAllowed(email)) {
