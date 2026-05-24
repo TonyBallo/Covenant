@@ -456,6 +456,21 @@ export function Docs() {
               <span className="text-gold">KYC provider of record</span>. You access the proof. We hold the data.{' '}
               <span className="text-marble">The liability that comes with holding sensitive identity information never enters your environment</span> — so you can focus on building your product instead of building compliance infrastructure.
             </Prose>
+
+            <div className="border border-gold/20 bg-gold/5 px-6 py-5 my-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <p className="font-cinzel text-gold text-xs tracking-widest uppercase mb-1">See It In Action</p>
+                <p className="font-cormorant text-marble-muted italic text-base md:text-lg leading-relaxed">
+                  Try the live vendor integration demo — a mock DeFi dashboard gated behind a Covenant seal check.
+                </p>
+              </div>
+              <Link
+                to="/demo/vendor-demo"
+                className="font-cinzel text-xs tracking-widest uppercase px-6 py-3 border border-gold/50 text-gold hover:bg-gold hover:text-tyrian-deep transition-colors shrink-0 text-center"
+              >
+                Vendor Demo →
+              </Link>
+            </div>
           </section>
 
           {/* ══ SECTION 3 — Membership Tiers ══════════════════════════════ */}
