@@ -352,7 +352,7 @@ function MysteryShowcase({ inputAddress, setInputAddress, onCheck, onCardClick, 
 
       <div className="w-full border border-gold/20 bg-tyrian-darker p-6 sm:p-8">
         <p className="font-cormorant text-marble-muted italic text-base text-center mb-5">
-          Click any seal to check its access — or enter an address manually.
+          Click any wallet to check its access — or enter an address manually.
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
           <input
