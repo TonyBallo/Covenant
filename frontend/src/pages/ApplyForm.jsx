@@ -71,8 +71,8 @@ export function ApplyForm({ walletAddress, walletConnected }) {
     <div className="min-h-screen py-16 px-6">
       <div className="max-w-xl mx-auto">
 
-        <div className="text-center mb-10">
-          <Link to="/demo/get-verified" state={isUpgrade ? { upgrade: true, currentTier } : undefined} className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors mb-6 inline-block">
+        <div className="relative text-center mb-10">
+          <Link to="/demo/get-verified" state={isUpgrade ? { upgrade: true, currentTier } : undefined} className="absolute left-0 top-0 font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors">
             ← Back to Tiers
           </Link>
 
