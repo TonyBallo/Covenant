@@ -49,12 +49,20 @@ export function About() {
               <p className="font-cormorant text-marble-muted italic text-xs tracking-wider leading-tight">Web3 Identity Verification</p>
             </div>
           </Link>
-          <button
-            onClick={() => navigate('/demo')}
-            className="font-cinzel text-xs tracking-widest uppercase px-5 py-2 border border-gold/60 text-gold hover:bg-gold/10 transition-colors"
-          >
-            Launch App
-          </button>
+          <div className="flex items-center gap-6">
+            <Link
+              to="/demo/docs"
+              className="font-cinzel text-marble-muted hover:text-gold text-xs tracking-widest uppercase transition-colors"
+            >
+              Docs
+            </Link>
+            <button
+              onClick={() => navigate('/demo')}
+              className="font-cinzel text-xs tracking-widest uppercase px-5 py-2 border border-gold/60 text-gold hover:bg-gold/10 transition-colors"
+            >
+              Launch App
+            </button>
+          </div>
         </div>
       </header>
 
