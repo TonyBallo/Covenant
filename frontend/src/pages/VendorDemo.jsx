@@ -5,7 +5,51 @@ import { CONTRACT_ADDRESS, CONTRACT_ABI, RPC_URL } from '../utils/contract';
 
 // ============ Mock Dashboard (shown when access is granted) ============
 
-function ProtectedDashboard({ walletAddress }) {
+const TIER_DATA = {
+  2: {
+    tvl: '$480,300',       position: '$12,450',     yield: '5.4%',
+    tvlChange: '+1.2%',    posChange: '+0.8%',      yieldChange: '+0.2%',
+    activity: [
+      { type: 'Deposit',    amount: '+500 USDC',   time: '2 hours ago', status: 'Confirmed' },
+      { type: 'Yield',      amount: '+1.24 USDC',  time: '8 hours ago', status: 'Confirmed' },
+      { type: 'Deposit',    amount: '+200 USDC',   time: '3 days ago',  status: 'Confirmed' },
+      { type: 'Withdrawal', amount: '-150 USDC',   time: '5 days ago',  status: 'Confirmed' },
+    ],
+  },
+  3: {
+    tvl: '$2,840,000',     position: '$86,200',     yield: '6.8%',
+    tvlChange: '+1.8%',    posChange: '+1.2%',      yieldChange: '+0.3%',
+    activity: [
+      { type: 'Deposit',    amount: '+5,000 USDC',  time: '2 hours ago', status: 'Confirmed' },
+      { type: 'Yield',      amount: '+8.40 USDC',   time: '8 hours ago', status: 'Confirmed' },
+      { type: 'Deposit',    amount: '+2,000 USDC',  time: '3 days ago',  status: 'Confirmed' },
+      { type: 'Withdrawal', amount: '-1,500 USDC',  time: '5 days ago',  status: 'Confirmed' },
+    ],
+  },
+  4: {
+    tvl: '$14,200,000',    position: '$342,000',    yield: '8.2%',
+    tvlChange: '+2.4%',    posChange: '+1.6%',      yieldChange: '+0.4%',
+    activity: [
+      { type: 'Deposit',    amount: '+50,000 USDC',  time: '2 hours ago', status: 'Confirmed' },
+      { type: 'Yield',      amount: '+82.40 USDC',   time: '8 hours ago', status: 'Confirmed' },
+      { type: 'Deposit',    amount: '+20,000 USDC',  time: '3 days ago',  status: 'Confirmed' },
+      { type: 'Withdrawal', amount: '-15,000 USDC',  time: '5 days ago',  status: 'Confirmed' },
+    ],
+  },
+  5: {
+    tvl: '$84,500,000',    position: '$1,850,000',  yield: '9.6%',
+    tvlChange: '+3.1%',    posChange: '+2.2%',      yieldChange: '+0.6%',
+    activity: [
+      { type: 'Deposit',    amount: '+500,000 USDC', time: '2 hours ago', status: 'Confirmed' },
+      { type: 'Yield',      amount: '+820.00 USDC',  time: '8 hours ago', status: 'Confirmed' },
+      { type: 'Deposit',    amount: '+200,000 USDC', time: '3 days ago',  status: 'Confirmed' },
+      { type: 'Withdrawal', amount: '-150,000 USDC', time: '5 days ago',  status: 'Confirmed' },
+    ],
+  },
+};
+
+function ProtectedDashboard({ walletAddress, tier }) {
+  const d = TIER_DATA[tier] ?? TIER_DATA[2];
   return (
     <div className="space-y-6">
 
@@ -25,7 +69,7 @@ function ProtectedDashboard({ walletAddress }) {
         </div>
         <div className="px-5 py-5 sm:px-8 sm:py-6">
           <p className="font-cormorant text-marble text-xl italic mb-2">
-            Your Covenant seal has been verified. Welcome to Protected Protocol.
+            Covenant seal verified. Welcome to Protected Protocol.
           </p>
           <p className="font-mono text-marble-muted text-xs break-all">{walletAddress}</p>
         </div>
@@ -42,9 +86,9 @@ function ProtectedDashboard({ walletAddress }) {
         {/* Metrics row */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-gold/10 border-b border-gold/15">
           {[
-            { label: 'Total Value Locked', value: '$4,821,300', change: '+2.4%' },
-            { label: 'Your Position',      value: '$12,450',   change: '+0.8%' },
-            { label: 'Yield (30d)',         value: '6.12%',     change: '+0.3%' },
+            { label: 'Total Value Locked', value: d.tvl,      change: d.tvlChange },
+            { label: 'Your Position',      value: d.position, change: d.posChange },
+            { label: 'Yield (30d)',        value: d.yield,    change: d.yieldChange },
           ].map(({ label, value, change }) => (
             <div key={label} className="bg-tyrian-darker px-5 py-4 sm:px-6 sm:py-5">
               <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-2">{label}</p>
@@ -60,12 +104,7 @@ function ProtectedDashboard({ walletAddress }) {
             Recent Activity
           </p>
           <div className="space-y-3">
-            {[
-              { type: 'Deposit',    amount: '+500 USDC',  time: '2 hours ago',   status: 'Confirmed' },
-              { type: 'Yield',      amount: '+1.24 USDC', time: '8 hours ago',   status: 'Confirmed' },
-              { type: 'Deposit',    amount: '+200 USDC',  time: '3 days ago',    status: 'Confirmed' },
-              { type: 'Withdrawal', amount: '-150 USDC',  time: '5 days ago',    status: 'Confirmed' },
-            ].map(({ type, amount, time, status }, i) => (
+            {d.activity.map(({ type, amount, time, status }, i) => (
               <div key={i} className="flex items-center justify-between border border-gold/10 bg-tyrian-dark px-5 py-3">
                 <div>
                   <p className="font-cinzel text-marble text-xs tracking-wide">{type}</p>
@@ -384,8 +423,9 @@ function MysteryShowcase({ inputAddress, setInputAddress, onCheck, onCardClick, 
 export function VendorDemo() {
   const [inputAddress, setInputAddress] = useState('');
   const [checkedAddress, setCheckedAddress] = useState(null);
+  const [checkedTier, setCheckedTier] = useState(null);
   const [checking, setChecking] = useState(false);
-  const [accessGranted, setAccessGranted] = useState(null); // null = not yet checked
+  const [accessGranted, setAccessGranted] = useState(null);
   const [denialReason, setDenialReason] = useState(null);
   const [error, setError] = useState(null);
 
@@ -406,19 +446,20 @@ export function VendorDemo() {
     try {
       const provider = new ethers.JsonRpcProvider(RPC_URL);
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-      const valid = await contract.isValid(address, 2);
+      const [valid, [verified, tier, revoked], expired] = await Promise.all([
+        contract.isValid(address, 2),
+        contract.getVerificationStatus(address),
+        contract.isExpired(address),
+      ]);
 
       if (!valid) {
-        const [[verified, , revoked], expired] = await Promise.all([
-          contract.getVerificationStatus(address),
-          contract.isExpired(address),
-        ]);
-        if (!verified) setDenialReason('no_seal');
+        if (!verified)    setDenialReason('no_seal');
         else if (revoked) setDenialReason('revoked');
         else if (expired) setDenialReason('expired');
-        else setDenialReason('wrong_tier');
+        else              setDenialReason('wrong_tier');
       }
 
+      setCheckedTier(Number(tier));
       setCheckedAddress(address);
       setAccessGranted(valid);
     } catch (err) {
@@ -432,6 +473,7 @@ export function VendorDemo() {
   const reset = () => {
     setAccessGranted(null);
     setCheckedAddress(null);
+    setCheckedTier(null);
     setDenialReason(null);
     setError(null);
     setInputAddress('');
@@ -484,7 +526,7 @@ export function VendorDemo() {
 
         {/* Result */}
         {!checking && accessGranted === true && (
-          <ProtectedDashboard walletAddress={checkedAddress} />
+          <ProtectedDashboard walletAddress={checkedAddress} tier={checkedTier} />
         )}
         {!checking && accessGranted === false && (
           <AccessRestricted reason={denialReason} />
