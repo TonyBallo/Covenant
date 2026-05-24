@@ -54,12 +54,6 @@ function Navbar({ walletAddress, walletConnected, onConnect, onDisconnect }) {
             >
               Lookup
             </Link>
-            <Link
-              to="/demo/admin"
-              className="font-cinzel text-marble-muted hover:text-gold text-xs tracking-widest uppercase transition-colors"
-            >
-              Admin
-            </Link>
             {walletConnected && (
               <Link
                 to="/demo/status"
@@ -127,13 +121,6 @@ function Navbar({ walletAddress, walletConnected, onConnect, onDisconnect }) {
               className="font-cinzel text-marble-muted hover:text-gold text-xs tracking-widest uppercase py-3 transition-colors"
             >
               Lookup
-            </Link>
-            <Link
-              to="/demo/admin"
-              onClick={() => setMobileMenuOpen(false)}
-              className="font-cinzel text-marble-muted hover:text-gold text-xs tracking-widest uppercase py-3 transition-colors"
-            >
-              Admin
             </Link>
             {walletConnected && (
               <Link

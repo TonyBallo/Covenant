@@ -30,6 +30,15 @@ export function TierSelect() {
               ? `You currently hold Tier ${currentTier}. Select the tier you wish to upgrade to.`
               : 'Select the trust tier that matches your needs'}
           </p>
+          {!upgradeMode && (
+            <Link
+              to="/demo/get-verified/apply"
+              state={{ tierRequested: 1, isUpgrade: false }}
+              className="inline-block mt-8 font-cinzel text-xs tracking-widest uppercase px-10 py-4 bg-gold text-tyrian-deep hover:bg-gold-dim transition-colors"
+            >
+              Begin with Tier I — Bronze
+            </Link>
+          )}
         </div>
 
         <div className="space-y-3">
