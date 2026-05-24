@@ -91,21 +91,25 @@ export function About() {
             {/* Body */}
             <div className="space-y-5 font-cormorant text-marble-dim text-xl leading-relaxed">
               <p>
-                Problem 1 — Every application you interact with online
-                asks you to prove who you are. Every single time. The same documents. The
-                same information. Over and over, with no memory of what came before. By the time
-                you've done it enough times, your identity becomes scattered, waiting to be picked up by criminals and abused by the platforms you trusted with it.
+                Problem 1 — Every modern application and platform asks you to prove who you are.
+                Each time you upload the same documents, enter the same information, wait for the same
+                verification — over and over. By the time you've done it enough times, your personal
+                information is stored in dozens of places, multiplying your exposure to data breaches
+                and identity theft. Your social security number shouldn't feel like a password you
+                have to enter everywhere just to use the internet.
               </p>
               <p>
-                Problem 2 — Modern approaches to anonymity can bring unnecessary complexity to
-                everyday transactions. The average person shouldn't have to understand blockchain
-                tracing and analysis to be able to safely interact online.
+                Problem 2 — Modern solutions to this provide anonymity but introduce unnecessary
+                complexity to everyday interactions, especially in digital finance. The average person
+                shouldn't need to understand blockchain tracing and analysis just to be able to safely
+                interact with peer-to-peer platforms.
               </p>
               <p>
-                Problem 3 — Platforms and services are burdened with heavy
-                compliance requirements, forced to hold toxic data they never
-                wanted in the first place. When something goes wrong they pay for it twice — first from the attack, then
-                from the regulatory penalties that follow. This results in a world where the people who build the most innovative products are the least able to protect their users, and the people who have the most to lose from a breach are the least able to avoid it.
+                Problem 3 — Platforms and services are burdened with heavy compliance requirements,
+                forcing them to store sensitive user identity data that only serves as a toxic asset.
+                When they get breached — which happens — they face the consequences twice: first from
+                the attack, then from the regulatory penalties that follow. They're punished for
+                holding data nobody wanted them to have. It's an unfair system with no good options.
               </p>
               <p>
                 Covenant was built because all of these problems share the same root cause: there is
