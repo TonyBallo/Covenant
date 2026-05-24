@@ -3,6 +3,14 @@ import { ETHERSCAN_BASE } from '../utils/contract';
 import { getCrossChainStatus } from '../utils/api';
 import { useState, useEffect } from 'react';
 
+const TIER_DESCRIPTION = {
+  1: "A Bronze seal means the person behind this wallet is a verified, real human — not a bot and not a duplicate account. It's the starting point of trust. You may not know who they are, but you know they're real.",
+  2: "A Silver seal means this wallet belongs to a real person whose legal identity has been confirmed. They've verified who they are against a government-issued document. When you see Silver, you're dealing with a real, named individual.",
+  3: "A Gold seal means this person has gone through a thorough vetting process — their identity has been confirmed, they've passed sanctions and background screening, and they've declared where their money comes from. Gold is the standard for serious financial interactions.",
+  4: "A Platinum seal means this person has been verified as a qualified investor in their country. They meet the legal standards required to participate in higher-level financial opportunities. When you see Platinum, you're dealing with someone who has been cleared for serious investment activity.",
+  5: "A Diamond seal means this wallet represents a verified business or organization — not an individual. Their ownership structure is transparent, their compliance program is certified, and their legitimacy has been formally established. Diamond is institutional-grade trust.",
+};
+
 const TIER_TAGLINE = {
   1: 'Verified Human',
   2: 'Named Identity',
@@ -38,6 +46,7 @@ export function ResultDisplay({ result }) {
   const [copied, setCopied] = useState(false);
   const [showSignature, setShowSignature] = useState(false);
   const [sigCopied, setSigCopied] = useState(false);
+  const [showTierInfo, setShowTierInfo] = useState(false);
 
   const copyAddress = () => {
     navigator.clipboard.writeText(result.address);
@@ -182,13 +191,42 @@ export function ResultDisplay({ result }) {
             <span style={{ fontFamily: 'Cinzel, serif', fontWeight: 700, fontSize: 'clamp(44px, 9vw, 64px)', lineHeight: 1, color: accent }}>
               {tierInfo.numeral}
             </span>
-            <div>
-              <p style={{ fontFamily: 'Cinzel, serif', fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase', color: accent }}>
-                {tierInfo.name}
-              </p>
+            <div style={{ position: 'relative' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <p style={{ fontFamily: 'Cinzel, serif', fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase', color: accent }}>
+                  {tierInfo.name}
+                </p>
+                <button
+                  onMouseEnter={() => setShowTierInfo(true)}
+                  onMouseLeave={() => setShowTierInfo(false)}
+                  style={{
+                    width: '15px', height: '15px', borderRadius: '50%',
+                    border: `1px solid ${accent}55`, background: 'transparent',
+                    color: `${accent}88`, fontFamily: 'Georgia, serif',
+                    fontSize: '10px', fontStyle: 'italic', fontWeight: 'bold',
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'default', flexShrink: 0, padding: 0, lineHeight: 1,
+                    alignSelf: 'center', marginBottom: '2px',
+                  }}
+                >i</button>
+              </div>
               <p style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: '16px', color: 'rgba(255,255,255,0.3)', marginTop: '4px' }}>
                 {TIER_TAGLINE[result.tier]}
               </p>
+              {showTierInfo && (
+                <div style={{
+                  position: 'absolute', top: 'calc(100% + 8px)', left: 0,
+                  zIndex: 50, maxWidth: '320px', pointerEvents: 'none',
+                  background: 'rgba(8,0,5,0.97)',
+                  border: `1px solid ${accent}30`,
+                  boxShadow: `0 4px 24px rgba(0,0,0,0.7), 0 0 16px ${accent}10`,
+                  padding: '14px 18px',
+                }}>
+                  <p style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: '15px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.65, margin: 0 }}>
+                    {TIER_DESCRIPTION[result.tier]}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
