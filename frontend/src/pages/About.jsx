@@ -91,25 +91,23 @@ export function About() {
             {/* Body */}
             <div className="space-y-5 font-cormorant text-marble-dim text-xl leading-relaxed">
               <p>
-                Problem 1 — Every modern application and platform asks you to prove who you are.
-                Each time you upload the same documents, enter the same information, wait for the same
-                verification — over and over. By the time you've done it enough times, your personal
-                information is stored in dozens of places, multiplying your exposure to data breaches
-                and identity theft. Your social security number shouldn't feel like a password you
-                have to enter everywhere just to use the internet.
+                Every modern application and platform asks you to prove who you are. Each time you
+                upload the same documents, enter the same information, wait for the same verification
+                — over and over. By the time you've done it enough times, your personal information
+                is stored in dozens of places, multiplying your exposure to data breaches and identity
+                theft. Your social security number shouldn't feel like a password you have to enter
+                everywhere just to use the internet. And yet, modern solutions to this create their
+                own problem — introducing unnecessary complexity to everyday interactions, especially
+                in digital finance. The average person shouldn't need to understand blockchain tracing
+                and analysis just to be able to safely interact with peer-to-peer platforms.
               </p>
               <p>
-                Problem 2 — Modern solutions to this provide anonymity but introduce unnecessary
-                complexity to everyday interactions, especially in digital finance. The average person
-                shouldn't need to understand blockchain tracing and analysis just to be able to safely
-                interact with peer-to-peer platforms.
-              </p>
-              <p>
-                Problem 3 — Platforms and services are burdened with heavy compliance requirements,
-                forcing them to store sensitive user identity data that only serves as a toxic asset.
-                When they get breached — which happens — they face the consequences twice: first from
-                the attack, then from the regulatory penalties that follow. They're punished for
-                holding data nobody wanted them to have. It's an unfair system with no good options.
+                Platforms and services face the same broken system from the other side. They're
+                burdened with heavy compliance requirements, forced to store sensitive user identity
+                data that only serves as a toxic asset. When they get breached — which happens — they
+                face the consequences twice: first from the attack, then from the regulatory penalties
+                that follow. They're punished for holding data nobody wanted them to have. It's an
+                unfair system with no good options.
               </p>
               <p>
                 Covenant was built because all of these problems share the same root cause: there is
