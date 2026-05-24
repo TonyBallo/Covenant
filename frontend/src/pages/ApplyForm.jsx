@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { submitKYC } from '../utils/api';
 import { TIERS } from '../utils/constants';
+import { isEmailDomainAllowed } from '../utils/emailValidation';
 
 export function ApplyForm({ walletAddress, walletConnected }) {
   const location = useLocation();
@@ -18,6 +19,7 @@ export function ApplyForm({ walletAddress, walletConnected }) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
+  const [emailError, setEmailError] = useState(null);
 
   useEffect(() => {
     setFormData(prev => ({ ...prev, walletAddress: walletAddress || '' }));
@@ -25,6 +27,10 @@ export function ApplyForm({ walletAddress, walletConnected }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isEmailDomainAllowed(formData.email)) {
+      setEmailError('Please use a personal, institutional (.edu/.gov), or business email. Disposable addresses are not accepted.');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -39,6 +45,15 @@ export function ApplyForm({ walletAddress, walletConnected }) {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (e.target.name === 'email') setEmailError(null);
+  };
+
+  const handleEmailBlur = () => {
+    if (formData.email && !isEmailDomainAllowed(formData.email)) {
+      setEmailError('Please use a personal, institutional (.edu/.gov), or business email. Disposable addresses are not accepted.');
+    } else {
+      setEmailError(null);
+    }
   };
 
   const requestedTierInfo = TIERS[tierRequested];
@@ -158,10 +173,14 @@ export function ApplyForm({ walletAddress, walletConnected }) {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
+                onBlur={handleEmailBlur}
                 placeholder="john@example.com"
                 required
-                className="w-full px-4 py-3 bg-tyrian-dark border border-gold/30 text-marble placeholder-marble-muted/50 focus:outline-none focus:border-gold/70 font-cormorant text-lg transition-colors"
+                className={`w-full px-4 py-3 bg-tyrian-dark border text-marble placeholder-marble-muted/50 focus:outline-none font-cormorant text-lg transition-colors ${emailError ? 'border-red-700/70 focus:border-red-600' : 'border-gold/30 focus:border-gold/70'}`}
               />
+              {emailError && (
+                <p className="font-cormorant text-red-400 italic text-sm mt-1">{emailError}</p>
+              )}
             </div>
 
             {/* Error */}
@@ -175,7 +194,7 @@ export function ApplyForm({ walletAddress, walletConnected }) {
             {/* Submit */}
             <button
               type="submit"
-              disabled={loading || !walletConnected}
+              disabled={loading || !walletConnected || !!emailError}
               className="w-full font-cinzel text-xs tracking-widest uppercase py-4 bg-gold text-tyrian-deep font-semibold hover:bg-gold-dim disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Submitting…' : isUpgrade ? 'Submit Upgrade Request' : 'Submit Application'}
