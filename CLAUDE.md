@@ -1,6 +1,6 @@
 # CLAUDE.md — Project Covenant
 
-Persistent context for Claude Code sessions. Updated 2026-03-28.
+Persistent context for Claude Code sessions. Updated 2026-05-24.
 
 ---
 
@@ -15,7 +15,7 @@ Project_Covenant/
 │   ├── src/
 │   │   ├── server.js                    # Express app setup, CORS, Supabase init, hourly cleanup job
 │   │   ├── routes/
-│   │   │   ├── kyc.js                   # KYC submit, email verification, status, cross-chain status
+│   │   │   ├── kyc.js                   # KYC submit, email verification, status, cross-chain status; validates email format + domain before insertion
 │   │   │   └── admin.js                 # Approve/reject/mint/revoke/attest/lookup endpoints
 │   │   └── services/
 │   │       ├── blockchain.js            # ethers.js v6 calls to Arbitrum Sepolia (mint, revoke, getSealId, getSealInfo)
@@ -28,22 +28,23 @@ Project_Covenant/
 │   │   ├── App.jsx                      # Router, navbar, wallet connection, homepage search
 │   │   ├── pages/
 │   │   │   ├── Landing.jsx              # Marketing landing page at "/" (no navbar; scroll-locked)
-│   │   │   ├── ApplyForm.jsx            # KYC submission form (Tier I / Bronze only)
+│   │   │   ├── ApplyForm.jsx            # KYC submission form (Tier I / Bronze only); validates email format + domain on blur/submit
 │   │   │   ├── Admin.jsx                # Admin panel (server-auth; Pending, Ready-to-Mint, Revoke Seal, Revoked Seals tabs)
 │   │   │   ├── Docs.jsx                 # Documentation page with tier info and seal images
 │   │   │   ├── MintCeremony.jsx         # Full-screen post-mint ceremony (wallet_watchAsset, shown once per seal via sessionStorage)
 │   │   │   ├── StatusPage.jsx           # Logged-in user's own verification status (always checks on-chain; shows seal image + Add to Wallet)
 │   │   │   ├── TierSelect.jsx           # Tier picker (only Tier I currently active)
-│   │   │   ├── VendorDemo.jsx           # Vendor integration demo — gates a mock DeFi dashboard behind isValid(address, 2)
+│   │   │   ├── VendorDemo.jsx           # Vendor integration demo — plain address input (no wallet connect); mystery showcase (5 neutral cards, shuffled addresses); dashboard values scale by tier (Silver–Diamond only; Bronze can't pass Silver gate)
 │   │   │   ├── VerifySuccess.jsx        # Post email-verification success screen
 │   │   │   └── VerifyFailed.jsx         # Post email-verification failure screen
 │   │   ├── components/
 │   │   │   ├── SearchBar.jsx            # Address input for public seal lookup; 5 tier quick-test buttons
-│   │   │   └── ResultDisplay.jsx        # Seal visualization — full-width seal image, tier row, attribute grid (matches StatusPage layout)
+│   │   │   └── ResultDisplay.jsx        # Seal visualization — full-width seal image, tier row with hoverable info tooltip, attribute grid (matches StatusPage layout)
 │   │   └── utils/
 │   │       ├── api.js                   # All fetch calls to backend (API_BASE_URL from env)
 │   │       ├── contract.js              # ABI + contract address + ethers.js read calls (Arbitrum Sepolia)
-│   │       └── constants.js             # TIERS map, formatDate(), formatAddress()
+│   │       ├── constants.js             # TIERS map, formatDate(), formatAddress()
+│   │       └── emailValidation.js       # isValidEmailFormat() + isEmailDomainAllowed() — used by ApplyForm; mirrors logic in backend kyc.js
 │   ├── package.json
 │   ├── vite.config.js
 │   ├── tailwind.config.js               # Custom colors: covenant.purple, covenant.gold, covenant.dark; safelist for dynamic tier colors
@@ -187,7 +188,9 @@ VITE_API_URL
 
 ```
 User fills ApplyForm
+  → client-side: email format + domain validated on blur/submit (emailValidation.js)
   → POST /api/kyc/submit (rate-limited: 3/15min)
+    → server-side: email format check, then domain allowlist/blocklist check (rejects disposable providers)
     → Supabase: store submission (status: 'pending', email_verified: false)
     → Resend: send verification email with magic link token (expires 15min)
 
@@ -406,3 +409,4 @@ npm run build
 3. **Frontend contract address is hardcoded** in `utils/contract.js` (not in env).
 4. **Mint confirmation email** — sent via Resend after successful mint; uses `RESEND_API_KEY` + `FRONTEND_URL` env vars. Fire-and-forget; never blocks the mint response.
 5. **`activateTiers.js` points at old contract** — update `pactAddress` before running on the current deployment.
+6. **Email domain validation** — `POST /api/kyc/submit` runs a format check then a domain check. Allowlist: Gmail, iCloud, Outlook, Hotmail, Live, Yahoo, Proton + any `.edu`/`.gov`. Blocklist: ~30 known disposable providers. Everything else (business domains) is allowed by default. Same logic mirrored client-side in `emailValidation.js` for immediate UX feedback.
