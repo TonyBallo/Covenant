@@ -70,6 +70,12 @@ const CARDS = [
   },
 ];
 
+const TIER_GLOW_SCALE = { 1: 0.2, 2: 0.4, 3: 0.6, 4: 0.8, 5: 1.0 };
+const gh = (base, tier) => {
+  const n = Math.round(parseInt(base, 16) * (TIER_GLOW_SCALE[tier] ?? 1.0));
+  return n.toString(16).padStart(2, '0');
+};
+
 // Base dimensions (desktop)
 const CARD_W       = 400;
 const CARD_H       = 212;
@@ -96,11 +102,10 @@ function useViewScale() {
 }
 
 // Renders the card face at any scale — used in both carousel and inspect overlay
-function CardFace({ c, scale = 1, isActive = false, inspect = false, verifiedOverride = null }) {
+function CardFace({ c, scale = 1, inspect = false, verifiedOverride = undefined }) {
   const s = (px) => `${Math.round(px * scale)}px`;
-  const resolvedVerified = verifiedOverride !== null ? verifiedOverride : c.verified;
+  const resolvedVerified = verifiedOverride !== undefined ? verifiedOverride : c.verified;
   const statusColor = resolvedVerified === null ? '#a09488' : resolvedVerified ? '#86efac' : '#fca5a5';
-  const statusLabel = resolvedVerified === null ? 'Loading' : resolvedVerified ? 'Verified' : 'Revoked';
 
   return (
     <div
@@ -109,7 +114,7 @@ function CardFace({ c, scale = 1, isActive = false, inspect = false, verifiedOve
         height: s(CARD_H),
         position: 'relative',
         background: c.cardBg,
-        border: `1px solid ${c.accent}38`,
+        border: `1px solid ${c.accent}${gh('38', c.tier)}`,
         overflow: 'hidden',
         flexShrink: 0,
       }}
@@ -139,13 +144,24 @@ function CardFace({ c, scale = 1, isActive = false, inspect = false, verifiedOve
       <div style={{ padding: `${s(14)} ${s(20)}`, display: 'flex', flexDirection: 'column', height: `calc(100% - ${s(4)})` }}>
 
         {/* Header */}
-        <div>
-          <p style={{ fontFamily: 'Cinzel, serif', fontSize: s(8), letterSpacing: '0.36em', textTransform: 'uppercase', color: '#ffffff2a' }}>
-            Covenant
-          </p>
-          <p style={{ fontFamily: 'Cinzel, serif', fontSize: s(6), letterSpacing: '0.44em', textTransform: 'uppercase', color: '#ffffff16', marginTop: s(2) }}>
-            Protocol
-          </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <p style={{ fontFamily: 'Cinzel, serif', fontSize: s(8), letterSpacing: '0.36em', textTransform: 'uppercase', color: '#ffffff2a' }}>
+              Covenant
+            </p>
+            <p style={{ fontFamily: 'Cinzel, serif', fontSize: s(6), letterSpacing: '0.44em', textTransform: 'uppercase', color: '#ffffff16', marginTop: s(2) }}>
+              Protocol
+            </p>
+          </div>
+          {/* Status dot — idle grey in showcase, colored glow in inspect */}
+          <span style={{
+            width: s(7), height: s(7), borderRadius: '50%',
+            display: 'inline-block', flexShrink: 0, marginTop: s(2),
+            background: inspect ? statusColor : 'rgba(148,132,122,0.22)',
+            boxShadow: inspect ? `0 0 ${s(7)} ${statusColor}` : 'none',
+            animation: inspect ? 'dotPulse 3.5s ease-in-out infinite' : 'none',
+            transition: 'background 0.4s, box-shadow 0.4s',
+          }} />
         </div>
 
         {/* Divider */}
@@ -180,46 +196,19 @@ function CardFace({ c, scale = 1, isActive = false, inspect = false, verifiedOve
                 {c.sig}
               </p>
             </div>
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', paddingBottom: s(4) }}>
-              <div>
-                <p style={{ fontFamily: 'Cinzel, serif', fontSize: s(6), letterSpacing: '0.3em', textTransform: 'uppercase', color: '#ffffff28', marginBottom: s(2) }}>
-                  Issued
-                </p>
-                <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: s(11), color: '#ffffff60', fontStyle: 'italic' }}>
-                  {c.issuedAt}
-                </p>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: s(5) }}>
-                <span style={{
-                  width: s(6), height: s(6), borderRadius: '50%',
-                  background: statusColor,
-                  display: 'inline-block',
-                  boxShadow: `0 0 ${s(6)} ${statusColor}`,
-                  animation: 'breathe 2.8s ease-in-out infinite',
-                }} />
-                <span style={{ fontFamily: 'Cinzel, serif', fontSize: s(7), letterSpacing: '0.28em', textTransform: 'uppercase', color: statusColor, opacity: 0.85 }}>
-                  {statusLabel}
-                </span>
-              </div>
+            <div style={{ paddingBottom: s(4) }}>
+              <p style={{ fontFamily: 'Cinzel, serif', fontSize: s(6), letterSpacing: '0.3em', textTransform: 'uppercase', color: '#ffffff28', marginBottom: s(2) }}>
+                Issued
+              </p>
+              <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: s(11), color: '#ffffff60', fontStyle: 'italic' }}>
+                {c.issuedAt}
+              </p>
             </div>
           </div>
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <p style={{ fontFamily: 'monospace', fontSize: s(9), color: '#ffffff22' }}>
-              {c.address.slice(0, 6)}···{c.address.slice(-4)}
-            </p>
-            {isActive && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: s(5) }}>
-                <span
-                  className="animate-pulse"
-                  style={{ width: s(5), height: s(5), borderRadius: '50%', background: c.accent, opacity: 0.75, display: 'inline-block' }}
-                />
-                <span style={{ fontFamily: 'Cinzel, serif', fontSize: s(7), letterSpacing: '0.3em', textTransform: 'uppercase', color: `${c.accent}90` }}>
-                  Verified
-                </span>
-              </div>
-            )}
-          </div>
+          <p style={{ fontFamily: 'monospace', fontSize: s(9), color: '#ffffff22' }}>
+            {c.address.slice(0, 6)}···{c.address.slice(-4)}
+          </p>
         )}
 
       </div>
@@ -230,6 +219,7 @@ function CardFace({ c, scale = 1, isActive = false, inspect = false, verifiedOve
 const BREATHE_STYLE = (
   <style>{`
     @keyframes breathe { 0%,100%{opacity:.55;transform:scale(1)} 50%{opacity:1;transform:scale(1.45)} }
+    @keyframes dotPulse { 0%,100%{opacity:.5} 50%{opacity:.95} }
     .showcase-scroll::-webkit-scrollbar { display: none; }
   `}</style>
 );
@@ -272,13 +262,28 @@ function InspectOverlay({ card, onClose, onVerify }) {
       <div
         onClick={e => e.stopPropagation()}
         style={{
+          position: 'relative',
           transition: 'transform 0.5s cubic-bezier(0.34, 1.4, 0.64, 1), opacity 0.35s ease',
           transform: visible ? 'scale(1) translateY(0)' : 'scale(0.75) translateY(40px)',
           opacity: visible ? 1 : 0,
-          filter: `drop-shadow(0 24px 48px ${card.accent}30)`,
+          filter: `drop-shadow(0 24px 48px ${card.accent}${gh('30', card.tier)})`,
         }}
       >
-        <CardFace c={card} scale={inspectScale} isActive inspect verifiedOverride={liveVerified} />
+        <CardFace c={card} scale={inspectScale} inspect verifiedOverride={liveVerified} />
+        <img
+          src={`/tiers/tier-${card.tier}.png`}
+          alt=""
+          style={{
+            position: 'absolute',
+            top: `${Math.round(-40 * inspectScale)}px`,
+            right: `${Math.round(-50 * inspectScale)}px`,
+            width: `${Math.round(300 * inspectScale)}px`,
+            height: `${Math.round(300 * inspectScale)}px`,
+            objectFit: 'contain',
+            opacity: 0.92,
+            pointerEvents: 'none',
+          }}
+        />
       </div>
 
       <div
@@ -432,11 +437,26 @@ export function WalletShowcase({ onSearch }) {
                       position: 'absolute', left: '50%', top: 0,
                       transform: `translateX(-50%) translateY(${isActive ? (isActiveHovered ? cardYOut - liftPx : cardYOut) : cardYIn}px)`,
                       transition: 'transform 0.4s cubic-bezier(0.25, 1.35, 0.5, 1), filter 0.3s ease',
-                      filter: isActiveHovered ? `drop-shadow(0 12px 28px ${c.accent}45)` : 'none',
+                      filter: isActiveHovered ? `drop-shadow(0 12px 28px ${c.accent}${gh('45', c.tier)})` : 'none',
                       zIndex: 5,
                     }}
                   >
-                    <CardFace c={c} scale={vs} isActive={isActive} />
+                    <CardFace c={c} scale={vs} />
+                    {/* Seal — on card face, lower-right, partially tucked under wallet lip */}
+                    <img
+                      src={`/tiers/tier-${c.tier}.png`}
+                      alt=""
+                      style={{
+                        position: 'absolute',
+                        top: `${Math.round(-40 * vs)}px`,
+                        right: `${Math.round(-50 * vs)}px`,
+                        width: `${Math.round(300 * vs)}px`,
+                        height: `${Math.round(300 * vs)}px`,
+                        objectFit: 'contain',
+                        opacity: 0.92,
+                        pointerEvents: 'none',
+                      }}
+                    />
                   </div>
 
                   {/* Wallet body */}
@@ -449,25 +469,11 @@ export function WalletShowcase({ onSearch }) {
                       zIndex: 10,
                       background: 'linear-gradient(180deg, #120009 0%, #0a0005 60%, #070003 100%)',
                       border: `1px solid rgba(255,255,255,0.08)`,
-                      borderTop: `2px solid ${c.accent}55`,
+                      borderTop: `2px solid ${c.accent}${gh('55', c.tier)}`,
                       borderRadius: '0 0 4px 4px',
                       boxShadow: `0 8px 32px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04)`,
                     }}
                   >
-                    {/* Seal — brand mark top-right of wallet */}
-                    <img
-                      src={`/tiers/tier-${c.tier}.png`}
-                      alt=""
-                      style={{
-                        position: 'absolute',
-                        top: '-8px', right: '-8px',
-                        width: `${Math.round(80 * vs)}px`,
-                        height: `${Math.round(80 * vs)}px`,
-                        objectFit: 'contain',
-                        opacity: 0.9,
-                        pointerEvents: 'none',
-                      }}
-                    />
 
                     <div style={{ height: '1px', background: `${c.accent}20`, marginTop: '10px', marginLeft: '16px', marginRight: '16px' }} />
                     <div style={{ padding: '14px 18px 0' }}>

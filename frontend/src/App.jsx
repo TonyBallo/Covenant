@@ -202,6 +202,8 @@ function HomePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchInput, setSearchInput] = useState('');
+  const [searchHovered, setSearchHovered] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
   const { key: locationKey } = useLocation();
 
   // Reset to showcase view on every navigation to this page
@@ -212,20 +214,24 @@ function HomePage() {
   }, [locationKey]);
 
   const handleSearch = async (address) => {
-    setLoading(true);
-    setError(null);
-    setResult(null);
-
+    // Validate address before touching any state — keeps the current view intact on bad input
+    let normalized;
     try {
-      // Normalize to checksummed form — accepts all-lowercase or wrong-case addresses.
-      // Truly invalid input (wrong length, non-hex) will throw and be caught below.
-      let normalized;
       try {
         normalized = ethers.getAddress(address);
       } catch {
         normalized = ethers.getAddress(address.toLowerCase());
       }
+    } catch {
+      setError('Please enter a valid Ethereum address (should start with 0x)');
+      return;
+    }
 
+    setLoading(true);
+    setError(null);
+    setResult(null);
+
+    try {
       const provider = new ethers.JsonRpcProvider(RPC_URL);
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
 
@@ -272,9 +278,7 @@ function HomePage() {
     } catch (err) {
       console.error('Search error:', err);
       let errorMessage = 'Failed to fetch verification status';
-      if (err.message.includes('invalid address') || err.message.includes('invalid BytesLike') || err.message.includes('bad address')) {
-        errorMessage = 'Please enter a valid Ethereum address (should start with 0x)';
-      } else if (err.message.includes('network')) {
+      if (err.message.includes('network')) {
         errorMessage = 'Network error — please check your internet connection';
       } else if (err.code === 'CALL_EXCEPTION') {
         errorMessage = 'Contract call failed — the contract may not be deployed on this network';
@@ -298,96 +302,127 @@ function HomePage() {
 
   return (
     <div className="min-h-screen">
+      <main className={`max-w-5xl mx-auto px-6 ${result ? 'py-2' : 'py-10 md:py-14'}`}>
 
-      {/* Search — fixed to top-right corner of viewport, below navbar */}
-      <div style={{
-        position: 'fixed', top: '72px', right: '16px',
-        width: '220px', zIndex: 40,
-        background: 'rgba(10,0,6,0.85)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
-        borderBottom: '1px solid rgba(212,175,90,0.15)',
-        padding: '10px 14px 12px',
-      }}>
-        <p className="font-cinzel text-[8px] tracking-[0.3em] uppercase text-marble-muted/40 mb-2">
-          Verify Address
-        </p>
-        <form onSubmit={handleSubmit}>
-          <div
-            className="flex items-center transition-colors duration-200"
-            style={{
-              borderBottom: searchInput
-                ? '1px solid rgba(212,175,90,0.7)'
-                : '1px solid rgba(212,175,90,0.25)',
-            }}
-          >
-            <svg
-              className="w-3 h-3 flex-shrink-0 mr-2"
-              style={{ color: 'rgba(212,175,90,0.4)' }}
-              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-            </svg>
-            <input
-              type="text"
-              value={searchInput}
-              onChange={e => setSearchInput(e.target.value)}
-              placeholder="0x…"
-              className="flex-1 min-w-0 py-1.5 bg-transparent text-marble font-mono text-xs placeholder-marble-muted/30 focus:outline-none"
-              disabled={loading}
-              autoComplete="off"
-              spellCheck="false"
-            />
-            {loading ? (
-              <span className="w-3 h-3 border border-gold/50 border-t-transparent rounded-full animate-spin flex-shrink-0 ml-2" />
-            ) : searchInput.trim() ? (
-              <button
-                type="submit"
-                className="flex-shrink-0 ml-2 transition-colors"
-                style={{ color: 'rgba(212,175,90,0.6)' }}
-                onMouseEnter={e => e.currentTarget.style.color = '#d4af5a'}
-                onMouseLeave={e => e.currentTarget.style.color = 'rgba(212,175,90,0.6)'}
-              >
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                </svg>
-              </button>
-            ) : null}
-          </div>
-        </form>
-        {error && (
-          <p className="font-cormorant text-red-400 italic text-[10px] mt-1.5">{error}</p>
-        )}
-        {(result || error) && !loading && (
-          <button
-            onClick={handleClear}
-            className="mt-2 font-cinzel text-[8px] tracking-widest uppercase text-marble-muted/40 hover:text-gold/60 transition-colors"
-          >
-            ← Clear
-          </button>
-        )}
-      </div>
+        {/* Search bar — expands from icon on hover/focus */}
+        {(() => {
+          const isOpen = searchHovered || searchFocused || !!searchInput || !!result || !!error;
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: result ? '8px' : '28px' }}>
+              <style>{`
+                @keyframes searchGlow {
+                  0%, 100% { box-shadow: 0 0 5px rgba(212,175,90,0.08), 0 0 12px rgba(212,175,90,0.06); }
+                  50%       { box-shadow: 0 0 14px rgba(212,175,90,0.28), 0 0 28px rgba(212,175,90,0.14); }
+                }
+                @keyframes searchIconGlow {
+                  0%, 100% { filter: drop-shadow(0 0 2px rgba(212,175,90,0.2)); }
+                  50%       { filter: drop-shadow(0 0 7px rgba(212,175,90,0.65)); }
+                }
+              `}</style>
+              <form onSubmit={handleSubmit}>
+                <div
+                  onMouseEnter={() => setSearchHovered(true)}
+                  onMouseLeave={() => setSearchHovered(false)}
+                  style={{
+                    display: 'flex', alignItems: 'center',
+                    background: 'rgba(10,0,6,0.55)',
+                    border: `1px solid ${isOpen ? 'rgba(212,175,90,0.4)' : 'rgba(212,175,90,0.22)'}`,
+                    width: isOpen ? 'min(460px, calc(100vw - 48px))' : '44px',
+                    height: '44px',
+                    overflow: 'hidden',
+                    transition: 'width 0.38s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s, box-shadow 0.3s',
+                    cursor: isOpen ? 'text' : 'pointer',
+                    animation: isOpen ? 'none' : 'searchGlow 3s ease-in-out infinite',
+                    boxShadow: isOpen ? '0 0 20px rgba(212,175,90,0.2), 0 0 40px rgba(212,175,90,0.08)' : undefined,
+                  }}
+                >
+                  {/* Icon — always visible, fixed width */}
+                  <div style={{ flexShrink: 0, width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg
+                    style={{
+                      color: isOpen ? 'rgba(212,175,90,0.55)' : 'rgba(212,175,90,0.35)',
+                      transition: 'color 0.25s, filter 0.3s',
+                      animation: isOpen ? 'none' : 'searchIconGlow 3s ease-in-out infinite',
+                      filter: isOpen ? 'drop-shadow(0 0 6px rgba(212,175,90,0.5))' : undefined,
+                    }}
+                    width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+                    </svg>
+                  </div>
+                  {/* Input — revealed as container widens */}
+                  <input
+                    type="text"
+                    value={searchInput}
+                    onChange={e => setSearchInput(e.target.value)}
+                    onFocus={() => setSearchFocused(true)}
+                    onBlur={() => setSearchFocused(false)}
+                    placeholder="Enter wallet address  0x…"
+                    style={{
+                      flex: 1, minWidth: 0,
+                      background: 'none', border: 'none', outline: 'none',
+                      fontFamily: 'monospace', fontSize: '12px',
+                      color: 'rgba(255,255,255,0.72)',
+                      letterSpacing: '0.04em',
+                      opacity: isOpen ? 1 : 0,
+                      transition: 'opacity 0.15s',
+                      paddingRight: '4px',
+                    }}
+                    disabled={loading}
+                    autoComplete="off"
+                    spellCheck="false"
+                  />
+                  {/* Right action */}
+                  <div style={{ flexShrink: 0, width: '40px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isOpen ? 1 : 0, transition: 'opacity 0.15s' }}>
+                    {loading ? (
+                      <span className="animate-spin" style={{ width: '12px', height: '12px', border: '1px solid rgba(212,175,90,0.45)', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block' }} />
+                    ) : searchInput.trim() ? (
+                      <button
+                        type="submit"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(212,175,90,0.55)', padding: 0, transition: 'color 0.2s' }}
+                        onMouseEnter={e => e.currentTarget.style.color = '#d4af5a'}
+                        onMouseLeave={e => e.currentTarget.style.color = 'rgba(212,175,90,0.55)'}
+                      >
+                        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                        </svg>
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              </form>
+              {error && (
+                <p style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', color: '#fca5a5', fontSize: '12px', marginTop: '8px' }}>{error}</p>
+              )}
+              {(result || error) && !loading && (
+                <button
+                  onClick={handleClear}
+                  style={{ marginTop: '8px', fontFamily: 'Cinzel, serif', fontSize: '8px', letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)', background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.2s' }}
+                  onMouseEnter={e => e.currentTarget.style.color = 'rgba(212,175,90,0.6)'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.28)'}
+                >
+                  ← Clear
+                </button>
+              )}
+            </div>
+          );
+        })()}
 
-      <main className={`max-w-5xl mx-auto px-6 ${result ? 'py-4' : 'py-10 md:py-14'}`}>
-
-        {/* Title */}
-        <div className={`${result ? 'mb-0' : 'mb-14'} text-center`}>
-          {!result && (
+        {/* Title — hidden when result is displayed */}
+        {!result && (
+          <div className="mb-10 text-center">
             <div className="flex items-center justify-center gap-3 mb-5 opacity-50">
               <div className="h-px w-10 bg-gradient-to-r from-transparent to-gold-dim"></div>
               <div className="w-1 h-1 bg-gold rotate-45"></div>
               <div className="h-px w-10 bg-gradient-to-l from-transparent to-gold-dim"></div>
             </div>
-          )}
-          <h2 className="font-cinzel text-marble text-3xl md:text-4xl tracking-wide mb-4">
-            Member Lookup
-          </h2>
-          {!result && (
+            <h2 className="font-cinzel text-marble text-3xl md:text-4xl tracking-wide mb-4">
+              Member Lookup
+            </h2>
             <p className="font-cormorant text-marble-dim text-lg italic leading-relaxed">
               Verify any wallet's standing in the Covenant trust network — instantly, on-chain.
             </p>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Main area */}
         {loading && (
@@ -414,13 +449,13 @@ function HomePage() {
 
         {result && !loading && (
           <div className="animate-fadeIn flex flex-col items-center -mt-2">
-            <div className="w-full max-w-lg">
+            <div className="w-full max-w-2xl">
               <ResultDisplay result={result} />
             </div>
           </div>
         )}
 
-        {!result && !loading && !error && (
+        {!result && !loading && (
           <WalletShowcase onSearch={(addr) => { setSearchInput(addr); handleSearch(addr); }} />
         )}
 
