@@ -182,8 +182,8 @@ export function StatusPage({ walletAddress }) {
   };
 
   useEffect(() => {
-    if (!walletAddress) navigate('/demo');
-  }, [walletAddress, navigate]);
+    if (!walletAddress) setLoading(false);
+  }, [walletAddress]);
 
   useEffect(() => {
     if (!sealData?.verified) return;
@@ -231,6 +231,23 @@ export function StatusPage({ walletAddress }) {
     };
     loadStatus();
   }, [walletAddress]);
+
+  if (!walletAddress) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-6">
+        <div className="max-w-md w-full border border-gold/20 bg-tyrian-darker p-10 text-center">
+          <div className="w-px h-10 bg-gradient-to-b from-transparent via-gold/40 to-transparent mx-auto mb-6" />
+          <h2 className="font-cinzel text-marble text-xl tracking-wide mb-3">Connect Your Wallet</h2>
+          <p className="font-cormorant text-marble-muted italic text-lg mb-8">
+            Connect your wallet using the navigation menu to view your verification status.
+          </p>
+          <Link to="/demo" className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors">
+            ← Return to Lookup
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

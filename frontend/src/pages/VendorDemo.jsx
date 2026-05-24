@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESS, CONTRACT_ABI, RPC_URL } from '../utils/contract';
@@ -186,45 +186,224 @@ function AccessRestricted({ reason = 'no_seal' }) {
   );
 }
 
+// ============ Mystery Showcase ============
+
+const NEUTRAL = '#7a7080';
+const CB = 'linear-gradient(145deg, #130009 0%, #0e0007 55%, #0a0005 100%)';
+// Addresses shuffled — tier order is intentionally non-sequential
+const MYSTERY_CARDS = [
+  { id: 0, accent: NEUTRAL, cardBg: CB, address: '0x3333333333333333333333333333333333333333' },
+  { id: 1, accent: NEUTRAL, cardBg: CB, address: '0x1111111111111111111111111111111111111111' },
+  { id: 2, accent: NEUTRAL, cardBg: CB, address: '0x8888888888888888888888888888888888888888' },
+  { id: 3, accent: NEUTRAL, cardBg: CB, address: '0x2222222222222222222222222222222222222222' },
+  { id: 4, accent: NEUTRAL, cardBg: CB, address: '0x5555555555555555555555555555555555555555' },
+];
+
+const MC_W = 320;
+const MC_H = 172;
+
+function MysteryCard({ c, vs, isActive }) {
+  const s = px => `${Math.round(px * vs)}px`;
+  return (
+    <div style={{
+      width: s(MC_W), height: s(MC_H),
+      position: 'relative',
+      background: c.cardBg,
+      border: `1px solid ${c.accent}${isActive ? '50' : '20'}`,
+      overflow: 'hidden', flexShrink: 0,
+      transition: 'border-color 0.3s',
+    }}>
+      <div style={{ height: s(3), background: c.accent, opacity: isActive ? 0.75 : 0.25 }} />
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none',
+        backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 18px, rgba(255,255,255,0.013) 18px, rgba(255,255,255,0.013) 19px)',
+      }} />
+      <div style={{
+        position: 'absolute', top: '50%', left: '50%',
+        transform: 'translate(-50%, -50%)',
+        fontFamily: 'Cinzel, serif', fontWeight: 700,
+        fontSize: s(130), lineHeight: 1,
+        color: c.accent, opacity: 0.04,
+        pointerEvents: 'none', userSelect: 'none',
+      }}>?</div>
+      <img src="/tiers/tier-1.png" alt="" style={{
+        position: 'absolute', top: s(-28), right: s(-36),
+        width: s(230), height: s(230), objectFit: 'contain',
+        opacity: 0.08, filter: 'blur(10px)', pointerEvents: 'none',
+      }} />
+      <div style={{ padding: `${s(11)} ${s(15)}`, display: 'flex', flexDirection: 'column', height: `calc(100% - ${s(3)})` }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <p style={{ fontFamily: 'Cinzel, serif', fontSize: s(7), letterSpacing: '0.36em', textTransform: 'uppercase', color: '#ffffff2a' }}>Covenant</p>
+            <p style={{ fontFamily: 'Cinzel, serif', fontSize: s(5.5), letterSpacing: '0.44em', textTransform: 'uppercase', color: '#ffffff16', marginTop: s(2) }}>Protocol</p>
+          </div>
+          <span style={{ width: s(6), height: s(6), borderRadius: '50%', background: 'rgba(148,132,122,0.2)', flexShrink: 0, marginTop: s(2) }} />
+        </div>
+        <div style={{ height: '1px', background: `${c.accent}1a`, margin: `${s(9)} 0` }} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: s(6) }}>
+          <span style={{ fontFamily: 'Cinzel, serif', fontWeight: 700, fontSize: s(44), lineHeight: 1, color: c.accent, opacity: 0.35 }}>?</span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: s(4) }}>
+            <div style={{ width: s(80), height: s(8), background: `${c.accent}22`, filter: 'blur(3px)', borderRadius: '2px' }} />
+            <div style={{ width: s(110), height: s(7), background: 'rgba(255,255,255,0.07)', filter: 'blur(3px)', borderRadius: '2px' }} />
+          </div>
+        </div>
+        <div style={{ height: '1px', background: `${c.accent}1a`, margin: `${s(9)} 0` }} />
+        <p style={{ fontFamily: 'monospace', fontSize: s(8), color: '#ffffff15', letterSpacing: '0.08em' }}>
+          0x• • • • • • • • • •
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function MysteryShowcase({ inputAddress, setInputAddress, onCheck, onCardClick, error }) {
+  const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const scrollRef = useRef(null);
+  const scrollSource = useRef('programmatic');
+
+  const [vs, setVs] = useState(() => Math.min(1, (window.innerWidth - 32) / MC_W));
+  useEffect(() => {
+    const onResize = () => setVs(Math.min(1, (window.innerWidth - 32) / MC_W));
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const cardW = Math.round(MC_W * vs);
+  const gap   = Math.round(20 * vs);
+
+  useEffect(() => {
+    if (!scrollRef.current) return;
+    if (scrollSource.current === 'user') { scrollSource.current = 'programmatic'; return; }
+    scrollRef.current.scrollTo({ left: active * (cardW + gap), behavior: 'smooth' });
+  }, [active, cardW, gap]);
+
+  useEffect(() => {
+    if (paused) return;
+    const id = setInterval(() => setActive(i => (i + 1) % MYSTERY_CARDS.length), 3000);
+    return () => clearInterval(id);
+  }, [paused]);
+
+  const handleScroll = () => {
+    if (!scrollRef.current) return;
+    const i = Math.round(scrollRef.current.scrollLeft / (cardW + gap));
+    const clamped = Math.max(0, Math.min(MYSTERY_CARDS.length - 1, i));
+    if (clamped !== active) { scrollSource.current = 'user'; setActive(clamped); setPaused(true); }
+  };
+
+  return (
+    <div
+      className="flex flex-col items-center select-none"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
+      <style>{`.mystery-scroll::-webkit-scrollbar { display: none; }`}</style>
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="mystery-scroll"
+        style={{
+          width: '100%', overflowX: 'auto',
+          scrollSnapType: 'x mandatory', scrollbarWidth: 'none', msOverflowStyle: 'none',
+        }}
+      >
+        <div style={{
+          display: 'flex', gap: `${gap}px`,
+          paddingLeft: `calc(50% - ${cardW / 2}px)`,
+          paddingRight: `calc(50% - ${cardW / 2}px)`,
+          width: 'max-content',
+        }}>
+          {MYSTERY_CARDS.map((c, i) => {
+            const dist = Math.abs(i - active);
+            const isActive = dist === 0;
+            return (
+              <div
+                key={c.id}
+                onClick={() => { setActive(i); setPaused(true); onCardClick(c.address); }}
+                style={{
+                  scrollSnapAlign: 'center', flexShrink: 0, cursor: 'pointer',
+                  opacity: isActive ? 1 : dist === 1 ? 0.4 : 0.15,
+                  transform: isActive ? 'scale(1)' : 'scale(0.97)',
+                  transition: 'opacity 0.3s, transform 0.3s',
+                  filter: isActive ? `drop-shadow(0 10px 28px ${NEUTRAL}30)` : 'none',
+                }}
+              >
+                <MysteryCard c={c} vs={vs} isActive={isActive} />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3 mt-5 mb-7">
+        {MYSTERY_CARDS.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => { setActive(i); setPaused(true); }}
+            style={{
+              width: i === active ? '28px' : '8px', height: '8px',
+              borderRadius: '9999px',
+              background: i === active ? NEUTRAL : 'rgba(255,255,255,0.18)',
+              border: 'none', padding: 0, cursor: 'pointer',
+              transition: 'all 0.3s ease',
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="w-full border border-gold/20 bg-tyrian-darker p-6 sm:p-8">
+        <p className="font-cormorant text-marble-muted italic text-base text-center mb-5">
+          Click any seal to check its access — or enter an address manually.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <input
+            type="text"
+            value={inputAddress}
+            onChange={e => setInputAddress(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && onCheck()}
+            placeholder="0x..."
+            className="flex-1 bg-tyrian-deep border border-gold/30 focus:border-gold/60 outline-none px-4 py-3 font-mono text-marble text-sm placeholder:text-marble-muted/40 transition-colors"
+          />
+          <button
+            onClick={onCheck}
+            disabled={!inputAddress.trim()}
+            className="font-cinzel text-xs tracking-widest uppercase px-8 py-3 bg-gold text-tyrian-deep hover:bg-gold-dim transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+          >
+            Check Access
+          </button>
+        </div>
+        {error && (
+          <p className="font-cormorant text-red-400 italic text-base mt-4">{error}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ============ VendorDemo Page ============
 
 export function VendorDemo() {
-  const [walletAddress, setWalletAddress] = useState(
-    sessionStorage.getItem('walletAddress') || ''
-  );
-  const [walletConnected, setWalletConnected] = useState(
-    sessionStorage.getItem('walletConnected') === 'true'
-  );
+  const [inputAddress, setInputAddress] = useState('');
+  const [checkedAddress, setCheckedAddress] = useState(null);
   const [checking, setChecking] = useState(false);
   const [accessGranted, setAccessGranted] = useState(null); // null = not yet checked
   const [denialReason, setDenialReason] = useState(null);
   const [error, setError] = useState(null);
 
-  const connectAndCheck = async () => {
+  const checkAccess = async (override) => {
     setError(null);
+    const raw = typeof override === 'string' ? override : inputAddress;
+    let address;
     try {
-      let address = walletAddress;
+      address = ethers.getAddress(raw.trim());
+    } catch {
+      setError('Invalid wallet address. Please enter a valid Ethereum address.');
+      return;
+    }
 
-      if (!walletConnected) {
-        if (!window.ethereum) {
-          const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-          if (isMobile) {
-            window.location.href = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;
-          } else {
-            alert('No wallet detected. Please install MetaMask.');
-          }
-          return;
-        }
-        const browserProvider = new ethers.BrowserProvider(window.ethereum);
-        const accounts = await browserProvider.send('eth_requestAccounts', []);
-        address = accounts[0];
-        setWalletAddress(address);
-        setWalletConnected(true);
-        sessionStorage.setItem('walletAddress', address);
-        sessionStorage.setItem('walletConnected', 'true');
-      }
-
-      setChecking(true);
+    setChecking(true);
+    setAccessGranted(null);
+    setDenialReason(null);
+    try {
       const provider = new ethers.JsonRpcProvider(RPC_URL);
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
       const valid = await contract.isValid(address, 2);
@@ -240,6 +419,7 @@ export function VendorDemo() {
         else setDenialReason('wrong_tier');
       }
 
+      setCheckedAddress(address);
       setAccessGranted(valid);
     } catch (err) {
       console.error('Vendor demo check failed:', err);
@@ -247,6 +427,14 @@ export function VendorDemo() {
     } finally {
       setChecking(false);
     }
+  };
+
+  const reset = () => {
+    setAccessGranted(null);
+    setCheckedAddress(null);
+    setDenialReason(null);
+    setError(null);
+    setInputAddress('');
   };
 
   return (
@@ -275,37 +463,15 @@ export function VendorDemo() {
           </p>
         </div>
 
-        {/* Not yet connected */}
-        {!walletConnected && accessGranted === null && (
-          <div className="border border-gold/20 bg-tyrian-darker p-10 text-center">
-            <div className="w-px h-10 bg-gradient-to-b from-transparent via-gold/40 to-transparent mx-auto mb-8"></div>
-            <p className="font-cormorant text-marble text-xl italic mb-8">
-              Connect your wallet to verify your Covenant seal and access the protocol.
-            </p>
-            <button
-              onClick={connectAndCheck}
-              className="font-cinzel text-xs tracking-widest uppercase px-8 py-3 bg-gold text-tyrian-deep hover:bg-gold-dim transition-colors"
-            >
-              Connect Wallet
-            </button>
-          </div>
-        )}
-
-        {/* Connected but not yet checked */}
-        {walletConnected && accessGranted === null && !checking && (
-          <div className="border border-gold/20 bg-tyrian-darker p-10 text-center">
-            <div className="w-px h-10 bg-gradient-to-b from-transparent via-gold/40 to-transparent mx-auto mb-6"></div>
-            <p className="font-mono text-marble-muted text-xs mb-2">Connected</p>
-            <p className="font-mono text-marble text-sm mb-8 break-all">
-              {walletAddress.slice(0, 6)}…{walletAddress.slice(-4)}
-            </p>
-            <button
-              onClick={connectAndCheck}
-              className="font-cinzel text-xs tracking-widest uppercase px-8 py-3 bg-gold text-tyrian-deep hover:bg-gold-dim transition-colors"
-            >
-              Verify Seal Access
-            </button>
-          </div>
+        {/* Mystery showcase gate */}
+        {accessGranted === null && !checking && (
+          <MysteryShowcase
+            inputAddress={inputAddress}
+            setInputAddress={setInputAddress}
+            onCheck={checkAccess}
+            onCardClick={(addr) => { setInputAddress(addr); checkAccess(addr); }}
+            error={error}
+          />
         )}
 
         {/* Loading */}
@@ -316,34 +482,36 @@ export function VendorDemo() {
           </div>
         )}
 
-        {/* Error */}
-        {error && (
-          <div className="border-l-4 border-red-800 bg-red-950/30 px-6 py-4 mb-6">
-            <p className="font-cinzel text-red-400 text-xs tracking-widest uppercase mb-1">Error</p>
-            <p className="font-cormorant text-red-300 text-lg">{error}</p>
-          </div>
-        )}
-
         {/* Result */}
         {!checking && accessGranted === true && (
-          <ProtectedDashboard walletAddress={walletAddress} />
+          <ProtectedDashboard walletAddress={checkedAddress} />
         )}
         {!checking && accessGranted === false && (
           <AccessRestricted reason={denialReason} />
         )}
 
-        {/* Integration note */}
+        {/* Integration note + check another */}
         {!checking && accessGranted !== null && (
-          <div className="mt-8 border border-gold/10 bg-tyrian-dark px-6 py-5">
-            <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-2">
-              How this works
-            </p>
-            <p className="font-cormorant text-marble-muted italic text-base leading-relaxed">
-              This page called <span className="font-mono text-marble-dim not-italic">isValid(address, 2)</span> on
-              the Covenant Pact contract and gated content based on the result — no backend required.
-              Any protocol can integrate this single read call to verify member identity on-chain.
-            </p>
-          </div>
+          <>
+            <div className="mt-8 border border-gold/10 bg-tyrian-dark px-6 py-5">
+              <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-2">
+                How this works
+              </p>
+              <p className="font-cormorant text-marble-muted italic text-base leading-relaxed">
+                This page called <span className="font-mono text-marble-dim not-italic">isValid(address, 2)</span> on
+                the Covenant Pact contract and gated content based on the result — no backend required.
+                Any protocol can integrate this single read call to verify member identity on-chain.
+              </p>
+            </div>
+            <div className="mt-4 text-center">
+              <button
+                onClick={reset}
+                className="font-cinzel text-gold/60 hover:text-gold text-xs tracking-widest uppercase transition-colors"
+              >
+                ← Check another address
+              </button>
+            </div>
+          </>
         )}
 
       </div>

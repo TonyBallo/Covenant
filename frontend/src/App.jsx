@@ -54,12 +54,6 @@ function Navbar({ walletAddress, walletConnected, onConnect, onDisconnect }) {
             >
               Lookup
             </Link>
-            <Link
-              to="/demo/admin"
-              className="font-cinzel text-marble-muted hover:text-gold text-xs tracking-widest uppercase transition-colors"
-            >
-              Admin
-            </Link>
             {walletConnected && (
               <Link
                 to="/demo/status"
@@ -69,10 +63,10 @@ function Navbar({ walletAddress, walletConnected, onConnect, onDisconnect }) {
               </Link>
             )}
             <Link
-              to="/demo/vendor-demo"
+              to="/demo/docs"
               className="font-cinzel text-marble-muted hover:text-gold text-xs tracking-widest uppercase transition-colors"
             >
-              Vendor Demo
+              Docs
             </Link>
             <Link
               to="/demo/get-verified"
@@ -128,13 +122,6 @@ function Navbar({ walletAddress, walletConnected, onConnect, onDisconnect }) {
             >
               Lookup
             </Link>
-            <Link
-              to="/demo/admin"
-              onClick={() => setMobileMenuOpen(false)}
-              className="font-cinzel text-marble-muted hover:text-gold text-xs tracking-widest uppercase py-3 transition-colors"
-            >
-              Admin
-            </Link>
             {walletConnected && (
               <Link
                 to="/demo/status"
@@ -145,11 +132,11 @@ function Navbar({ walletAddress, walletConnected, onConnect, onDisconnect }) {
               </Link>
             )}
             <Link
-              to="/demo/vendor-demo"
+              to="/demo/docs"
               onClick={() => setMobileMenuOpen(false)}
               className="font-cinzel text-marble-muted hover:text-gold text-xs tracking-widest uppercase py-3 transition-colors"
             >
-              Vendor Demo
+              Docs
             </Link>
             <Link
               to="/demo/get-verified"
@@ -390,6 +377,11 @@ function HomePage() {
                   </div>
                 </div>
               </form>
+              {!isOpen && !error && (
+                <p style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', color: 'rgba(255,255,255,0.2)', fontSize: '13px', marginTop: '10px', letterSpacing: '0.03em' }}>
+                  Look up any wallet address
+                </p>
+              )}
               {error && (
                 <p style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', color: '#fca5a5', fontSize: '12px', marginTop: '8px' }}>{error}</p>
               )}
@@ -456,7 +448,15 @@ function HomePage() {
         )}
 
         {!result && !loading && (
-          <WalletShowcase onSearch={(addr) => { setSearchInput(addr); handleSearch(addr); }} />
+          <>
+            <WalletShowcase onSearch={(addr) => { setSearchInput(addr); handleSearch(addr); }} />
+            <p className="text-center mt-6 font-cormorant text-marble-muted/60 italic text-base">
+              Don't have a seal?{' '}
+              <Link to="/demo/get-verified" className="text-gold/70 hover:text-gold transition-colors not-italic font-cinzel text-xs tracking-widest uppercase">
+                Apply for verification →
+              </Link>
+            </p>
+          </>
         )}
 
       </main>
