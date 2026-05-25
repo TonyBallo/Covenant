@@ -63,7 +63,7 @@ export async function mintSeal(userAddress, tier, signature, jurisdictionCode = 
     await contract.mint.staticCall(userAddress, tier, jurisdictionCode, signature, resolvedExpiresAt);
 
     const tx = await contract.mint(userAddress, tier, jurisdictionCode, signature, resolvedExpiresAt, {
-      gasLimit: 300000  // Conservative ceiling; actual usage is ~150–180k
+      gasLimit: 500000  // Conservative ceiling; actual usage is ~50–80k
     });
 
     console.log(`📤 Transaction sent: ${tx.hash}`);
