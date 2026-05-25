@@ -59,12 +59,21 @@ export function Waitlist() {
               <div className="w-1.5 h-1.5 bg-gold rotate-45" />
               <div className="h-px w-12 bg-gold-dim" />
             </div>
-            <p className="font-cinzel text-gold text-xs tracking-[0.3em] uppercase mb-3">Check your inbox</p>
-            <p className="font-cormorant text-marble text-xl italic mb-3">
-              We sent you a confirmation link.
+            <p className="font-cinzel text-gold text-xs tracking-[0.3em] uppercase mb-4">Almost there</p>
+            <h2 className="font-cinzel text-marble text-2xl tracking-wide mb-4">Check your inbox.</h2>
+            <p className="font-cormorant text-marble-dim italic text-lg leading-relaxed mb-6">
+              We've sent a confirmation email to the address you provided.
             </p>
-            <p className="font-cormorant text-marble-muted italic text-base mb-6">
-              Click it to secure your spot on the waitlist. The link expires in 24 hours.
+
+            <div className="border border-gold/40 bg-gold/8 px-6 py-5 mb-6">
+              <p className="font-cinzel text-gold text-[11px] tracking-[0.25em] uppercase mb-2">Action required</p>
+              <p className="font-cormorant text-marble text-lg leading-relaxed">
+                You must click the link in that email to secure your spot. Your spot is <span className="italic">not</span> reserved until you confirm.
+              </p>
+            </div>
+
+            <p className="font-cormorant text-marble-muted/60 italic text-sm mb-8">
+              The link expires in 24 hours. Check your spam folder if you don't see it.
             </p>
             <Link
               to="/demo"
@@ -154,12 +163,6 @@ export function Waitlist() {
                 <p className="font-cormorant text-red-300 italic text-base">{error}</p>
               </div>
             )}
-
-            <div className="border-l-2 border-gold/25 pl-4">
-              <p className="font-cormorant text-marble-muted italic text-base leading-relaxed">
-                We'll send a confirmation link to your email. You'll need to click it to secure your spot.
-              </p>
-            </div>
 
             <button
               type="submit"
