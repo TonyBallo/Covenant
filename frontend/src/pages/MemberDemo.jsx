@@ -450,65 +450,81 @@ export function MemberDemo() {
               </div>
             </div>
 
-            {/* Covenant browser-extension popup */}
+            {/* Covenant browser-extension popup — styled as Platinum card face */}
             <div
-              className={`fixed top-4 right-4 z-50 w-80 transition-all duration-500 ease-out ${
-                sealVisible
-                  ? 'opacity-100 translate-x-0'
-                  : 'opacity-0 translate-x-8 pointer-events-none'
-              }`}
+              className={`fixed top-4 right-4 z-50 w-72 transition-all duration-500 ease-out overflow-hidden`}
               style={{
-                background: 'linear-gradient(145deg, #1a0014 0%, #14000c 60%, #0a0006 100%)',
-                border: '1px solid rgba(212,175,90,0.25)',
-                boxShadow: '0 8px 40px rgba(0,0,0,0.7), 0 0 24px rgba(212,175,90,0.06)',
+                opacity: sealVisible ? 1 : 0,
+                transform: sealVisible ? 'translateX(0)' : 'translateX(24px)',
+                pointerEvents: sealVisible ? 'auto' : 'none',
+                background: 'linear-gradient(145deg, #00091c 0%, #14000c 55%, #0a0006 100%)',
+                border: '1px solid #93c5fd2d',
+                boxShadow: '0 12px 48px rgba(0,0,0,0.8), 0 0 32px #93c5fd20',
               }}
             >
-              {/* Extension header bar */}
-              <div
-                className="flex items-center justify-between px-3 py-2"
-                style={{ borderBottom: '1px solid rgba(212,175,90,0.12)', background: 'rgba(212,175,90,0.04)' }}
-              >
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 shrink-0">
-                    <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="14" cy="14" r="12.5" stroke="#d4af5a" strokeWidth="1" strokeDasharray="2 3" />
-                      <polygon points="14,6 20.06,9.75 20.06,17.25 14,21 7.94,17.25 7.94,9.75" fill="none" stroke="#d4af5a" strokeWidth="1" opacity="0.8" />
-                      <circle cx="14" cy="14" r="2.5" fill="#d4af5a" opacity="0.9" />
-                    </svg>
-                  </div>
-                  <span className="font-cinzel text-[11px] tracking-widest uppercase" style={{ color: 'rgba(212,175,90,0.7)' }}>Covenant</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'rgba(212,175,90,0.7)' }} />
-                  <span className="font-cinzel text-[10px] tracking-widest uppercase" style={{ color: 'rgba(212,175,90,0.5)' }}>Active</span>
-                </div>
-              </div>
+              {/* Top accent bar */}
+              <div style={{ height: '4px', background: '#93c5fd', opacity: 0.75 }} />
 
-              {/* Body */}
-              <div className="px-4 py-4">
-                <p className="font-cinzel text-[10px] tracking-[0.25em] uppercase mb-3" style={{ color: 'rgba(212,175,90,0.35)' }}>
-                  Seal detected on this page
-                </p>
-                <div className="flex items-center gap-3 mb-4">
-                  <img src="/tiers/tier-4.png" alt="Platinum Seal" className="w-12 h-12 shrink-0" />
+              {/* Diagonal stripe texture */}
+              <div style={{
+                position: 'absolute', inset: 0, pointerEvents: 'none',
+                backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 18px, rgba(255,255,255,0.013) 18px, rgba(255,255,255,0.013) 19px)',
+              }} />
+
+              {/* Watermark numeral */}
+              <div style={{
+                position: 'absolute', top: '50%', left: '38%',
+                transform: 'translate(-50%, -50%)',
+                fontFamily: 'Cinzel, serif', fontWeight: 700,
+                fontSize: '120px', lineHeight: 1,
+                color: '#93c5fd', opacity: 0.04,
+                pointerEvents: 'none', userSelect: 'none',
+              }}>IV</div>
+
+              {/* Card content */}
+              <div style={{ padding: '12px 16px', position: 'relative' }}>
+
+                {/* Header row */}
+                <div className="flex items-start justify-between mb-3">
                   <div>
-                    <p className="font-cinzel text-sm tracking-wide leading-tight mb-0.5" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                      Platinum Member
-                    </p>
-                    <p className="font-cormorant italic text-sm leading-snug" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                      Verified identity on file
-                    </p>
+                    <p style={{ fontFamily: 'Cinzel, serif', fontSize: '8px', letterSpacing: '0.36em', textTransform: 'uppercase', color: '#ffffff2a' }}>Covenant</p>
+                    <p style={{ fontFamily: 'Cinzel, serif', fontSize: '6px', letterSpacing: '0.44em', textTransform: 'uppercase', color: '#ffffff16', marginTop: '2px' }}>Protocol</p>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#86efac', boxShadow: '0 0 6px #86efac' }} />
+                    <span style={{ fontFamily: 'Cinzel, serif', fontSize: '9px', letterSpacing: '0.28em', textTransform: 'uppercase', color: '#93c5fd70' }}>Active</span>
                   </div>
                 </div>
+
+                {/* Divider */}
+                <div style={{ height: '1px', background: '#93c5fd22', marginBottom: '12px' }} />
+
+                {/* Tier hero + seal image */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-baseline gap-3">
+                    <span style={{ fontFamily: 'Cinzel, serif', fontWeight: 700, fontSize: '40px', lineHeight: 1, color: '#93c5fd' }}>IV</span>
+                    <div>
+                      <p style={{ fontFamily: 'Cinzel, serif', fontSize: '13px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#93c5fd' }}>Platinum</p>
+                      <p style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: '11px', color: '#ffffff32', marginTop: '2px' }}>Sophisticated Investor</p>
+                    </div>
+                  </div>
+                  <img src="/tiers/tier-4.png" alt="Platinum Seal" style={{ width: '56px', height: '56px', objectFit: 'contain', opacity: 0.92, flexShrink: 0 }} />
+                </div>
+
+                {/* Divider */}
+                <div style={{ height: '1px', background: '#93c5fd22', marginBottom: '12px' }} />
+
+                {/* CTA */}
                 <button
                   onClick={() => setPhase('granted')}
-                  className="w-full font-cinzel text-[11px] tracking-widest uppercase py-2.5 transition-colors"
-                  style={{ background: 'rgba(212,175,90,0.1)', border: '1px solid rgba(212,175,90,0.3)', color: 'rgba(212,175,90,0.85)' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(212,175,90,0.18)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(212,175,90,0.1)'}
+                  className="w-full font-cinzel text-[10px] tracking-widest uppercase py-2.5 transition-colors"
+                  style={{ background: '#93c5fd15', border: '1px solid #93c5fd40', color: '#93c5fdcc' }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#93c5fd25'}
+                  onMouseLeave={e => e.currentTarget.style.background = '#93c5fd15'}
                 >
                   Use my seal to skip this →
                 </button>
+              </div>
               </div>
             </div>
           </>
