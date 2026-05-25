@@ -508,7 +508,7 @@ export function MemberDemo() {
                       <p style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: '11px', color: '#ffffff32', marginTop: '2px' }}>Sophisticated Investor</p>
                     </div>
                   </div>
-                  <img src="/tiers/tier-4.png" alt="Platinum Seal" style={{ width: '56px', height: '56px', objectFit: 'contain', opacity: 0.92, flexShrink: 0 }} />
+                  <img src="/tiers/tier-4.png" alt="Platinum Seal" style={{ width: '168px', height: '168px', objectFit: 'contain', opacity: 0.92, flexShrink: 0 }} />
                 </div>
 
                 {/* Divider */}
