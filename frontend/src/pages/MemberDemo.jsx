@@ -404,7 +404,7 @@ export function MemberDemo() {
               </p>
             </div>
 
-            <div className={`border border-gold/15 bg-tyrian-darker transition-opacity duration-700 ${sealVisible ? 'opacity-25' : 'opacity-100'}`}>
+            <div className={`border border-gold/15 bg-tyrian-darker ${sealVisible ? 'pointer-events-none' : ''}`}>
               <div className="border-b border-gold/15 px-5 py-3 bg-tyrian-dark">
                 <p className="font-cinzel text-marble text-xs tracking-widest uppercase">
                   Secure Verification Portal — Step 1 of 7
@@ -517,12 +517,23 @@ export function MemberDemo() {
                 <div style={{ height: '1px', background: '#93c5fd22', marginBottom: '12px' }} />
 
                 {/* CTA */}
+                <style>{`
+                  @keyframes sealGlow {
+                    0%, 100% { box-shadow: 0 0 8px #93c5fd30, 0 0 0px #93c5fd00; }
+                    50%       { box-shadow: 0 0 18px #93c5fd60, 0 0 32px #93c5fd25; }
+                  }
+                `}</style>
                 <button
                   onClick={() => setPhase('granted')}
-                  className="w-full font-cinzel text-[10px] tracking-widest uppercase py-2.5 transition-colors"
-                  style={{ background: '#93c5fd15', border: '1px solid #93c5fd40', color: '#93c5fdcc' }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#93c5fd25'}
-                  onMouseLeave={e => e.currentTarget.style.background = '#93c5fd15'}
+                  className="w-full font-cinzel text-[10px] tracking-widest uppercase py-2.5"
+                  style={{
+                    background: '#93c5fd15',
+                    border: '1px solid #93c5fd40',
+                    color: '#93c5fdcc',
+                    animation: 'sealGlow 2.2s ease-in-out infinite',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#93c5fd25'; e.currentTarget.style.animation = 'none'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = '#93c5fd15'; e.currentTarget.style.animation = 'sealGlow 2.2s ease-in-out infinite'; }}
                 >
                   Use my seal to skip this →
                 </button>
