@@ -19,6 +19,7 @@ import { Waitlist } from './pages/Waitlist';
 import { DemoIntro } from './pages/DemoIntro';
 import { ForMembers } from './pages/ForMembers';
 import { ForProtocols } from './pages/ForProtocols';
+import { MemberDemo } from './pages/MemberDemo';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -594,6 +595,7 @@ function App() {
           <Route path="/demo/intro" element={<DemoIntro />} />
           <Route path="/demo/for-members" element={<ForMembers />} />
           <Route path="/demo/for-protocols" element={<ForProtocols />} />
+          <Route path="/demo/member-demo" element={<MemberDemo />} />
           <Route path="/demo" element={<HomePage />} />
           <Route path="/demo/get-verified" element={<TierSelect />} />
           <Route path="/demo/get-verified/apply" element={<ApplyForm walletAddress={walletAddress} walletConnected={walletConnected} />} />

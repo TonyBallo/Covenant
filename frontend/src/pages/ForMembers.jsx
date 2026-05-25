@@ -89,10 +89,10 @@ export function ForMembers() {
         {/* CTA */}
         <div className="space-y-4">
           <button
-            onClick={() => navigate('/demo')}
+            onClick={() => navigate('/demo/member-demo')}
             className="w-full font-cinzel text-xs tracking-widest uppercase py-4 bg-gold text-tyrian-deep font-semibold hover:bg-gold-dim transition-colors"
           >
-            See it in action — look up a seal
+            See it in action →
           </button>
           <button
             onClick={() => navigate('/demo/get-verified')}
