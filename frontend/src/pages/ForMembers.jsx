@@ -3,17 +3,17 @@ import { useNavigate } from 'react-router-dom';
 const SCENARIOS = [
   {
     numeral: 'I',
-    label: 'The Cost of Starting Over',
+    label: 'The Cost of Compliance',
     body: [
-      "You want to use a new DeFi lending platform. You've already verified with two others this year — uploaded the same documents, waited the same waiting periods. You do it again. Six months later, one of those platforms gets breached. Your passport scan was in there.",
-      "On top of that: every protocol you do qualify for has no way of knowing it. Without a credential, you're just another anonymous wallet — indistinguishable from a bot.",
+      "You want to use a new online platform. You've already verified with two others this year — uploaded the same documents, waited the same waiting periods. You do it again. Six months later, one of those platforms gets breached. Your passport scan was in there.",
+      "Your data was taken. And there was nothing you could have done to prevent it — you had no choice but to hand it over.",
     ],
   },
   {
     numeral: 'II',
     label: 'The Cost of Trusting the Wrong Person',
     body: [
-      "You meet someone in a crypto community. Active, knowledgeable, their profile looks real. They pitch a private deal — a token presale, a direct trade, an investment opportunity. You send the funds. They disappear.",
+      "Someone reaches out. They're knowledgeable, credible, and the opportunity sounds real — a private investment, an early deal, a way to grow your money. You send the funds. They disappear.",
       "The wallet they used had been linked to the same scheme dozens of times across different victims. The only way you could have known was to run a full blockchain trace — something that takes hours and expertise most people don't have.",
     ],
   },
@@ -38,11 +38,11 @@ export function ForMembers() {
         <div className="mb-12">
           <p className="font-cinzel text-gold text-xs tracking-[0.3em] uppercase mb-4">For Members</p>
           <h1 className="font-cinzel text-marble text-3xl md:text-4xl tracking-wide mb-5 leading-snug">
-            These are not edge cases.
+            The costs of the digital world
           </h1>
           <p className="font-cormorant text-marble-dim italic text-xl leading-relaxed">
-            They are the default state of the internet. And they share the same root cause — there is
-            no shared layer of trust between people online.
+            Not rare events. Not worst-case scenarios. These happen every day — because the internet
+            was never built with a shared layer of trust between people.
           </p>
         </div>
 

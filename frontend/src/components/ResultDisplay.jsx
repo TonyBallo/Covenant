@@ -41,7 +41,7 @@ const TIER_BG = {
   5: 'linear-gradient(145deg, #0e0018 0%, #14000c 55%, #0a0006 100%)',
 };
 
-export function ResultDisplay({ result }) {
+export function ResultDisplay({ result, animateRevoked = false }) {
   const [chainStatus, setChainStatus] = useState({ ethereum: true, polygon: false });
   const [copied, setCopied] = useState(false);
   const [showSignature, setShowSignature] = useState(false);
@@ -289,7 +289,21 @@ export function ResultDisplay({ result }) {
 
         {/* Warning banners — inside the card at the bottom */}
         {result.revoked && (
-          <div style={{ borderTop: '1px solid rgba(239,68,68,0.25)', background: 'rgba(127,29,29,0.3)', padding: '14px 32px' }}>
+          <>
+            {animateRevoked && (
+              <style>{`
+                @keyframes revokedGlow {
+                  0%, 100% { box-shadow: inset 0 0 0px rgba(239,68,68,0); border-color: rgba(239,68,68,0.25); }
+                  50%       { box-shadow: inset 0 0 24px rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.6); }
+                }
+              `}</style>
+            )}
+          <div style={{
+            borderTop: '1px solid rgba(239,68,68,0.25)',
+            background: 'rgba(127,29,29,0.3)',
+            padding: '14px 32px',
+            animation: animateRevoked ? 'revokedGlow 2.4s ease-in-out infinite' : 'none',
+          }}>
             <p style={{ fontFamily: 'Cinzel, serif', fontSize: '10px', letterSpacing: '0.28em', textTransform: 'uppercase', color: '#fca5a5', marginBottom: '6px' }}>
               Trust Seal Revoked
             </p>
@@ -297,6 +311,7 @@ export function ResultDisplay({ result }) {
               {result.revocationReason || 'This seal has been revoked and should not be trusted for protocol access.'}
             </p>
           </div>
+          </>
         )}
 
         {result.isExpired && !result.revoked && (

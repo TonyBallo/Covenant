@@ -3,8 +3,7 @@ import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { WalletShowcase } from './components/WalletShowcase';
 import { ResultDisplay } from './components/ResultDisplay';
-import { TierSelect } from './pages/TierSelect';
-import { ApplyForm } from './pages/ApplyForm';
+import { DemoOnly } from './pages/DemoOnly';
 import { StatusPage } from './pages/StatusPage';
 import { VerifySuccess } from './pages/VerifySuccess';
 import { VerifyFailed } from './pages/VerifyFailed';
@@ -597,8 +596,8 @@ function App() {
           <Route path="/demo/for-protocols" element={<ForProtocols />} />
           <Route path="/demo/member-demo" element={<MemberDemo />} />
           <Route path="/demo" element={<HomePage />} />
-          <Route path="/demo/get-verified" element={<TierSelect />} />
-          <Route path="/demo/get-verified/apply" element={<ApplyForm walletAddress={walletAddress} walletConnected={walletConnected} />} />
+          <Route path="/demo/get-verified" element={<DemoOnly />} />
+          <Route path="/demo/get-verified/apply" element={<DemoOnly />} />
           <Route path="/demo/status" element={<StatusPage walletAddress={walletAddress} />} />
           <Route path="/demo/verify-success" element={<VerifySuccess />} />
           <Route path="/demo/verify-failed" element={<VerifyFailed />} />

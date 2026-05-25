@@ -135,44 +135,52 @@ export function MemberDemo() {
                 A family friend reaches out.
               </h1>
               <p className="font-cormorant text-marble-dim italic text-xl leading-relaxed">
-                Everything about this looks normal. Their accounts are real. You've known them for years.
+                Everything about this looks normal. You've known them for years.
               </p>
             </div>
 
-            <div className="border border-gold/20 bg-tyrian-darker mb-8">
-              <div className="border-b border-gold/15 px-5 py-3 flex items-center justify-between bg-tyrian-dark">
-                <div>
-                  <p className="font-cinzel text-marble text-xs tracking-widest uppercase">Alex M.</p>
-                  <p className="font-cormorant text-marble-muted/60 italic text-sm">
-                    Via verified email · Facebook · iPhone
-                  </p>
+            {/* SMS thread */}
+            <div className="mb-8 rounded-2xl overflow-hidden" style={{ background: '#111114' }}>
+
+              {/* Contact header */}
+              <div className="flex flex-col items-center gap-2 px-4 py-4" style={{ background: '#1c1c1e', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: '#3a3a3c' }}>
+                  <span style={{ fontFamily: 'system-ui, sans-serif', fontSize: '18px', color: 'rgba(255,255,255,0.85)' }}>A</span>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400/60" />
-                  <span className="font-cinzel text-green-400/60 text-xs tracking-widest">Verified accounts</span>
+                <div className="text-center">
+                  <p style={{ fontFamily: 'system-ui, sans-serif', fontSize: '15px', fontWeight: 600, color: 'rgba(255,255,255,0.9)' }}>Alex M.</p>
+                  <p style={{ fontFamily: 'system-ui, sans-serif', fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>Text Message</p>
                 </div>
               </div>
-              <div className="px-5 py-6 space-y-4">
-                <p className="font-cormorant text-marble italic text-lg leading-relaxed">
-                  "Hey, hope you're doing well. I'm so sorry to reach out like this — I don't normally
-                  ask for this kind of thing. I'm in a bit of a situation and could really use some help.
-                  Please keep this between us, I don't want other family to know, it's embarrassing."
-                </p>
-                <p className="font-cormorant text-marble italic text-lg leading-relaxed">
-                  "The banks won't work for this — a couple of my accounts have eyes on them, family
-                  stuff, long story. That's actually why crypto is better here. Keeps it private.
-                  I've already got a wallet ready."
-                </p>
-                <p className="font-cormorant text-marble italic text-lg leading-relaxed">
-                  "$1,000 would genuinely get me back on my feet. I'll pay you back two-fold the
-                  moment I'm sorted, I promise. You can trust me on this."
-                </p>
-                <div className="border-t border-gold/15 pt-4">
-                  <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-2">
-                    Their wallet address
-                  </p>
-                  <p className="font-mono text-marble-dim text-sm break-all">{DEMO_REVOKED_ADDRESS}</p>
+
+              {/* Bubbles */}
+              <div className="px-4 py-5 space-y-2">
+                {[
+                  "Hey, hope you're doing well. I'm so sorry to reach out like this — I don't normally ask for this kind of thing but I'm in a bit of a situation and could really use some help. Please keep this between us, I'm really ashamed and could use a friend.",
+                  "I can't use a bank either, since my accounts aren't exactly private. That's actually why crypto is better here. I'll provide you my wallet address below, super simple to use and you can let me know if you need any help figuring it out.",
+                  "$500 is all I need. I'll pay you back twice that amount the moment I'm sorted, I promise. You can trust me. Again I'm so sorry for the inconvenience, it's a long story I can fill you in on after.",
+                ].map((msg, i) => (
+                  <div key={i} className="flex justify-start">
+                    <div
+                      className="max-w-xs px-3.5 py-2.5 rounded-2xl rounded-tl-sm"
+                      style={{ background: '#3a3a3c' }}
+                    >
+                      <p style={{ fontFamily: 'system-ui, sans-serif', fontSize: '15px', color: 'rgba(255,255,255,0.88)', lineHeight: 1.4 }}>{msg}</p>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Wallet address bubble */}
+                <div className="flex justify-start pt-1">
+                  <div
+                    className="max-w-xs px-3.5 py-2.5 rounded-2xl rounded-tl-sm"
+                    style={{ background: '#3a3a3c' }}
+                  >
+                    <p style={{ fontFamily: 'system-ui, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginBottom: '4px' }}>Wallet address</p>
+                    <p style={{ fontFamily: 'monospace', fontSize: '12px', color: 'rgba(255,255,255,0.7)', wordBreak: 'break-all', lineHeight: 1.5 }}>{DEMO_REVOKED_ADDRESS}</p>
+                  </div>
                 </div>
+
               </div>
             </div>
 
@@ -235,7 +243,7 @@ export function MemberDemo() {
         {phase === 'revoked_seal' && (
           <>
             <div className="mb-8">
-              <ResultDisplay result={sealResult} />
+              <ResultDisplay result={sealResult} animateRevoked />
             </div>
 
             <p className="font-cormorant text-marble-dim italic text-lg leading-relaxed mb-10">
@@ -404,49 +412,64 @@ export function MemberDemo() {
               </p>
             </div>
 
-            <div className={`border border-gold/15 bg-tyrian-darker ${sealVisible ? 'pointer-events-none' : ''}`}>
-              <div className="border-b border-gold/15 px-5 py-3 bg-tyrian-dark">
-                <p className="font-cinzel text-marble text-xs tracking-widest uppercase">
-                  Secure Verification Portal — Step 1 of 7
-                </p>
-              </div>
-              <div className="px-5 py-6 space-y-4">
-                {VERIFY_FIELDS.map(({ label, placeholder, type, action }) => (
-                  <div key={label}>
-                    <label className="font-cinzel text-marble-muted text-xs tracking-widest uppercase block mb-1.5">
-                      {label}
-                    </label>
-                    {type === 'upload' && (
-                      <div className="border border-dashed border-gold/15 py-3 px-4 text-center">
-                        <span className="font-cormorant text-marble-muted/30 italic text-sm">Upload file</span>
-                      </div>
-                    )}
-                    {type === 'photo' && (
-                      <div className="border border-dashed border-gold/15 py-3 px-4 text-center">
-                        <span className="font-cormorant text-marble-muted/30 italic text-sm">Open camera</span>
-                      </div>
-                    )}
-                    {type === 'captcha' && (
-                      <div className="border border-gold/15 bg-tyrian-dark py-3 px-4 flex items-center gap-3">
-                        <div className="w-4 h-4 border border-gold/20 rounded shrink-0" />
-                        <span className="font-cormorant text-marble-muted/30 italic text-sm">I am not a robot</span>
-                      </div>
-                    )}
-                    {!type && (
-                      <div className="flex gap-2">
-                        <input
-                          placeholder={placeholder}
-                          className="flex-1 px-3 py-2.5 bg-tyrian-dark border border-gold/15 text-marble-muted placeholder-marble-muted/30 font-cormorant text-base outline-none focus:border-gold/35 transition-colors"
-                        />
-                        {action && (
-                          <button className="font-cinzel text-xs tracking-widest uppercase px-4 py-2.5 border border-gold/25 text-marble-muted/60 hover:border-gold/50 hover:text-marble-muted shrink-0 transition-colors">
-                            {action}
-                          </button>
-                        )}
-                      </div>
-                    )}
+            <div
+              className={sealVisible ? 'pointer-events-none' : ''}
+              style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden', fontFamily: 'system-ui, sans-serif' }}
+            >
+              {/* Browser-style title bar */}
+              <div style={{ background: '#f3f4f6', borderBottom: '1px solid #e5e7eb', padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', gap: '5px' }}>
+                    <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#f87171', display: 'inline-block' }} />
+                    <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#fbbf24', display: 'inline-block' }} />
+                    <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#34d399', display: 'inline-block' }} />
                   </div>
-                ))}
+                  <span style={{ fontSize: '12px', color: '#9ca3af', marginLeft: '8px' }}>🔒 verify.secureplatform.com</span>
+                </div>
+                <span style={{ fontSize: '11px', color: '#9ca3af' }}>Step 1 of 7</span>
+              </div>
+
+              {/* Form */}
+              <div style={{ padding: '24px 20px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', marginBottom: '4px' }}>Identity Verification</h3>
+                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '20px' }}>To continue, we need to verify your identity. Please complete all fields.</p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {VERIFY_FIELDS.map(({ label, placeholder, type, action }) => (
+                    <div key={label}>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '5px' }}>{label}</label>
+                      {type === 'upload' && (
+                        <div style={{ border: '2px dashed #d1d5db', borderRadius: '6px', padding: '12px', textAlign: 'center', background: '#fff' }}>
+                          <span style={{ fontSize: '13px', color: '#9ca3af' }}>📎 Click to upload or drag and drop</span>
+                        </div>
+                      )}
+                      {type === 'photo' && (
+                        <div style={{ border: '2px dashed #d1d5db', borderRadius: '6px', padding: '12px', textAlign: 'center', background: '#fff' }}>
+                          <span style={{ fontSize: '13px', color: '#9ca3af' }}>📷 Open camera</span>
+                        </div>
+                      )}
+                      {type === 'captcha' && (
+                        <div style={{ border: '1px solid #d1d5db', borderRadius: '6px', padding: '12px 14px', background: '#fff', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div style={{ width: '16px', height: '16px', border: '2px solid #d1d5db', borderRadius: '3px', flexShrink: 0 }} />
+                          <span style={{ fontSize: '13px', color: '#6b7280' }}>I'm not a robot</span>
+                        </div>
+                      )}
+                      {!type && (
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <input
+                            placeholder={placeholder}
+                            style={{ flex: 1, padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', color: '#111827', background: '#fff', outline: 'none' }}
+                          />
+                          {action && (
+                            <button style={{ padding: '8px 14px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '12px', fontWeight: 600, color: '#374151', background: '#f9fafb', cursor: 'pointer', flexShrink: 0 }}>
+                              {action}
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -566,28 +589,22 @@ export function MemberDemo() {
             <div className="border-l-2 border-gold/30 pl-6 mb-10">
               <p className="font-cormorant text-marble italic text-xl leading-relaxed">
                 One seal. No forms. No uploads. No waiting. Your identity was already confirmed —
-                Covenant spoke for you.
+                Covenant spoke for you without giving up any of your data.
               </p>
             </div>
 
             <div className="space-y-4">
               <button
-                onClick={() => navigate('/demo/get-verified')}
+                onClick={() => navigate('/waitlist')}
                 className="w-full font-cinzel text-xs tracking-widest uppercase py-4 bg-gold text-tyrian-deep font-semibold hover:bg-gold-dim transition-colors"
               >
-                Apply for your seal
+                Join the waitlist
               </button>
               <button
                 onClick={() => navigate('/demo')}
                 className="w-full font-cinzel text-xs tracking-widest uppercase py-4 border border-gold/30 text-gold hover:bg-gold/5 hover:border-gold/60 transition-colors"
               >
                 Explore the lookup tool
-              </button>
-              <button
-                onClick={() => navigate('/waitlist')}
-                className="w-full font-cinzel text-marble-muted/40 hover:text-marble-muted text-xs tracking-widest uppercase py-3 transition-colors"
-              >
-                Join the mainnet waitlist →
               </button>
             </div>
           </>

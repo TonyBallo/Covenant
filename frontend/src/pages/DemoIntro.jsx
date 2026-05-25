@@ -18,7 +18,7 @@ export function DemoIntro() {
             Who are you here as?
           </h1>
           <p className="font-cormorant text-marble-dim italic text-xl leading-relaxed max-w-lg mx-auto">
-            Choose your path. We'll show you exactly what Covenant is built to solve for you.
+            Choose your path. We'll show you exactly what Covenant can do.
           </p>
         </div>
 
@@ -33,10 +33,10 @@ export function DemoIntro() {
               Path I
             </p>
             <h2 className="font-cinzel text-marble text-xl tracking-wide mb-4 leading-snug">
-              I'm looking to get verified
+              I'm a potential member
             </h2>
             <p className="font-cormorant text-marble-muted italic text-lg leading-relaxed">
-              You want to establish your reputation once and carry it across every platform you use.
+              You want to establish your reputation online — and know who you can actually trust before you transact.
             </p>
             <div className="mt-8 flex items-center gap-3">
               <span className="font-cinzel text-gold/40 text-xs tracking-widest uppercase group-hover:text-gold/70 transition-colors">
@@ -57,7 +57,7 @@ export function DemoIntro() {
               Path II
             </p>
             <h2 className="font-cinzel text-marble text-xl tracking-wide mb-4 leading-snug">
-              I'm building a protocol
+              I'm a potential partner
             </h2>
             <p className="font-cormorant text-marble-muted italic text-lg leading-relaxed">
               You need to know your users are who they say they are — without building the infrastructure to verify them yourself.
