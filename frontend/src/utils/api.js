@@ -126,12 +126,12 @@ export async function mintSeal(data) {
     headers: ADMIN_HEADERS(),
     body: JSON.stringify(data)
   });
-  
+
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error || 'Failed to mint seal');
+    throw new Error(error.details || error.error || 'Failed to mint seal');
   }
-  
+
   return response.json();
 }
 
