@@ -239,6 +239,12 @@ router.post('/mint', async (req, res) => {
       });
     }
 
+    if (jurisdictionCode > 255) {
+      return res.status(400).json({
+        error: `Jurisdiction code ${jurisdictionCode} exceeds uint8 range. The current contract only supports codes 0–255. Use Global (0) or redeploy the contract with uint16 jurisdiction support.`
+      });
+    }
+
     // Check if already minted
     const existingSealId = await getSealId(walletAddress);
     if (existingSealId > 0) {

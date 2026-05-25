@@ -72,25 +72,17 @@ export function formatAddress(address) {
 
 // ISO 3166-1 numeric jurisdiction codes. 0 = global (no restriction).
 // Keyed by numeric code; value is display label.
+// Only codes ≤ 255 are included — the contract stores jurisdictionCode as uint8.
+// Codes for Germany (276), India (356), Italy (380), Japan (392), Mexico (484),
+// Netherlands (528), Portugal (620), Singapore (702), Spain (724), Switzerland (756),
+// UK (826), and US (840) exceed uint8 and require a contract redeploy (uint16) to support.
 export const JURISDICTIONS = {
-  0:   { label: 'Global',         flag: '🌐' },
-  36:  { label: 'Australia',      flag: '🇦🇺' },
-  76:  { label: 'Brazil',         flag: '🇧🇷' },
-  124: { label: 'Canada',         flag: '🇨🇦' },
-  156: { label: 'China',          flag: '🇨🇳' },
-  250: { label: 'France',         flag: '🇫🇷' },
-  276: { label: 'Germany',        flag: '🇩🇪' },
-  356: { label: 'India',          flag: '🇮🇳' },
-  380: { label: 'Italy',          flag: '🇮🇹' },
-  392: { label: 'Japan',          flag: '🇯🇵' },
-  484: { label: 'Mexico',         flag: '🇲🇽' },
-  528: { label: 'Netherlands',    flag: '🇳🇱' },
-  620: { label: 'Portugal',       flag: '🇵🇹' },
-  702: { label: 'Singapore',      flag: '🇸🇬' },
-  724: { label: 'Spain',          flag: '🇪🇸' },
-  756: { label: 'Switzerland',    flag: '🇨🇭' },
-  826: { label: 'United Kingdom', flag: '🇬🇧' },
-  840: { label: 'United States',  flag: '🇺🇸' },
+  0:   { label: 'Global',     flag: '🌐' },
+  36:  { label: 'Australia',  flag: '🇦🇺' },
+  76:  { label: 'Brazil',     flag: '🇧🇷' },
+  124: { label: 'Canada',     flag: '🇨🇦' },
+  156: { label: 'China',      flag: '🇨🇳' },
+  250: { label: 'France',     flag: '🇫🇷' },
 };
 
 // Returns a display string for a numeric jurisdiction code.
