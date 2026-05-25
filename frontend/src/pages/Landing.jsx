@@ -93,7 +93,7 @@ export function Landing() {
         </div>
 
         <div className="landing-demo-btn-wrap">
-          <button className="landing-demo-btn" onClick={() => navigate('/demo')}>Launch Demo</button>
+          <button className="landing-demo-btn" onClick={() => navigate('/demo/intro')}>Launch Demo</button>
           <Link to="/waitlist" className="landing-waitlist-btn">Join the Waitlist</Link>
         </div>
       </main>
