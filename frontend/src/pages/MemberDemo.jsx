@@ -13,6 +13,23 @@ import { ResultDisplay } from '../components/ResultDisplay';
 const DEMO_REVOKED_ADDRESS = '0x0000000000000000000000000000000000000000'; // ← replace before launch
 // ──────────────────────────────────────────────────────────────────────────────
 
+// Used when the real address isn't configured yet — keeps the demo presentable.
+const MOCK_SEAL_RESULT = {
+  verified: true,
+  address: DEMO_REVOKED_ADDRESS,
+  tier: 1,
+  revoked: true,
+  isExpired: false,
+  mintedAt: Math.floor(Date.now() / 1000) - 60 * 60 * 24 * 45, // 45 days ago
+  expiresAt: 0,
+  sealId: 1,
+  jurisdictionCode: 0,
+  covenantSignature: '',
+  burnPending: false,
+  burnExecutableAt: 0,
+  revocationReason: 'Fraud — confirmed link to pig-butchering syndicate',
+};
+
 const ANALYSIS_STEPS = [
   'Checking wallet creation date…',
   'Scanning transaction history…',
@@ -66,6 +83,7 @@ export function MemberDemo() {
 
   const runLookup = async () => {
     setPhase('searching');
+    let resolved = false;
     try {
       const provider = new ethers.JsonRpcProvider(RPC_URL);
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
@@ -90,10 +108,10 @@ export function MemberDemo() {
           burnExecutableAt: Number(burnExecutableAt),
           revocationReason: seal.revocationReason || 'Seal revoked by Covenant.',
         });
+        resolved = true;
       }
-    } catch (_) {
-      // Fallback — show the revoked result regardless of network issues
-    }
+    } catch (_) { /* fall through to mock */ }
+    if (!resolved) setSealResult(MOCK_SEAL_RESULT);
     setTimeout(() => setPhase('revoked_seal'), 1000);
   };
 
@@ -216,19 +234,9 @@ export function MemberDemo() {
         {/* ── REVOKED SEAL ─────────────────────────────────────── */}
         {phase === 'revoked_seal' && (
           <>
-            {sealResult ? (
-              <div className="mb-8">
-                <ResultDisplay result={sealResult} />
-              </div>
-            ) : (
-              /* Fallback if contract call failed */
-              <div className="border border-red-900/40 bg-red-950/10 mb-8 px-5 py-5">
-                <p className="font-cinzel text-red-400/80 text-xs tracking-widest uppercase mb-3">Seal Revoked</p>
-                <p className="font-cormorant text-red-300/80 italic text-lg leading-relaxed">
-                  Fraud — confirmed link to pig-butchering syndicate
-                </p>
-              </div>
-            )}
+            <div className="mb-8">
+              <ResultDisplay result={sealResult} />
+            </div>
 
             <p className="font-cormorant text-marble-dim italic text-lg leading-relaxed mb-10">
               This wallet once held a verified Covenant seal — and lost it. The network already
