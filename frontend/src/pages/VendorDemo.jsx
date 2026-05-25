@@ -51,85 +51,87 @@ const TIER_DATA = {
 function ProtectedDashboard({ walletAddress, tier }) {
   const d = TIER_DATA[tier] ?? TIER_DATA[2];
   return (
-    <div className="space-y-6">
+    <div style={{ fontFamily: 'system-ui, sans-serif' }}>
 
-      {/* Access granted header */}
-      <div className="border border-gold/40 bg-tyrian-darker overflow-hidden">
-        <div className="bg-tyrian-dark border-b border-gold/25 px-5 py-4 sm:px-8 sm:py-5 flex items-center justify-between">
-          <div>
-            <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-1">
-              Protected Protocol
-            </p>
-            <p className="font-cinzel text-gold text-lg tracking-wide">Access Granted</p>
-          </div>
-          <div className="flex items-center gap-2 bg-gold/10 border border-gold/30 px-3 py-2">
-            <span className="w-2 h-2 bg-gold rounded-full animate-pulse"></span>
-            <span className="font-cinzel text-gold text-xs tracking-widest uppercase">Verified</span>
-          </div>
+      {/* Access granted banner */}
+      <div style={{ background: '#1e3a5f', borderRadius: '8px 8px 0 0', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '2px' }}>Protected Protocol</p>
+          <p style={{ fontSize: '17px', fontWeight: 700, color: '#fff' }}>Welcome back</p>
         </div>
-        <div className="px-5 py-5 sm:px-8 sm:py-6">
-          <p className="font-cormorant text-marble text-xl italic mb-2">
-            Covenant seal verified. Welcome to Protected Protocol.
-          </p>
-          <p className="font-mono text-marble-muted text-xs break-all">{walletAddress}</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: '6px', padding: '6px 12px' }}>
+          <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#34d399', boxShadow: '0 0 6px #34d399' }} />
+          <span style={{ fontSize: '11px', fontWeight: 600, color: '#34d399', letterSpacing: '0.05em' }}>Identity Verified</span>
         </div>
       </div>
 
-      {/* Mock dashboard */}
-      <div className="border border-gold/20 bg-tyrian-darker overflow-hidden">
-        <div className="border-b border-gold/15 px-8 py-5">
-          <h2 className="font-cinzel text-marble text-base tracking-widest uppercase">
-            Protected Protocol Dashboard
-          </h2>
-        </div>
+      {/* Wallet row */}
+      <div style={{ background: '#f0f4f8', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', padding: '10px 24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ fontSize: '11px', color: '#64748b' }}>Connected wallet:</span>
+        <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#334155' }}>{walletAddress.slice(0, 10)}···{walletAddress.slice(-8)}</span>
+      </div>
 
-        {/* Metrics row */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-gold/10 border-b border-gold/15">
-          {[
-            { label: 'Total Value Locked', value: d.tvl,      change: d.tvlChange },
-            { label: 'Your Position',      value: d.position, change: d.posChange },
-            { label: 'Yield (30d)',        value: d.yield,    change: d.yieldChange },
-          ].map(({ label, value, change }) => (
-            <div key={label} className="bg-tyrian-darker px-5 py-4 sm:px-6 sm:py-5">
-              <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-2">{label}</p>
-              <p className="font-cinzel text-marble text-2xl tracking-wide mb-1">{value}</p>
-              <p className="font-cormorant text-gold italic text-sm">{change} this week</p>
+      {/* Main dashboard card */}
+      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderTop: 'none', borderRadius: '0 0 8px 8px', overflow: 'hidden' }}>
+
+        {/* Nav tabs */}
+        <div style={{ borderBottom: '1px solid #e2e8f0', padding: '0 24px', display: 'flex', gap: '24px' }}>
+          {['Dashboard', 'Positions', 'History', 'Settings'].map((tab, i) => (
+            <div key={tab} style={{ padding: '12px 0', fontSize: '13px', fontWeight: i === 0 ? 600 : 400, color: i === 0 ? '#1e3a5f' : '#94a3b8', borderBottom: i === 0 ? '2px solid #1e3a5f' : '2px solid transparent', cursor: 'default' }}>
+              {tab}
             </div>
           ))}
         </div>
 
-        {/* Mock activity feed */}
-        <div className="px-8 py-6">
-          <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-4">
-            Recent Activity
-          </p>
-          <div className="space-y-3">
+        {/* Metrics */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderBottom: '1px solid #e2e8f0' }}>
+          {[
+            { label: 'Total Value Locked', value: d.tvl,      change: d.tvlChange },
+            { label: 'Your Position',      value: d.position, change: d.posChange },
+            { label: 'Yield (30d)',        value: d.yield,    change: d.yieldChange },
+          ].map(({ label, value, change }, i) => (
+            <div key={label} style={{ padding: '20px 24px', borderRight: i < 2 ? '1px solid #e2e8f0' : 'none' }}>
+              <p style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>{label}</p>
+              <p style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>{value}</p>
+              <p style={{ fontSize: '12px', color: '#10b981', fontWeight: 500 }}>▲ {change} this week</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Activity feed */}
+        <div style={{ padding: '20px 24px' }}>
+          <p style={{ fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '12px' }}>Recent Activity</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {d.activity.map(({ type, amount, time, status }, i) => (
-              <div key={i} className="flex items-center justify-between border border-gold/10 bg-tyrian-dark px-5 py-3">
-                <div>
-                  <p className="font-cinzel text-marble text-xs tracking-wide">{type}</p>
-                  <p className="font-cormorant text-marble-muted italic text-sm">{time}</p>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #f1f5f9' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: amount.startsWith('+') ? '#dcfce7' : '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>
+                    {amount.startsWith('+') ? '↓' : '↑'}
+                  </div>
+                  <div>
+                    <p style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>{type}</p>
+                    <p style={{ fontSize: '11px', color: '#94a3b8' }}>{time}</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className={`font-mono text-sm font-semibold ${amount.startsWith('+') ? 'text-gold' : 'text-marble-dim'}`}>
-                    {amount}
-                  </p>
-                  <p className="font-cinzel text-marble-muted text-xs tracking-widest">{status}</p>
+                <div style={{ textAlign: 'right' }}>
+                  <p style={{ fontSize: '13px', fontWeight: 700, color: amount.startsWith('+') ? '#10b981' : '#ef4444' }}>{amount}</p>
+                  <p style={{ fontSize: '11px', color: '#94a3b8' }}>{status}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Mock action buttons */}
-        <div className="px-5 pb-6 sm:px-8 sm:pb-8 flex flex-wrap gap-4">
-          <button className="font-cinzel text-xs tracking-widest uppercase px-6 py-3 bg-gold text-tyrian-deep hover:bg-gold-dim transition-colors">
+        {/* Action buttons */}
+        <div style={{ padding: '0 24px 24px', display: 'flex', gap: '12px' }}>
+          <button style={{ padding: '10px 24px', background: '#1e3a5f', color: '#fff', borderRadius: '6px', border: 'none', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
             Deposit
           </button>
-          <button className="font-cinzel text-xs tracking-widest uppercase px-6 py-3 border border-gold/40 text-gold hover:bg-gold/10 transition-colors">
+          <button style={{ padding: '10px 24px', background: '#fff', color: '#1e3a5f', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
             Withdraw
           </button>
         </div>
+
       </div>
     </div>
   );
