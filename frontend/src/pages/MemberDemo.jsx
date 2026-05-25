@@ -457,14 +457,18 @@ export function MemberDemo() {
                   ? 'opacity-100 translate-x-0'
                   : 'opacity-0 translate-x-8 pointer-events-none'
               }`}
-              style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(147,197,253,0.15)' }}
+              style={{
+                background: 'linear-gradient(145deg, #1a0014 0%, #14000c 60%, #0a0006 100%)',
+                border: '1px solid rgba(212,175,90,0.25)',
+                boxShadow: '0 8px 40px rgba(0,0,0,0.7), 0 0 24px rgba(212,175,90,0.06)',
+              }}
             >
-              {/* Chrome-style extension header */}
-              <div style={{ background: '#1e1e2e', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+              {/* Extension header bar */}
+              <div
                 className="flex items-center justify-between px-3 py-2"
+                style={{ borderBottom: '1px solid rgba(212,175,90,0.12)', background: 'rgba(212,175,90,0.04)' }}
               >
                 <div className="flex items-center gap-2">
-                  {/* Extension icon */}
                   <div className="w-4 h-4 shrink-0">
                     <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <circle cx="14" cy="14" r="12.5" stroke="#d4af5a" strokeWidth="1" strokeDasharray="2 3" />
@@ -472,26 +476,26 @@ export function MemberDemo() {
                       <circle cx="14" cy="14" r="2.5" fill="#d4af5a" opacity="0.9" />
                     </svg>
                   </div>
-                  <span className="font-cinzel text-white/70 text-xs tracking-wide">Covenant</span>
+                  <span className="font-cinzel text-[11px] tracking-widest uppercase" style={{ color: 'rgba(212,175,90,0.7)' }}>Covenant</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400/80" />
-                  <span className="font-cinzel text-green-400/70 text-[10px] tracking-widest uppercase">Active</span>
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'rgba(212,175,90,0.7)' }} />
+                  <span className="font-cinzel text-[10px] tracking-widest uppercase" style={{ color: 'rgba(212,175,90,0.5)' }}>Active</span>
                 </div>
               </div>
 
               {/* Body */}
-              <div style={{ background: '#13001a' }} className="px-4 py-4">
-                <p className="font-cinzel text-white/35 text-[10px] tracking-[0.25em] uppercase mb-3">
+              <div className="px-4 py-4">
+                <p className="font-cinzel text-[10px] tracking-[0.25em] uppercase mb-3" style={{ color: 'rgba(212,175,90,0.35)' }}>
                   Seal detected on this page
                 </p>
                 <div className="flex items-center gap-3 mb-4">
                   <img src="/tiers/tier-4.png" alt="Platinum Seal" className="w-12 h-12 shrink-0" />
                   <div>
-                    <p className="font-cinzel text-white/90 text-sm tracking-wide leading-tight mb-0.5">
+                    <p className="font-cinzel text-sm tracking-wide leading-tight mb-0.5" style={{ color: 'rgba(255,255,255,0.85)' }}>
                       Platinum Member
                     </p>
-                    <p className="font-cormorant text-white/40 italic text-sm leading-snug">
+                    <p className="font-cormorant italic text-sm leading-snug" style={{ color: 'rgba(255,255,255,0.35)' }}>
                       Verified identity on file
                     </p>
                   </div>
@@ -499,9 +503,9 @@ export function MemberDemo() {
                 <button
                   onClick={() => setPhase('granted')}
                   className="w-full font-cinzel text-[11px] tracking-widest uppercase py-2.5 transition-colors"
-                  style={{ background: 'rgba(147,197,253,0.12)', border: '1px solid rgba(147,197,253,0.3)', color: 'rgba(147,197,253,0.85)' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(147,197,253,0.2)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(147,197,253,0.12)'}
+                  style={{ background: 'rgba(212,175,90,0.1)', border: '1px solid rgba(212,175,90,0.3)', color: 'rgba(212,175,90,0.85)' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(212,175,90,0.18)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(212,175,90,0.1)'}
                 >
                   Use my seal to skip this →
                 </button>
