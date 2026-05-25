@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESS, CONTRACT_ABI, RPC_URL } from '../utils/contract';
-import { TIERS } from '../utils/constants';
+import { ResultDisplay } from '../components/ResultDisplay';
 
 // ─── SETUP REQUIRED ───────────────────────────────────────────────────────────
 // This address must hold a REVOKED seal on Arbitrum Sepolia before the demo
@@ -69,13 +69,25 @@ export function MemberDemo() {
     try {
       const provider = new ethers.JsonRpcProvider(RPC_URL);
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-      const [verified, tier, revoked] = await contract.getVerificationStatus(DEMO_REVOKED_ADDRESS);
+      const [verified, tier, revoked, burnPending, burnExecutableAt] =
+        await contract.getVerificationStatus(DEMO_REVOKED_ADDRESS);
       if (verified) {
         const sealId = await contract.addressToSealId(DEMO_REVOKED_ADDRESS);
         const seal = await contract.sealData(sealId);
+        const expiresAt = Number(seal.expiresAt);
         setSealResult({
+          verified: true,
+          address: DEMO_REVOKED_ADDRESS,
           tier: Number(tier),
           revoked: Boolean(revoked),
+          isExpired: expiresAt > 0 && Date.now() / 1000 > expiresAt,
+          mintedAt: Number(seal.mintedAt),
+          expiresAt,
+          sealId: Number(sealId),
+          jurisdictionCode: Number(seal.jurisdictionCode),
+          covenantSignature: seal.covenantSignature,
+          burnPending: Boolean(burnPending),
+          burnExecutableAt: Number(burnExecutableAt),
           revocationReason: seal.revocationReason || 'Seal revoked by Covenant.',
         });
       }
@@ -84,8 +96,6 @@ export function MemberDemo() {
     }
     setTimeout(() => setPhase('revoked_seal'), 1000);
   };
-
-  const tierInfo = sealResult ? TIERS[sealResult.tier] : null;
 
   return (
     <div className="min-h-screen py-16 px-6">
@@ -206,37 +216,19 @@ export function MemberDemo() {
         {/* ── REVOKED SEAL ─────────────────────────────────────── */}
         {phase === 'revoked_seal' && (
           <>
-            <div className="border border-red-900/40 bg-red-950/10 mb-8">
-              <div className="border-b border-red-900/30 px-5 py-3 flex items-center justify-between bg-red-950/10">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-red-500/70 shrink-0" />
-                  <p className="font-cinzel text-red-400/80 text-xs tracking-widest uppercase">
-                    Seal Revoked
-                  </p>
-                </div>
-                {tierInfo && (
-                  <p className="font-cinzel text-marble-muted/50 text-xs tracking-widest uppercase">
-                    Was: {tierInfo.name} {tierInfo.numeral}
-                  </p>
-                )}
+            {sealResult ? (
+              <div className="mb-8">
+                <ResultDisplay result={sealResult} />
               </div>
-              <div className="px-5 py-5 space-y-4">
-                <div>
-                  <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-2">
-                    Wallet
-                  </p>
-                  <p className="font-mono text-marble-muted/60 text-xs break-all">{DEMO_REVOKED_ADDRESS}</p>
-                </div>
-                <div>
-                  <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-2">
-                    Revocation reason
-                  </p>
-                  <p className="font-cormorant text-red-300/80 italic text-lg leading-relaxed">
-                    {sealResult?.revocationReason ?? 'Fraud — confirmed link to pig-butchering syndicate'}
-                  </p>
-                </div>
+            ) : (
+              /* Fallback if contract call failed */
+              <div className="border border-red-900/40 bg-red-950/10 mb-8 px-5 py-5">
+                <p className="font-cinzel text-red-400/80 text-xs tracking-widest uppercase mb-3">Seal Revoked</p>
+                <p className="font-cormorant text-red-300/80 italic text-lg leading-relaxed">
+                  Fraud — confirmed link to pig-butchering syndicate
+                </p>
               </div>
-            </div>
+            )}
 
             <p className="font-cormorant text-marble-dim italic text-lg leading-relaxed mb-10">
               This wallet once held a verified Covenant seal — and lost it. The network already
