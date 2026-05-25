@@ -236,7 +236,7 @@ export async function revokeSeal(sealId, reason) {
     console.log(`🚫 Revoking seal #${sealId}: ${reason}`);
 
     const tx = await contract.revoke(sealId, reason, {
-      gasLimit: 200000  // Conservative ceiling; actual usage is ~50–80k
+      gasLimit: 400000  // Long reason strings require multiple cold SSTOREs
     });
 
     const receipt = await tx.wait();
