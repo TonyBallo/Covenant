@@ -525,7 +525,6 @@ export function MemberDemo() {
                   Use my seal to skip this →
                 </button>
               </div>
-              </div>
             </div>
           </>
         )}
