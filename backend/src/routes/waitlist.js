@@ -4,7 +4,7 @@ import { Resend } from 'resend';
 import { supabase } from '../server.js';
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-const NOTIFY_EMAIL = 'acballo77@gmail.com';
+const NOTIFY_EMAIL = 'tonyballo@covenantprotocol.io';
 
 const router = express.Router();
 
