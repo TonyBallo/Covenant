@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased] - 2026-05-25
+
+### Fixed
+
+#### Mint Out-of-Gas Revert (`backend/src/services/blockchain.js`)
+- **Symptom:** Admin panel mint button failed with a generic "Failed to mint seal" error. On-chain receipt showed `status: 0` and `gasUsed` exactly equal to the 300,000 gas limit — the diagnostic signal for an out-of-gas revert rather than a logic revert.
+- **Cause:** The `SealData` struct stores `bytes covenantSignature` (a 65-byte ECDSA signature — a dynamic type that Solidity unpacks into multiple 32-byte storage slots). On a freshly deployed contract, every one of those slots is a cold SSTORE (20,000 gas each). Combined with the other struct fields, ERC721 state updates, and event emissions, the total cost exceeded 300k on the very first mint.
+- **Why staticCall passed but the transaction reverted:** `eth_call` (staticCall) runs with effectively unlimited gas and only checks execution logic. The actual `eth_sendRawTransaction` enforces the gas limit, so the call succeeded in simulation but ran out mid-execution on-chain.
+- **Fix:** Increased `gasLimit` from 300,000 → 500,000. Actual measured cost is ~50–80k for subsequent mints (warm slots); the higher ceiling only applies to cold-slot writes on the first mint per contract deployment.
+
+#### Jurisdiction Code uint8 Overflow (`backend/src/routes/admin.js`, `frontend/src/utils/constants.js`)
+- **Symptom:** Mint failed with `"Failed to create signature: padding exceeds data length (buffer=0x0348...)"`. `0x0348` = 840 = US ISO 3166-1 numeric code.
+- **Cause:** The contract stores `jurisdictionCode` as `uint8` (max 255). Many common country codes exceed this range (US=840, UK=826, Germany=276, etc.). Passing them to `ethers.solidityPackedKeccak256` with type `"uint8"` caused a buffer overflow before the transaction was even sent.
+- **Fix:** Filtered the `JURISDICTIONS` map in `constants.js` to only include codes ≤ 255 (Australia=36, Brazil=76, Canada=124, China=156, France=250). Added a server-side guard in `admin.js` returning HTTP 400 with an explanatory message if a code > 255 is submitted. Future fix: redeploy the contract with `uint16 jurisdictionCode` to support the full ISO 3166-1 range.
+
+#### Mint Error Swallowed in Admin Panel (`frontend/src/utils/api.js`)
+- **Symptom:** All mint failures showed the same generic "Failed to mint seal" string regardless of actual cause, making debugging impossible.
+- **Fix:** Updated the `mintSeal` API call to surface `error.details || error.error` from the response body before falling back to the generic message.
+
+#### staticCall Pre-flight Added (`backend/src/services/blockchain.js`)
+- Added `contract.mint.staticCall(...)` before every real `mint()` call. staticCall uses unlimited gas and surfaces Solidity revert strings, so logic errors (bad signature, already has seal, tier not active) are caught and reported before any gas is spent on a doomed transaction.
+
+### Added
+
+#### SMS OTP Phone Verification (`backend/src/routes/kyc.js`, `frontend/src/pages/ApplyForm.jsx`)
+- Bronze KYC intake now requires phone number verification via Twilio Verify (SMS OTP) before form submission.
+- **Flow:** User enters phone → `POST /api/kyc/send-otp` triggers a Twilio Verify channel → user enters the 6-digit code → `POST /api/kyc/verify-otp` confirms with Twilio → backend issues a short-lived HMAC-signed token → token is submitted with the KYC form and validated server-side.
+- **Stateless token design:** No new database table — the token is a base64-encoded HMAC-SHA256 payload `{ phone, exp }` signed with `PHONE_TOKEN_SECRET`. The submit endpoint validates the signature, checks expiry (30 min), and confirms the phone matches the submission.
+- Phone stored in E.164 format in Supabase.
+- OTP endpoint rate-limited to 5 requests per 15 minutes per IP.
+- Required env vars: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_VERIFY_SERVICE_SID`, `PHONE_TOKEN_SECRET`.
+
+#### Email Format + Domain Validation (`frontend/src/utils/emailValidation.js`, `backend/src/routes/kyc.js`)
+- Added `isValidEmailFormat()` regex check to reject non-email inputs (e.g. plain text like "wasted resources").
+- Added `isEmailDomainAllowed()` domain check: allowlist for major personal providers (Gmail, iCloud, Outlook, Yahoo, Proton) + any `.edu`/`.gov`; blocklist for ~30 known disposable providers; business domains allowed by default.
+- Validation runs client-side on blur/submit for immediate UX feedback and server-side on `POST /api/kyc/submit` as the authoritative gate.
+
+---
+
 ## [2.0.0] - 2026-02-02
 
 ### 🎉 Major Release - Production Security Hardening
