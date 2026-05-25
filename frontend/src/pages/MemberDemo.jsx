@@ -435,12 +435,11 @@ export function MemberDemo() {
                     {!type && (
                       <div className="flex gap-2">
                         <input
-                          disabled
                           placeholder={placeholder}
-                          className="flex-1 px-3 py-2.5 bg-tyrian-dark border border-gold/15 text-marble-muted/30 placeholder-marble-muted/20 font-cormorant text-base outline-none"
+                          className="flex-1 px-3 py-2.5 bg-tyrian-dark border border-gold/15 text-marble-muted placeholder-marble-muted/30 font-cormorant text-base outline-none focus:border-gold/35 transition-colors"
                         />
                         {action && (
-                          <button disabled className="font-cinzel text-xs tracking-widest uppercase px-4 py-2.5 border border-gold/15 text-marble-muted/25 shrink-0">
+                          <button className="font-cinzel text-xs tracking-widest uppercase px-4 py-2.5 border border-gold/25 text-marble-muted/60 hover:border-gold/50 hover:text-marble-muted shrink-0 transition-colors">
                             {action}
                           </button>
                         )}
