@@ -12,6 +12,22 @@ const ADMIN_HEADERS = () => ({
   'x-admin-secret': _adminSecret || sessionStorage.getItem('admin-secret') || '',
 });
 /**
+ * Join the mainnet launch waitlist
+ */
+export async function joinWaitlist({ name, email, user_type, org_name }) {
+  const response = await fetch(`${API_BASE_URL}/api/waitlist`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, email, user_type, org_name }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to join waitlist');
+  }
+  return response.json();
+}
+
+/**
  * Send SMS OTP to phone number
  */
 export async function sendOTP(phone) {

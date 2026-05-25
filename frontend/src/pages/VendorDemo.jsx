@@ -556,6 +556,22 @@ export function VendorDemo() {
           </>
         )}
 
+        {/* Waitlist CTA */}
+        <div className="mt-12 border border-gold/10 bg-gold/5 px-6 py-6 text-center">
+          <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-2">
+            Ready to Integrate for Real?
+          </p>
+          <p className="font-cormorant text-marble-dim italic text-base mb-4">
+            Covenant is live on testnet. Join the waitlist to be notified when we launch on mainnet.
+          </p>
+          <Link
+            to="/waitlist"
+            className="font-cinzel text-gold/70 hover:text-gold text-xs tracking-widest uppercase border border-gold/20 hover:border-gold/40 px-5 py-2.5 transition-colors inline-block"
+          >
+            Join the Waitlist
+          </Link>
+        </div>
+
       </div>
     </div>
   );

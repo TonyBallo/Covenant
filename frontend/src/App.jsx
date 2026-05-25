@@ -15,6 +15,7 @@ import { Docs } from './pages/Docs';
 import { Landing } from './pages/Landing';
 import { MintCeremony } from './pages/MintCeremony';
 import { About } from './pages/About';
+import { Waitlist } from './pages/Waitlist';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -577,6 +578,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/about" element={<About />} />
+        <Route path="/waitlist" element={<Waitlist />} />
         <Route path="/demo/mint-ceremony" element={<MintCeremony />} />
         <Route element={
           <DemoLayout

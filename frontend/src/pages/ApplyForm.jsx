@@ -350,6 +350,21 @@ export function ApplyForm({ walletAddress, walletConnected }) {
           <p className="font-cormorant text-marble-muted/50 italic text-sm text-center mt-6">
             * Required. Your information is encrypted and stored securely off-chain.
           </p>
+
+          <div className="mt-8 border border-gold/10 bg-gold/5 px-6 py-5 text-center">
+            <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-2">
+              Mainnet Launch
+            </p>
+            <p className="font-cormorant text-marble-dim italic text-base mb-4">
+              This demo runs on testnet. Be first to know when Covenant goes live.
+            </p>
+            <Link
+              to="/waitlist"
+              className="font-cinzel text-gold/70 hover:text-gold text-xs tracking-widest uppercase border border-gold/20 hover:border-gold/40 px-5 py-2.5 transition-colors inline-block"
+            >
+              Join the Waitlist
+            </Link>
+          </div>
         </div>
       </div>
     </div>

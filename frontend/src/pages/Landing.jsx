@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import './Landing.css';
 
 const PHRASES = ['Stability', 'Trust', 'Identity', 'Authenticity', 'Legitimacy', 'Protection'];
@@ -93,6 +94,7 @@ export function Landing() {
 
         <div className="landing-demo-btn-wrap">
           <button className="landing-demo-btn" onClick={() => navigate('/demo')}>Launch Demo</button>
+          <Link to="/waitlist" className="landing-waitlist-btn">Join the Waitlist</Link>
         </div>
       </main>
 

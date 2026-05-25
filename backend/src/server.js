@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import kycRoutes from './routes/kyc.js';
 import adminRoutes from './routes/admin.js';
+import waitlistRoutes from './routes/waitlist.js';
 
 dotenv.config();
 
@@ -46,6 +47,7 @@ app.get('/health', (req, res) => {
 // Routes
 app.use('/api/kyc', kycRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/waitlist', waitlistRoutes);
 
 // 404 handler
 app.use((req, res) => {
