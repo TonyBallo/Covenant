@@ -185,6 +185,37 @@ router.post('/submit', submitLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Phone verification required. Please verify your number before submitting.' });
     }
 
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Check email and phone uniqueness — block if already tied to an active, approved, or revoked
+    // seal on a *different* wallet. Same-wallet upgrades are allowed (neq check).
+    const LOCKED_STATUSES = ['approved', 'minted', 'revoked'];
+    const [{ data: emailConflict }, { data: phoneConflict }] = await Promise.all([
+      supabase
+        .from('kyc_submissions')
+        .select('id')
+        .eq('email', normalizedEmail)
+        .in('status', LOCKED_STATUSES)
+        .neq('wallet_address', walletAddress)
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from('kyc_submissions')
+        .select('id')
+        .eq('phone', normalizedPhone)
+        .in('status', LOCKED_STATUSES)
+        .neq('wallet_address', walletAddress)
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    if (emailConflict) {
+      return res.status(409).json({ error: 'This email address is already associated with an existing verification.' });
+    }
+    if (phoneConflict) {
+      return res.status(409).json({ error: 'This phone number is already associated with an existing verification.' });
+    }
+
     // Check on-chain seal state to gate new applications vs upgrade applications
     const sealInfo = await getSealInfo(walletAddress);
     if (sealInfo.found) {
@@ -251,7 +282,7 @@ router.post('/submit', submitLimiter, async (req, res) => {
       .insert({
         user_id: user.id,
         wallet_address: walletAddress,
-        email,
+        email: normalizedEmail,
         phone: normalizedPhone,
         full_name: fullName,
         tier_requested: tierRequested,
