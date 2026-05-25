@@ -36,7 +36,7 @@ export async function createMintSignature(userAddress, tier, jurisdictionCode = 
     return signature;
   } catch (error) {
     console.error('Signature creation failed:', error);
-    throw new Error('Failed to create signature');
+    throw new Error(`Failed to create signature: ${error.message}`);
   }
 }
 
