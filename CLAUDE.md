@@ -1,6 +1,6 @@
 # CLAUDE.md — Project Covenant
 
-Persistent context for Claude Code sessions. Updated 2026-05-24.
+Persistent context for Claude Code sessions. Updated 2026-05-25.
 
 ---
 
@@ -15,8 +15,8 @@ Project_Covenant/
 │   ├── src/
 │   │   ├── server.js                    # Express app setup, CORS, Supabase init, hourly cleanup job
 │   │   ├── routes/
-│   │   │   ├── kyc.js                   # KYC submit, email verification, status, cross-chain status; validates email format + domain before insertion
-│   │   │   └── admin.js                 # Approve/reject/mint/revoke/attest/lookup endpoints
+│   │   │   ├── kyc.js                   # KYC submit, send-otp/verify-otp (Twilio Verify), email verification, status, cross-chain status; validates email format + domain before insertion
+│   │   │   └── admin.js                 # Approve/reject/mint/revoke/attest/reattest/upgrade/pending-burns/lookup endpoints
 │   │   └── services/
 │   │       ├── blockchain.js            # ethers.js v6 calls to Arbitrum Sepolia (mint, revoke, getSealId, getSealInfo)
 │   │       ├── polygon.js               # Polygon Amoy attestation calls (attest, get, revoke)
@@ -28,9 +28,12 @@ Project_Covenant/
 │   │   ├── App.jsx                      # Router, navbar, wallet connection, homepage search
 │   │   ├── pages/
 │   │   │   ├── Landing.jsx              # Marketing landing page at "/" (no navbar; scroll-locked)
-│   │   │   ├── ApplyForm.jsx            # KYC submission form (Tier I / Bronze only); validates email format + domain on blur/submit
+│   │   │   ├── Landing.css              # Landing page styles
+│   │   │   ├── About.jsx                # About/principles page ("/about")
+│   │   │   ├── ApplyForm.jsx            # KYC submission form (Tier I / Bronze only); phone OTP via Twilio; validates email format + domain on blur/submit
 │   │   │   ├── Admin.jsx                # Admin panel (server-auth; Pending, Ready-to-Mint, Revoke Seal, Revoked Seals tabs)
 │   │   │   ├── Docs.jsx                 # Documentation page with tier info and seal images
+│   │   │   ├── GetVerified.jsx          # Simplified KYC submission form (higher tiers; no OTP flow)
 │   │   │   ├── MintCeremony.jsx         # Full-screen post-mint ceremony (wallet_watchAsset, shown once per seal via sessionStorage)
 │   │   │   ├── StatusPage.jsx           # Logged-in user's own verification status (always checks on-chain; shows seal image + Add to Wallet)
 │   │   │   ├── TierSelect.jsx           # Tier picker (only Tier I currently active)
@@ -39,7 +42,8 @@ Project_Covenant/
 │   │   │   └── VerifyFailed.jsx         # Post email-verification failure screen
 │   │   ├── components/
 │   │   │   ├── SearchBar.jsx            # Address input for public seal lookup; 5 tier quick-test buttons
-│   │   │   └── ResultDisplay.jsx        # Seal visualization — full-width seal image, tier row with hoverable info tooltip, attribute grid (matches StatusPage layout)
+│   │   │   ├── ResultDisplay.jsx        # Seal visualization — full-width seal image, tier row with hoverable info tooltip, attribute grid (matches StatusPage layout)
+│   │   │   └── WalletShowcase.jsx       # Animated wallet card showcase on homepage; links to seal lookup
 │   │   └── utils/
 │   │       ├── api.js                   # All fetch calls to backend (API_BASE_URL from env)
 │   │       ├── contract.js              # ABI + contract address + ethers.js read calls (Arbitrum Sepolia)
@@ -55,6 +59,7 @@ Project_Covenant/
 │   ├── deploy.js                        # Hardhat deploy script for Pact
 │   ├── deployAttestation.js             # Hardhat deploy for PactWitness (Polygon Amoy)
 │   ├── activateTiers.js                 # One-off script to enable tier levels on a deployed Pact contract
+│   ├── mintExpiredSeal.js               # Dev script to mint a seal with an already-expired expiresAt (testing)
 │   ├── mintTestSeals.js                 # Dev script to mint test seals
 │   ├── repopulateSeals.js               # Migration script — re-mints all seals from an old contract onto a new one
 │   ├── uploadToIPFS.js                  # Uploads tier PNG images + metadata JSON to Pinata; patches image CIDs in-place
@@ -95,6 +100,7 @@ Project_Covenant/
 | ethers | ^6.9.0 |
 | @supabase/supabase-js | ^2.39.0 |
 | resend | ^6.9.2 |
+| twilio | ^6.0.2 |
 | express-rate-limit | ^8.2.1 |
 | dotenv | ^16.3.1 |
 | nodemon (dev) | ^3.0.2 |
@@ -146,6 +152,9 @@ POLYGON_RPC_URL
 POLYGON_ATTESTATION_ADDRESS
 ADMIN_SECRET
 RESEND_API_KEY
+TWILIO_ACCOUNT_SID
+TWILIO_AUTH_TOKEN
+TWILIO_VERIFY_SERVICE_SID
 FRONTEND_URL
 PORT
 NODE_ENV
@@ -189,9 +198,13 @@ VITE_API_URL
 ```
 User fills ApplyForm
   → client-side: email format + domain validated on blur/submit (emailValidation.js)
-  → POST /api/kyc/submit (rate-limited: 3/15min)
-    → server-side: email format check, then domain allowlist/blocklist check (rejects disposable providers)
-    → Supabase: store submission (status: 'pending', email_verified: false)
+  → POST /api/kyc/send-otp  { phone }
+    → Twilio Verify: send SMS OTP to phone number (rate-limited: otpLimiter)
+  → POST /api/kyc/verify-otp  { phone, code }
+    → Twilio Verify: check OTP; returns signed phoneVerificationToken (HMAC, 10min TTL)
+  → POST /api/kyc/submit (rate-limited: 3/15min)  { ...formData, phoneVerificationToken }
+    → server-side: validates phoneVerificationToken, email format check, domain allowlist/blocklist check (rejects disposable providers)
+    → Supabase: store submission (status: 'pending', email_verified: false, phone_verified: true)
     → Resend: send verification email with magic link token (expires 15min)
 
 User clicks email link
@@ -238,7 +251,7 @@ Admin revokes seal
 ### Backend → Smart Contract
 - `backend/src/services/blockchain.js` uses `ethers.JsonRpcProvider` (`ARBITRUM_SEPOLIA_RPC_URL`)
 - Signed transactions via `new ethers.Wallet(OWNER_PRIVATE_KEY, provider)`
-- Gas limits hardcoded: 300,000 for mint, 200,000 for revoke
+- Gas limits hardcoded: 500,000 for mint, 400,000 for revoke, 250,000 for upgradeTier
 - Exports: `mintSeal`, `revokeSeal`, `getSealId`, `hasSeal`, `getSealInfo`
 
 ### Wallet Connection Pattern
@@ -312,7 +325,9 @@ struct BurnRequest {
 ### User-facing (`/api/kyc/`)
 | Method | Path | Description |
 |---|---|---|
-| POST | `/api/kyc/submit` | Submit KYC application (rate-limited: 3/15min) |
+| POST | `/api/kyc/send-otp` | Send SMS OTP to phone number via Twilio Verify (rate-limited) |
+| POST | `/api/kyc/verify-otp` | Verify SMS OTP; returns signed phoneVerificationToken (rate-limited) |
+| POST | `/api/kyc/submit` | Submit KYC application (rate-limited: 3/15min); requires phoneVerificationToken |
 | GET | `/api/kyc/verify/:token` | Email verification magic link |
 | GET | `/api/kyc/status/:address` | KYC submission status for address |
 | GET | `/api/kyc/cross-chain-status/:address` | Cross-chain attestation status |
@@ -330,6 +345,9 @@ struct BurnRequest {
 | POST | `/api/admin/mint` | Mint seal on Arbitrum Sepolia |
 | POST | `/api/admin/revoke` | Revoke seal on-chain + set Supabase status to 'revoked' |
 | POST | `/api/admin/attest/:id` | Attest seal on Polygon Amoy |
+| POST | `/api/admin/reattest/:id` | Re-attest an existing seal on Polygon Amoy |
+| POST | `/api/admin/upgrade` | Upgrade seal tier on-chain |
+| GET | `/api/admin/pending-burns` | Seals with an active pending burn request |
 
 > Admin routes require `x-admin-secret` header validated server-side against `ADMIN_SECRET` env var (Railway). Invalid or missing secret returns 401. Rate limited to 300 req/15min per IP.
 
