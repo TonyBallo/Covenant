@@ -15,6 +15,7 @@ import { Landing } from './pages/Landing';
 import { MintCeremony } from './pages/MintCeremony';
 import { About } from './pages/About';
 import { Waitlist } from './pages/Waitlist';
+import { WaitlistConfirmed } from './pages/WaitlistConfirmed';
 import { DemoIntro } from './pages/DemoIntro';
 import { ForMembers } from './pages/ForMembers';
 import { ForProtocols } from './pages/ForProtocols';
@@ -582,6 +583,7 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/about" element={<About />} />
         <Route path="/waitlist" element={<Waitlist />} />
+        <Route path="/waitlist/confirmed" element={<WaitlistConfirmed />} />
         <Route path="/demo/mint-ceremony" element={<MintCeremony />} />
         <Route element={
           <DemoLayout

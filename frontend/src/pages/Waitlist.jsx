@@ -59,9 +59,12 @@ export function Waitlist() {
               <div className="w-1.5 h-1.5 bg-gold rotate-45" />
               <div className="h-px w-12 bg-gold-dim" />
             </div>
-            <p className="font-cinzel text-gold text-xs tracking-[0.3em] uppercase mb-3">You're on the list</p>
-            <p className="font-cormorant text-marble text-xl italic mb-6">
-              We'll reach out when Covenant goes live on mainnet.
+            <p className="font-cinzel text-gold text-xs tracking-[0.3em] uppercase mb-3">Check your inbox</p>
+            <p className="font-cormorant text-marble text-xl italic mb-3">
+              We sent you a confirmation link.
+            </p>
+            <p className="font-cormorant text-marble-muted italic text-base mb-6">
+              Click it to secure your spot on the waitlist. The link expires in 24 hours.
             </p>
             <Link
               to="/demo"
