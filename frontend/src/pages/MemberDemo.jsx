@@ -2,8 +2,16 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESS, CONTRACT_ABI, RPC_URL } from '../utils/contract';
+import { TIERS } from '../utils/constants';
 
-const SCAM_ADDRESS = '0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496';
+// ─── SETUP REQUIRED ───────────────────────────────────────────────────────────
+// This address must hold a REVOKED seal on Arbitrum Sepolia before the demo
+// goes live. Via the admin panel:
+//   1. Mint a Bronze seal to any test wallet.
+//   2. Revoke it with reason: "Fraud — confirmed link to pig-butchering syndicate"
+//   3. Paste that wallet address here.
+const DEMO_REVOKED_ADDRESS = '0x0000000000000000000000000000000000000000'; // ← replace before launch
+// ──────────────────────────────────────────────────────────────────────────────
 
 const ANALYSIS_STEPS = [
   'Checking wallet creation date…',
@@ -14,23 +22,24 @@ const ANALYSIS_STEPS = [
 ];
 
 const VERIFY_FIELDS = [
-  { label: 'Full Legal Name',                  placeholder: 'As it appears on your ID' },
-  { label: 'Email Address',                    placeholder: 'your@email.com',           action: 'Verify' },
-  { label: 'Phone Number',                     placeholder: '+1 (555) 000-0000',        action: 'Send Code' },
-  { label: 'Government-Issued ID',             type: 'upload' },
-  { label: 'Live Photo Verification',          type: 'photo' },
-  { label: 'Social Security Number (last 4)',  placeholder: '_ _ _ _' },
-  { label: 'Bank Statement (last 3 months)',   type: 'upload' },
-  { label: 'CAPTCHA Verification',             type: 'captcha' },
+  { label: 'Full Legal Name',                 placeholder: 'As it appears on your ID' },
+  { label: 'Email Address',                   placeholder: 'your@email.com',    action: 'Verify' },
+  { label: 'Phone Number',                    placeholder: '+1 (555) 000-0000', action: 'Send Code' },
+  { label: 'Government-Issued ID',            type: 'upload' },
+  { label: 'Live Photo Verification',         type: 'photo' },
+  { label: 'Social Security Number (last 4)', placeholder: '_ _ _ _' },
+  { label: 'Bank Statement (last 3 months)',  type: 'upload' },
+  { label: 'CAPTCHA Verification',            type: 'captcha' },
 ];
 
 export function MemberDemo() {
   const navigate = useNavigate();
   const [phase, setPhase] = useState('scenario');
+  const [sealResult, setSealResult] = useState(null);
   const [analysisStep, setAnalysisStep] = useState(-1);
   const [sealVisible, setSealVisible] = useState(false);
 
-  // Drive the blockchain analysis animation
+  // Drive the optional blockchain analysis animation
   useEffect(() => {
     if (phase !== 'investigating') return;
     setAnalysisStep(0);
@@ -47,7 +56,7 @@ export function MemberDemo() {
     return () => clearInterval(id);
   }, [phase]);
 
-  // Trigger the seal popup after the verification wall has had time to land
+  // Trigger the Covenant seal popup after the verification wall settles
   useEffect(() => {
     if (phase !== 'verify_wall') return;
     setSealVisible(false);
@@ -60,12 +69,23 @@ export function MemberDemo() {
     try {
       const provider = new ethers.JsonRpcProvider(RPC_URL);
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-      await contract.getVerificationStatus(SCAM_ADDRESS);
+      const [verified, tier, revoked] = await contract.getVerificationStatus(DEMO_REVOKED_ADDRESS);
+      if (verified) {
+        const sealId = await contract.addressToSealId(DEMO_REVOKED_ADDRESS);
+        const seal = await contract.sealData(sealId);
+        setSealResult({
+          tier: Number(tier),
+          revoked: Boolean(revoked),
+          revocationReason: seal.revocationReason || 'Seal revoked by Covenant.',
+        });
+      }
     } catch (_) {
-      // no-op — result is "no seal" regardless of network errors
+      // Fallback — show the revoked result regardless of network issues
     }
-    setTimeout(() => setPhase('no_seal'), 1000);
+    setTimeout(() => setPhase('revoked_seal'), 1000);
   };
+
+  const tierInfo = sealResult ? TIERS[sealResult.tier] : null;
 
   return (
     <div className="min-h-screen py-16 px-6">
@@ -116,14 +136,14 @@ export function MemberDemo() {
                   I've already got a wallet ready."
                 </p>
                 <p className="font-cormorant text-marble italic text-lg leading-relaxed">
-                  "$1,000 would genuinely get me back on my feet. I'll pay you back two-fold the moment
-                  I'm sorted, I promise. You can trust me on this."
+                  "$1,000 would genuinely get me back on my feet. I'll pay you back two-fold the
+                  moment I'm sorted, I promise. You can trust me on this."
                 </p>
                 <div className="border-t border-gold/15 pt-4">
                   <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-2">
                     Their wallet address
                   </p>
-                  <p className="font-mono text-marble-dim text-sm break-all">{SCAM_ADDRESS}</p>
+                  <p className="font-mono text-marble-dim text-sm break-all">{DEMO_REVOKED_ADDRESS}</p>
                 </div>
               </div>
             </div>
@@ -159,7 +179,7 @@ export function MemberDemo() {
                 Wallet to check
               </p>
               <p className="font-mono text-marble text-sm break-all bg-tyrian-dark border border-gold/15 px-4 py-3">
-                {SCAM_ADDRESS}
+                {DEMO_REVOKED_ADDRESS}
               </p>
             </div>
 
@@ -183,41 +203,96 @@ export function MemberDemo() {
           </div>
         )}
 
-        {/* ── NO SEAL ──────────────────────────────────────────── */}
-        {phase === 'no_seal' && (
+        {/* ── REVOKED SEAL ─────────────────────────────────────── */}
+        {phase === 'revoked_seal' && (
           <>
             <div className="border border-red-900/40 bg-red-950/10 mb-8">
-              <div className="border-b border-red-900/30 px-5 py-3 flex items-center gap-3 bg-red-950/10">
-                <div className="w-2 h-2 rounded-full bg-red-500/70 shrink-0" />
-                <p className="font-cinzel text-red-400/80 text-xs tracking-widest uppercase">
-                  No Covenant seal found
-                </p>
+              <div className="border-b border-red-900/30 px-5 py-3 flex items-center justify-between bg-red-950/10">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-red-500/70 shrink-0" />
+                  <p className="font-cinzel text-red-400/80 text-xs tracking-widest uppercase">
+                    Seal Revoked
+                  </p>
+                </div>
+                {tierInfo && (
+                  <p className="font-cinzel text-marble-muted/50 text-xs tracking-widest uppercase">
+                    Was: {tierInfo.name} {tierInfo.numeral}
+                  </p>
+                )}
               </div>
-              <div className="px-5 py-5">
-                <p className="font-mono text-marble-muted/50 text-xs break-all mb-4">{SCAM_ADDRESS}</p>
-                <p className="font-cormorant text-marble-dim italic text-lg leading-relaxed">
-                  This wallet holds no verified standing in the Covenant trust network. No pact has
-                  been entered. No identity has been confirmed.
+              <div className="px-5 py-5 space-y-4">
+                <div>
+                  <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-2">
+                    Wallet
+                  </p>
+                  <p className="font-mono text-marble-muted/60 text-xs break-all">{DEMO_REVOKED_ADDRESS}</p>
+                </div>
+                <div>
+                  <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-2">
+                    Revocation reason
+                  </p>
+                  <p className="font-cormorant text-red-300/80 italic text-lg leading-relaxed">
+                    {sealResult?.revocationReason ?? 'Fraud — confirmed link to pig-butchering syndicate'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <p className="font-cormorant text-marble-dim italic text-lg leading-relaxed mb-10">
+              This wallet once held a verified Covenant seal — and lost it. The network already
+              knows what happened. You didn't have to.
+            </p>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => setPhase('pre_verify')}
+                className="w-full font-cinzel text-xs tracking-widest uppercase py-4 bg-gold text-tyrian-deep font-semibold hover:bg-gold-dim transition-colors"
+              >
+                That's enough for me — continue
+              </button>
+              <button
+                onClick={() => setPhase('investigating')}
+                className="w-full font-cinzel text-xs tracking-widest uppercase py-4 border border-gold/20 text-marble-muted/60 hover:border-gold/40 hover:text-marble-muted transition-colors"
+              >
+                Go deeper — run blockchain analysis
+              </button>
+              <p className="font-cormorant text-marble-muted/30 italic text-sm text-center pt-1">
+                The analysis is optional. Covenant already told you what you needed.
+              </p>
+            </div>
+          </>
+        )}
+
+        {/* ── PRE-VERIFY (skipped analysis path) ───────────────── */}
+        {phase === 'pre_verify' && (
+          <>
+            <div className="mb-10">
+              <p className="font-cinzel text-gold text-xs tracking-[0.3em] uppercase mb-4">One lookup.</p>
+              <h2 className="font-cinzel text-marble text-2xl md:text-3xl tracking-wide mb-6 leading-snug">
+                Covenant surfaced the truth.
+              </h2>
+              <div className="space-y-4">
+                <p className="font-cormorant text-marble-dim italic text-xl leading-relaxed">
+                  No blockchain expertise. No hours of research. No trace tools. You checked one
+                  thing — whether that wallet held a standing seal — and the network told you
+                  everything you needed to know.
+                </p>
+                <p className="font-cormorant text-marble-dim italic text-xl leading-relaxed">
+                  Now imagine the other side of that equation, and what a seal does when it's yours.
                 </p>
               </div>
             </div>
 
-            <p className="font-cormorant text-marble-dim italic text-lg leading-relaxed mb-8">
-              A Covenant member has a real identity behind their wallet — one they put on the line
-              by entering the pact. This wallet has no such commitment. That alone is worth
-              paying attention to.
-            </p>
-
             <button
-              onClick={() => setPhase('investigating')}
-              className="w-full font-cinzel text-xs tracking-widest uppercase py-4 border border-gold/30 text-gold hover:bg-gold/5 hover:border-gold/60 transition-colors"
+              onClick={() => setPhase('verify_wall')}
+              className="w-full font-cinzel text-xs tracking-widest uppercase py-4 bg-gold text-tyrian-deep font-semibold hover:bg-gold-dim transition-colors"
             >
-              Something feels wrong — investigate further →
+              Continue →
             </button>
           </>
         )}
 
-        {/* ── INVESTIGATING ─────────────────────────────────────── */}
+        {/* ── INVESTIGATING (optional extra mile) ──────────────── */}
         {phase === 'investigating' && (
           <div className="py-12">
             <p className="font-cinzel text-marble-muted text-xs tracking-widest uppercase mb-10">
@@ -243,7 +318,7 @@ export function MemberDemo() {
           </div>
         )}
 
-        {/* ── EXPOSED ──────────────────────────────────────────── */}
+        {/* ── EXPOSED (extra mile result) ───────────────────────── */}
         {phase === 'exposed' && (
           <>
             <div className="mb-8">
@@ -251,7 +326,7 @@ export function MemberDemo() {
                 Analysis complete
               </p>
               <h2 className="font-cinzel text-marble text-2xl md:text-3xl tracking-wide mb-4 leading-snug">
-                That wasn't Alex.
+                The full story.
               </h2>
             </div>
 
@@ -296,11 +371,10 @@ export function MemberDemo() {
               </div>
             </div>
 
-            <div className="border-l-2 border-gold/30 pl-6 mb-10">
+            <div className="border-l-2 border-gold/30 pl-6 mb-4">
               <p className="font-cormorant text-marble italic text-xl leading-relaxed">
-                You just avoided losing $1,000 to a criminal operation — not because you ran a
-                blockchain trace, but because you checked one thing: whether that wallet held a
-                Covenant seal.
+                The analysis confirmed what Covenant already told you. The revoked seal was
+                the signal. Everything else was the explanation.
               </p>
             </div>
 
@@ -377,7 +451,7 @@ export function MemberDemo() {
               </div>
             </div>
 
-            {/* Seal popup — slides up from bottom */}
+            {/* Covenant seal popup */}
             <div
               className={`fixed inset-x-0 bottom-0 z-50 flex justify-center px-6 pb-6 transition-all duration-700 ${
                 sealVisible
