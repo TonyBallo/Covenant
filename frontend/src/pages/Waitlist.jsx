@@ -155,6 +155,12 @@ export function Waitlist() {
               </div>
             )}
 
+            <div className="border-l-2 border-gold/25 pl-4">
+              <p className="font-cormorant text-marble-muted italic text-base leading-relaxed">
+                We'll send a confirmation link to your email. You'll need to click it to secure your spot.
+              </p>
+            </div>
+
             <button
               type="submit"
               disabled={loading}

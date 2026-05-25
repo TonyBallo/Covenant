@@ -7,6 +7,7 @@ import { supabase } from '../server.js';
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const NOTIFY_EMAIL = 'tonyballo@covenantprotocol.io';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://covenantprotocol.io';
+const BACKEND_URL = process.env.BACKEND_URL || 'https://covenant-production-4cf7.up.railway.app';
 const TOKEN_TTL_HOURS = 24;
 
 const router = express.Router();
@@ -63,7 +64,7 @@ router.post('/', waitlistLimiter, async (req, res) => {
 
     // Send confirmation email
     if (resend) {
-      const confirmLink = `${FRONTEND_URL}/waitlist/confirm/${token}`;
+      const confirmLink = `${BACKEND_URL}/api/waitlist/confirm/${token}`;
       resend.emails.send({
         from: 'Covenant Protocol <noreply@verify.covenantprotocol.io>',
         to: email.trim().toLowerCase(),
