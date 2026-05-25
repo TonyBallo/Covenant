@@ -499,7 +499,12 @@ export function MemberDemo() {
                 {/* Divider */}
                 <div style={{ height: '1px', background: '#93c5fd22', marginBottom: '12px' }} />
 
-                {/* Tier hero + seal image (seal floats absolutely, doesn't affect layout) */}
+                {/* Seal image */}
+                <div className="flex justify-center mb-2">
+                  <img src="/tiers/tier-4.png" alt="Platinum Seal" style={{ width: '168px', height: '168px', objectFit: 'contain', opacity: 0.92 }} />
+                </div>
+
+                {/* Tier hero */}
                 <div className="flex items-baseline gap-3 mb-3">
                   <span style={{ fontFamily: 'Cinzel, serif', fontWeight: 700, fontSize: '40px', lineHeight: 1, color: '#93c5fd' }}>IV</span>
                   <div>
@@ -507,7 +512,6 @@ export function MemberDemo() {
                     <p style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: '11px', color: '#ffffff32', marginTop: '2px' }}>Sophisticated Investor</p>
                   </div>
                 </div>
-                <img src="/tiers/tier-4.png" alt="Platinum Seal" style={{ position: 'absolute', top: '-30px', right: '-30px', width: '168px', height: '168px', objectFit: 'contain', opacity: 0.92, pointerEvents: 'none' }} />
 
                 {/* Divider */}
                 <div style={{ height: '1px', background: '#93c5fd22', marginBottom: '12px' }} />
