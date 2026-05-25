@@ -450,37 +450,61 @@ export function MemberDemo() {
               </div>
             </div>
 
-            {/* Covenant seal popup */}
+            {/* Covenant browser-extension popup */}
             <div
-              className={`fixed inset-x-0 bottom-0 z-50 flex justify-center px-6 pb-6 transition-all duration-700 ${
+              className={`fixed top-4 right-4 z-50 w-80 transition-all duration-500 ease-out ${
                 sealVisible
-                  ? 'opacity-100 translate-y-0'
-                  : 'opacity-0 translate-y-10 pointer-events-none'
+                  ? 'opacity-100 translate-x-0'
+                  : 'opacity-0 translate-x-8 pointer-events-none'
               }`}
+              style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(147,197,253,0.15)' }}
             >
-              <div className="w-full max-w-md border border-blue-400/30 bg-tyrian-deeper shadow-2xl overflow-hidden">
-                <div className="border-b border-blue-400/15 px-5 py-2.5 bg-blue-950/20">
-                  <p className="font-cinzel text-blue-300/70 text-xs tracking-widest uppercase">
-                    Covenant · Seal Detected
-                  </p>
+              {/* Chrome-style extension header */}
+              <div style={{ background: '#1e1e2e', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+                className="flex items-center justify-between px-3 py-2"
+              >
+                <div className="flex items-center gap-2">
+                  {/* Extension icon */}
+                  <div className="w-4 h-4 shrink-0">
+                    <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="14" cy="14" r="12.5" stroke="#d4af5a" strokeWidth="1" strokeDasharray="2 3" />
+                      <polygon points="14,6 20.06,9.75 20.06,17.25 14,21 7.94,17.25 7.94,9.75" fill="none" stroke="#d4af5a" strokeWidth="1" opacity="0.8" />
+                      <circle cx="14" cy="14" r="2.5" fill="#d4af5a" opacity="0.9" />
+                    </svg>
+                  </div>
+                  <span className="font-cinzel text-white/70 text-xs tracking-wide">Covenant</span>
                 </div>
-                <div className="px-5 py-5 flex items-center gap-5">
-                  <img src="/tiers/tier-4.png" alt="Platinum Seal" className="w-16 h-16 shrink-0" />
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400/80" />
+                  <span className="font-cinzel text-green-400/70 text-[10px] tracking-widest uppercase">Active</span>
+                </div>
+              </div>
+
+              {/* Body */}
+              <div style={{ background: '#13001a' }} className="px-4 py-4">
+                <p className="font-cinzel text-white/35 text-[10px] tracking-[0.25em] uppercase mb-3">
+                  Seal detected on this page
+                </p>
+                <div className="flex items-center gap-3 mb-4">
+                  <img src="/tiers/tier-4.png" alt="Platinum Seal" className="w-12 h-12 shrink-0" />
                   <div>
-                    <p className="font-cinzel text-marble text-lg tracking-wide mb-1">Platinum Member</p>
-                    <p className="font-cormorant text-marble-muted italic text-base leading-snug">
-                      Identity verified. Bypass this form instantly.
+                    <p className="font-cinzel text-white/90 text-sm tracking-wide leading-tight mb-0.5">
+                      Platinum Member
+                    </p>
+                    <p className="font-cormorant text-white/40 italic text-sm leading-snug">
+                      Verified identity on file
                     </p>
                   </div>
                 </div>
-                <div className="px-5 pb-5">
-                  <button
-                    onClick={() => setPhase('granted')}
-                    className="w-full font-cinzel text-xs tracking-widest uppercase py-3.5 bg-blue-500/20 border border-blue-400/40 text-blue-300 hover:bg-blue-500/30 transition-colors"
-                  >
-                    Use my seal
-                  </button>
-                </div>
+                <button
+                  onClick={() => setPhase('granted')}
+                  className="w-full font-cinzel text-[11px] tracking-widest uppercase py-2.5 transition-colors"
+                  style={{ background: 'rgba(147,197,253,0.12)', border: '1px solid rgba(147,197,253,0.3)', color: 'rgba(147,197,253,0.85)' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(147,197,253,0.2)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(147,197,253,0.12)'}
+                >
+                  Use my seal to skip this →
+                </button>
               </div>
             </div>
           </>
