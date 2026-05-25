@@ -278,7 +278,7 @@ export function MemberDemo() {
                   everything you needed to know.
                 </p>
                 <p className="font-cormorant text-marble-dim italic text-xl leading-relaxed">
-                  Let's find out what else Covenant can do for you.
+                  Let's find out what else Covenant can do for you...
                 </p>
               </div>
             </div>
@@ -379,7 +379,7 @@ export function MemberDemo() {
             </div>
 
             <p className="font-cormorant text-marble-dim italic text-lg leading-relaxed mb-8">
-              Let's find out what else Covenant can do for you.
+              Let's find out what else Covenant can do for you...
             </p>
 
             <button
