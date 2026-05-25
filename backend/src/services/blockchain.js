@@ -59,6 +59,9 @@ export async function mintSeal(userAddress, tier, signature, jurisdictionCode = 
 
     console.log(`⛓️  Minting seal for ${userAddress} tier ${tier} jurisdiction ${jurisdictionCode} expiresAt ${resolvedExpiresAt || 'never'}...`);
 
+    // Simulate the call first to get the revert reason before spending gas
+    await contract.mint.staticCall(userAddress, tier, jurisdictionCode, signature, resolvedExpiresAt);
+
     const tx = await contract.mint(userAddress, tier, jurisdictionCode, signature, resolvedExpiresAt, {
       gasLimit: 300000  // Conservative ceiling; actual usage is ~150–180k
     });
