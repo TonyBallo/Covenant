@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { submitKYC } from '../utils/api';
+import { submitKYC, sendOTP, verifyOTP } from '../utils/api';
 import { TIERS } from '../utils/constants';
 import { isValidEmailFormat, isEmailDomainAllowed } from '../utils/emailValidation';
 
@@ -14,12 +14,19 @@ export function ApplyForm({ walletAddress, walletConnected }) {
     walletAddress: walletAddress || '',
     fullName: '',
     email: '',
+    phone: '',
     tierRequested,
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
   const [emailError, setEmailError] = useState(null);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [phoneToken, setPhoneToken] = useState(null);
+  const [phoneError, setPhoneError] = useState(null);
 
   useEffect(() => {
     setFormData(prev => ({ ...prev, walletAddress: walletAddress || '' }));
@@ -38,7 +45,7 @@ export function ApplyForm({ walletAddress, walletConnected }) {
     setLoading(true);
     setError(null);
     try {
-      await submitKYC(formData);
+      await submitKYC({ ...formData, phoneVerificationToken: phoneToken });
       setSuccess(true);
     } catch (err) {
       setError(err.message);
@@ -50,6 +57,13 @@ export function ApplyForm({ walletAddress, walletConnected }) {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (e.target.name === 'email') setEmailError(null);
+    if (e.target.name === 'phone') {
+      setOtpSent(false);
+      setOtpVerified(false);
+      setPhoneToken(null);
+      setOtpCode('');
+      setPhoneError(null);
+    }
   };
 
   const handleEmailBlur = () => {
@@ -60,6 +74,48 @@ export function ApplyForm({ walletAddress, walletConnected }) {
       setEmailError('Please use a personal, institutional (.edu/.gov), or business email. Disposable addresses are not accepted.');
     } else {
       setEmailError(null);
+    }
+  };
+
+  const handleSendOTP = async () => {
+    setOtpLoading(true);
+    setPhoneError(null);
+    try {
+      await sendOTP(formData.phone);
+      setOtpSent(true);
+    } catch (err) {
+      setPhoneError(err.message);
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    setOtpLoading(true);
+    setPhoneError(null);
+    try {
+      const { phoneVerificationToken } = await verifyOTP(formData.phone, otpCode);
+      setPhoneToken(phoneVerificationToken);
+      setOtpVerified(true);
+    } catch (err) {
+      setPhoneError(err.message);
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    setOtpSent(false);
+    setOtpCode('');
+    setPhoneError(null);
+    setOtpLoading(true);
+    try {
+      await sendOTP(formData.phone);
+      setOtpSent(true);
+    } catch (err) {
+      setPhoneError(err.message);
+    } finally {
+      setOtpLoading(false);
     }
   };
 
@@ -190,6 +246,82 @@ export function ApplyForm({ walletAddress, walletConnected }) {
               )}
             </div>
 
+            {/* Phone */}
+            <div>
+              <label className="font-cinzel text-marble-muted text-xs tracking-widest uppercase block mb-2">
+                Phone Number *
+              </label>
+              {otpVerified ? (
+                <div className="border border-green-900/60 bg-green-950/20 px-4 py-3 flex items-center gap-3">
+                  <span className="text-green-400 text-sm">✓</span>
+                  <div>
+                    <p className="font-cinzel text-green-400 text-xs tracking-widest uppercase">Verified</p>
+                    <p className="font-mono text-marble-dim text-sm">{formData.phone}</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex gap-0">
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="+1 (555) 000-0000"
+                      disabled={otpSent || loading}
+                      className="flex-1 px-4 py-3 bg-tyrian-dark border border-gold/30 text-marble placeholder-marble-muted/50 focus:outline-none focus:border-gold/70 font-cormorant text-lg transition-colors disabled:opacity-60"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSendOTP}
+                      disabled={otpLoading || !formData.phone || otpSent}
+                      className="font-cinzel text-xs tracking-widest uppercase px-5 py-3 border border-gold/30 text-gold bg-gold/5 hover:bg-gold/15 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {otpLoading && !otpSent ? 'Sending…' : otpSent ? 'Sent' : 'Send Code'}
+                    </button>
+                  </div>
+                  {otpSent && (
+                    <div className="mt-3">
+                      <div className="flex gap-0">
+                        <input
+                          type="text"
+                          value={otpCode}
+                          onChange={(e) => setOtpCode(e.target.value)}
+                          placeholder="6-digit code"
+                          maxLength={6}
+                          className="flex-1 px-4 py-3 bg-tyrian-dark border border-gold/30 text-marble placeholder-marble-muted/50 focus:outline-none focus:border-gold/70 font-mono text-lg tracking-widest transition-colors"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleVerifyOTP}
+                          disabled={otpLoading || otpCode.length < 6}
+                          className="font-cinzel text-xs tracking-widest uppercase px-5 py-3 border border-gold/30 text-gold bg-gold/5 hover:bg-gold/15 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {otpLoading ? 'Verifying…' : 'Verify'}
+                        </button>
+                      </div>
+                      <div className="flex items-center justify-between mt-1">
+                        {phoneError && (
+                          <p className="font-cormorant text-red-400 italic text-sm">{phoneError}</p>
+                        )}
+                        <button
+                          type="button"
+                          onClick={handleResendOTP}
+                          disabled={otpLoading}
+                          className="font-cormorant text-gold/50 italic text-sm hover:text-gold transition-colors ml-auto"
+                        >
+                          Resend code
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  {phoneError && !otpSent && (
+                    <p className="font-cormorant text-red-400 italic text-sm mt-1">{phoneError}</p>
+                  )}
+                </>
+              )}
+            </div>
+
             {/* Error */}
             {error && (
               <div className="border-l-4 border-red-800 bg-red-950/30 px-5 py-3">
@@ -201,7 +333,7 @@ export function ApplyForm({ walletAddress, walletConnected }) {
             {/* Submit */}
             <button
               type="submit"
-              disabled={loading || !walletConnected || !!emailError}
+              disabled={loading || !walletConnected || !!emailError || !otpVerified}
               className="w-full font-cinzel text-xs tracking-widest uppercase py-4 bg-gold text-tyrian-deep font-semibold hover:bg-gold-dim disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Submitting…' : isUpgrade ? 'Submit Upgrade Request' : 'Submit Application'}

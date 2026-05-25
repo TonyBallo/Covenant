@@ -12,6 +12,38 @@ const ADMIN_HEADERS = () => ({
   'x-admin-secret': _adminSecret || sessionStorage.getItem('admin-secret') || '',
 });
 /**
+ * Send SMS OTP to phone number
+ */
+export async function sendOTP(phone) {
+  const response = await fetch(`${API_BASE_URL}/api/kyc/send-otp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to send verification code');
+  }
+  return response.json();
+}
+
+/**
+ * Verify SMS OTP code — returns { phoneVerificationToken } on success
+ */
+export async function verifyOTP(phone, code) {
+  const response = await fetch(`${API_BASE_URL}/api/kyc/verify-otp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone, code }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Invalid verification code');
+  }
+  return response.json();
+}
+
+/**
  * Submit KYC application
  */
 export async function submitKYC(data) {
@@ -20,12 +52,12 @@ export async function submitKYC(data) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   });
-  
+
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.error || 'Failed to submit KYC');
   }
-  
+
   return response.json();
 }
 

@@ -2,12 +2,18 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { Resend } from 'resend';
 import crypto from 'crypto';
+import twilio from 'twilio';
 import { supabase } from '../server.js';
 import { createMintSignature } from '../services/signature.js';
 import { getSealInfo } from '../services/blockchain.js';
 
 const router = express.Router();
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+
+const twilioClient = (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN)
+  ? twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
+  : null;
+const TWILIO_VERIFY_SID = process.env.TWILIO_VERIFY_SERVICE_SID;
 
 const PERSONAL_EMAIL_DOMAINS = new Set([
   'gmail.com', 'icloud.com', 'me.com', 'mac.com',
@@ -62,19 +68,106 @@ const submitLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const otpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { error: 'Too many OTP requests, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+function normalizePhone(phone) {
+  const cleaned = (phone || '').replace(/[^\d+]/g, '');
+  if (cleaned.startsWith('+')) return cleaned;
+  if (/^\d{10}$/.test(cleaned)) return `+1${cleaned}`;
+  if (/^1\d{10}$/.test(cleaned)) return `+${cleaned}`;
+  return cleaned;
+}
+
+function generatePhoneToken(phone) {
+  const expiry = Date.now() + 30 * 60 * 1000;
+  const payload = JSON.stringify({ phone, expiry });
+  const sig = crypto.createHmac('sha256', process.env.ADMIN_SECRET || 'dev-secret')
+    .update(payload).digest('hex');
+  return Buffer.from(JSON.stringify({ payload, sig })).toString('base64');
+}
+
+function validatePhoneToken(token, phone) {
+  try {
+    const { payload, sig } = JSON.parse(Buffer.from(token, 'base64').toString());
+    const expected = crypto.createHmac('sha256', process.env.ADMIN_SECRET || 'dev-secret')
+      .update(payload).digest('hex');
+    if (!crypto.timingSafeEqual(Buffer.from(sig, 'hex'), Buffer.from(expected, 'hex'))) return false;
+    const { phone: tokenPhone, expiry } = JSON.parse(payload);
+    if (tokenPhone !== phone) return false;
+    if (Date.now() > expiry) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Send SMS OTP
+ * POST /api/kyc/send-otp
+ */
+router.post('/send-otp', otpLimiter, async (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) return res.status(400).json({ error: 'Phone number required' });
+
+    const normalized = normalizePhone(phone);
+
+    if (!twilioClient) return res.status(503).json({ error: 'SMS service not configured' });
+
+    await twilioClient.verify.v2.services(TWILIO_VERIFY_SID)
+      .verifications.create({ to: normalized, channel: 'sms' });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Send OTP error:', error);
+    res.status(500).json({ error: 'Failed to send verification code. Check the number and try again.' });
+  }
+});
+
+/**
+ * Verify SMS OTP and return a short-lived phone token
+ * POST /api/kyc/verify-otp
+ */
+router.post('/verify-otp', otpLimiter, async (req, res) => {
+  try {
+    const { phone, code } = req.body;
+    if (!phone || !code) return res.status(400).json({ error: 'Phone and code required' });
+
+    const normalized = normalizePhone(phone);
+
+    if (!twilioClient) return res.status(503).json({ error: 'SMS service not configured' });
+
+    const check = await twilioClient.verify.v2.services(TWILIO_VERIFY_SID)
+      .verificationChecks.create({ to: normalized, code });
+
+    if (check.status !== 'approved') {
+      return res.status(400).json({ error: 'Invalid or expired verification code' });
+    }
+
+    res.json({ success: true, phoneVerificationToken: generatePhoneToken(normalized) });
+  } catch (error) {
+    console.error('Verify OTP error:', error);
+    res.status(500).json({ error: 'Failed to verify code' });
+  }
+});
+
 /**
  * Submit KYC application
  * POST /api/kyc/submit
  */
 router.post('/submit', submitLimiter, async (req, res) => {
   try {
-    const { walletAddress, email, phone, fullName, tierRequested } = req.body;
+    const { walletAddress, email, phone, fullName, tierRequested, phoneVerificationToken } = req.body;
 
     // Validate input
-    if (!walletAddress || !email || !fullName || !tierRequested) {
-      return res.status(400).json({
-        error: 'Missing required fields'
-      });
+    if (!walletAddress || !email || !fullName || !tierRequested || !phone) {
+      return res.status(400).json({ error: 'Missing required fields' });
     }
 
     if (!isValidEmailFormat(email)) {
@@ -85,6 +178,11 @@ router.post('/submit', submitLimiter, async (req, res) => {
       return res.status(400).json({
         error: 'Please use a personal email (Gmail, iCloud, Outlook, etc.), institutional (.edu/.gov), or verified business email. Disposable addresses are not accepted.'
       });
+    }
+
+    const normalizedPhone = normalizePhone(phone);
+    if (!phoneVerificationToken || !validatePhoneToken(phoneVerificationToken, normalizedPhone)) {
+      return res.status(400).json({ error: 'Phone verification required. Please verify your number before submitting.' });
     }
 
     // Check on-chain seal state to gate new applications vs upgrade applications
@@ -154,7 +252,7 @@ router.post('/submit', submitLimiter, async (req, res) => {
         user_id: user.id,
         wallet_address: walletAddress,
         email,
-        phone,
+        phone: normalizedPhone,
         full_name: fullName,
         tier_requested: tierRequested,
         status: 'pending',
