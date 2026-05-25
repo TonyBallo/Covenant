@@ -77,7 +77,7 @@ export function MemberDemo() {
   useEffect(() => {
     if (phase !== 'verify_wall') return;
     setSealVisible(false);
-    const id = setTimeout(() => setSealVisible(true), 2800);
+    const id = setTimeout(() => setSealVisible(true), 10000);
     return () => clearTimeout(id);
   }, [phase]);
 
